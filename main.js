@@ -1,12 +1,12 @@
 const config = {
-  apiKey: "AIzaSyCsUKnwBcZbVGDlS6NhnsGH1OJKazgceTE",
-  authDomain: "create-post-9064c.firebaseapp.com",
-  databaseURL: "https://create-post-9064c-default-rtdb.firebaseio.com",
-  projectId: "create-post-9064c",
-  storageBucket: "create-post-9064c.appspot.com",
-  messagingSenderId: "266951699835",
-  appId: "1:266951699835:web:78a671ae6e76dc2ca9e1de"
-};
+  apiKey: "AIzaSyDieZ5BXXZKmoATiZjT2b8kgMRDgDbZnpY",
+  authDomain: "hiiiii-e3e17.firebaseapp.com",
+  databaseURL: "https://hiiiii-e3e17-default-rtdb.firebaseio.com",
+  projectId: "hiiiii-e3e17",
+  storageBucket: "hiiiii-e3e17.appspot.com",
+  messagingSenderId: "910966612080",
+  appId: "1:910966612080:web:eae287bd46beb0040394b5"
+}
 
 firebase.initializeApp(config);
 
