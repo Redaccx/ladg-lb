@@ -6,8 +6,8 @@ const config = {
   storageBucket: "reda-7d506.appspot.com",
   messagingSenderId: "637395019512",
   appId: "1:637395019512:web:1c7834e529eb90dcaf3d0d",
-  measurementId: "G-Q7H13D1YFC"
-};
+  
+}
 
 firebase.initializeApp(config);
 
