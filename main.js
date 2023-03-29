@@ -471,3 +471,4 @@ closeNav.addEventListener("click", (e) => {
     document.getElementById("main").style.marginLeft = "";
 })
 
+
