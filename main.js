@@ -5,8 +5,8 @@ const config = {
   projectId: "testys-56abf",
   storageBucket: "testys-56abf.appspot.com",
   messagingSenderId: "691391330319",
-  appId: "1:691391330319:web:7c2037f0c4bd3069fbcb7a",
-  measurementId: "G-BZ8ZRQNKWZ"
+  appId: "1:691391330319:web:518284cb5fc1cf14fbcb7a",
+  measurementId: "G-YZ4FJNXEFF"
 };
 
 firebase.initializeApp(config);
