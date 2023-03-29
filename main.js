@@ -1,4 +1,4 @@
-const config = {
+const firebaseConfig = {
   apiKey: "AIzaSyAFPHSQdRugV6ngWGtPuUfSzBhS94D30hU",
   authDomain: "reda-7d506.firebaseapp.com",
   databaseURL: "https://reda-7d506-default-rtdb.firebaseio.com",
