@@ -1,12 +1,11 @@
 const config = {
-  apiKey: "AIzaSyAFPHSQdRugV6ngWGtPuUfSzBhS94D30hU",
-  authDomain: "reda-7d506.firebaseapp.com",
-  databaseURL: "https://reda-7d506-default-rtdb.firebaseio.com",
-  projectId: "reda-7d506",
-  storageBucket: "reda-7d506.appspot.com",
-  messagingSenderId: "637395019512",
-  appId: "1:637395019512:web:1c7834e529eb90dcaf3d0d",
-  
+  apiKey: "AIzaSyCsUKnwBcZbVGDlS6NhnsGH1OJKazgceTE",
+  authDomain: "create-post-9064c.firebaseapp.com",
+  databaseURL: "https://create-post-9064c-default-rtdb.firebaseio.com",
+  projectId: "create-post-9064c",
+  storageBucket: "create-post-9064c.appspot.com",
+  messagingSenderId: "266951699835",
+  appId: "1:266951699835:web:78a671ae6e76dc2ca9e1de"
 }
 
 firebase.initializeApp(config);
