@@ -44,7 +44,7 @@
         
 
         .page-item {
-            border: 0px solid transparent;
+            border: 1px solid black;
             background: #eaeaea;
             border-radius: 30px;
            
