@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin News Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+    }
+    .login {
+      max-width: 300px;
+      margin: 100px auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px #ccc;
+      border-radius: 8px;
+    }
+    .news-form, .post {
+      background: white;
+      padding: 15px;
+      margin: 20px auto;
+      max-width: 600px;
+      box-shadow: 0 0 5px #ccc;
+      border-radius: 6px;
+    }
+    .post img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    input, textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 8px;
+      font-size: 14px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+      background-color: #C1272D;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    .edit-btn, .delete-btn {
+      margin-right: 10px;
+    }
+    .actions {
+      margin-top: 10px;
+    }
+    .link {
+      color: #0066cc;
+      text-decoration: underline;
+    }
+    .heart {
+      cursor: pointer;
+      color: gray;
+      font-size: 20px;
+    }
+    .heart.liked {
+      color: red;
+    }
+    .logout {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div id="login" class="login">
+  <h3>Admin Login</h3>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p id="login-error" style="color:red;"></p>
+</div>
+
+<div id="main" style="display:none;">
+  <div class="logout">
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="news-form">
+    <h3>Add News Post</h3>
+    <input type="text" id="title" placeholder="Title">
+    <textarea id="content" placeholder="Content"></textarea>
+    <input type="text" id="link" placeholder="External link (optional)">
+    <input type="file" id="image" accept="image/*">
+    <button onclick="addPost()">Add</button>
+  </div>
+
+  <div id="posts"></div>
+</div>
+
+<script>
+  const adminUser = "Beweble";
+  const adminPass = "1234";
+  let isAdmin = false;
+
+  function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    if (user === adminUser && pass === adminPass) {
+      isAdmin = true;
+      localStorage.setItem("isAdmin", "true");
+      document.getElementById("login").style.display = "none";
+      document.getElementById("main").style.display = "block";
+      displayPosts();
+    } else {
+      document.getElementById("login-error").innerText = "Wrong credentials.";
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("isAdmin");
+    isAdmin = false;
+    document.getElementById("main").style.display = "none";
+    document.getElementById("login").style.display = "block";
+  }
+
+  function addPost() {
+    const title = document.getElementById("title").value;
+    const content = document.getElementById("content").value;
+    const link = document.getElementById("link").value;
+    const image = document.getElementById("image").files[0];
+
+    if (!image) {
+      alert("Please choose an image.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const imgSrc = e.target.result;
+      const post = {
+        id: Date.now(),
+        title,
+        content,
+        link,
+        image: imgSrc,
+        date: new Date().toLocaleDateString(),
+        likes: 0
+      };
+      savePost(post);
+    };
+    reader.readAsDataURL(image);
+  }
+
+  function savePost(post) {
+    const posts = JSON.parse(localStorage.getItem("news") || "[]");
+    posts.unshift(post);
+    localStorage.setItem("news", JSON.stringify(posts));
+    displayPosts();
+    document.getElementById("title").value = "";
+    document.getElementById("content").value = "";
+    document.getElementById("link").value = "";
+    document.getElementById("image").value = "";
+  }
+
+  function displayPosts() {
+    const container = document.getElementById("posts");
+    container.innerHTML = "";
+    const posts = JSON.parse(localStorage.getItem("news") || "[]");
+
+    posts.forEach(post => {
+      const div = document.createElement("div");
+      div.className = "post";
+
+      div.innerHTML = `
+        <img src="${post.image}" />
+        <h4 contenteditable="${isAdmin}" onblur="updateField(${post.id}, 'title', this.innerText)">${post.title}</h4>
+        <p contenteditable="${isAdmin}" onblur="updateField(${post.id}, 'content', this.innerText)">${post.content}</p>
+        ${post.link ? `<a href="${post.link}" target="_blank" class="link">${post.link}</a>` : ""}
+        <p style="font-size: 12px; color: gray;">Posted on: ${post.date}</p>
+        <span class="heart" onclick="toggleLike(this, ${post.id})">♥</span> <span id="like-${post.id}">${post.likes}</span>
+        ${isAdmin ? `
+        <div class="actions">
+          <input type="text" placeholder="Update link" onblur="updateField(${post.id}, 'link', this.value)" value="${post.link || ''}">
+          <button class="edit-btn" onclick="changeImage(${post.id})">Change Image</button>
+          <button class="delete-btn" onclick="deletePost(${post.id})">Delete</button>
+        </div>` : ''}
+      `;
+
+      container.appendChild(div);
+    });
+  }
+
+  function deletePost(id) {
+    let posts = JSON.parse(localStorage.getItem("news") || "[]");
+    posts = posts.filter(p => p.id !== id);
+    localStorage.setItem("news", JSON.stringify(posts));
+    displayPosts();
+  }
+
+  function updateField(id, field, value) {
+    let posts = JSON.parse(localStorage.getItem("news") || "[]");
+    const index = posts.findIndex(p => p.id === id);
+    if (index > -1) {
+      posts[index][field] = value;
+      localStorage.setItem("news", JSON.stringify(posts));
+      displayPosts();
+    }
+  }
+
+  function toggleLike(elem, id) {
+    let posts = JSON.parse(localStorage.getItem("news") || "[]");
+    const post = posts.find(p => p.id === id);
+    if (post) {
+      const liked = elem.classList.contains("liked");
+      post.likes += liked ? -1 : 1;
+      localStorage.setItem("news", JSON.stringify(posts));
+      elem.classList.toggle("liked");
+      document.getElementById(`like-${id}`).innerText = post.likes;
+    }
+  }
+
+  function changeImage(id) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = function() {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        updateField(id, 'image', e.target.result);
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }
+
+  // ✅ فحص إذا الأدمن مسجّل دخول
+  window.onload = () => {
+    if (localStorage.getItem("isAdmin") === "true") {
+      isAdmin = true;
+      document.getElementById("login").style.display = "none";
+      document.getElementById("main").style.display = "block";
+    }
+    displayPosts();
+  };
+</script>
+
+</body>
+</html>
