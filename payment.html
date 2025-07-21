@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>طرق الدفع - الجمعية اللبنانية للإنماء</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Tahoma', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    .language-toggle {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background-color: #C1272D;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .logo {
+      margin: 50px auto 10px;
+    }
+
+    .logo img {
+      width: 140px;
+      border-radius: 10px;
+    }
+
+    h1 {
+      margin-top: 10px;
+      font-size: 24px;
+      color: #C1272D;
+    }
+
+    .description {
+      font-size: 16px;
+      margin: 15px auto 30px;
+      color: #555;
+      max-width: 90%;
+      line-height: 1.8;
+    }
+
+    .payment-methods {
+      max-width: 420px;
+      margin: auto;
+      padding: 0 20px;
+    }
+
+    .payment-option {
+      background-color: #fff;
+      border: 2px solid #C1272D;
+      border-radius: 10px;
+      margin: 12px 0;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      text-decoration: none;
+      color: inherit;
+      transition: 0.2s;
+    }
+
+    .payment-option:hover {
+      background-color: #C1272D;
+      color: #fff;
+      transform: scale(1.02);
+    }
+
+    .payment-option span {
+      font-size: 17px;
+    }
+
+    .payment-option img {
+      width: 32px;
+      height: 32px;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 15px 20px;
+      background-color: #C1272D;
+      color: #fff;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="language-toggle" onclick="toggleLanguage()">EN</button>
+
+  <div class="logo">
+    <img src="https://l.top4top.io/p_34860y2ax1.jpg" alt="شعار الجمعية">
+  </div>
+
+  <h1 id="title">طرق الدفع</h1>
+
+  <div class="description" id="description">
+    الجمعية اللبنانية للإنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة.  
+    يمكنك دعم الجمعية من خلال التبرع عبر إحدى الطرق التالية. نحن نضمن أمان العمليات وسرعة التوصيل، ويتم استخدام كل تبرع في مشاريع واقعية تخدم المجتمع. شكراً لمساهمتكم في التغيير.
+  </div>
+
+  <div class="payment-methods" id="payments">
+    <a href="https://www.paypal.com" class="payment-option" target="_blank">
+      <span>PayPal</span>
+      <img src="https://cdn-icons-png.flaticon.com/512/196/196578.png" alt="PayPal">
+    </a>
+    <a href="#" class="payment-option">
+      <span>Visa / MasterCard</span>
+      <img src="https://cdn-icons-png.flaticon.com/512/349/349221.png" alt="Visa">
+    </a>
+    <a href="#" class="payment-option">
+      <span>Payoneer</span>
+      <img src="https://cdn-icons-png.flaticon.com/512/731/731985.png" alt="Payoneer">
+    </a>
+    <a href="#" class="payment-option">
+      <span>Bitcoin</span>
+      <img src="https://cdn-icons-png.flaticon.com/512/888/888879.png" alt="Bitcoin">
+    </a>
+  </div>
+
+  <footer id="footer">
+    جميع الحقوق محفوظة © الجمعية اللبنانية للإنماء 2025
+  </footer>
+
+  <script>
+    let currentLang = "ar";
+
+    function toggleLanguage() {
+      if (currentLang === "ar") {
+        document.documentElement.lang = "en";
+        document.documentElement.dir = "ltr";
+        document.querySelector(".language-toggle").textContent = "عربي";
+        document.getElementById("title").textContent = "Payment Methods";
+        document.getElementById("description").textContent =
+          "The Lebanese Development Association is a non-profit organization dedicated to supporting families in need and empowering youth through sustainable programs. You can support us by donating using one of the secure methods below. Every donation contributes to real, impactful projects. Thank you for making a difference.";
+        const options = document.querySelectorAll(".payment-option span");
+        options[0].textContent = "PayPal";
+        options[1].textContent = "Visa / MasterCard";
+        options[2].textContent = "Payoneer";
+        options[3].textContent = "Bitcoin";
+        document.getElementById("footer").textContent = "All rights reserved © Lebanese Development Association 2025";
+        currentLang = "en";
+      } else {
+        document.documentElement.lang = "ar";
+        document.documentElement.dir = "rtl";
+        document.querySelector(".language-toggle").textContent = "EN";
+        document.getElementById("title").textContent = "طرق الدفع";
+        document.getElementById("description").textContent =
+          "الجمعية اللبنانية للإنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة. يمكنك دعم الجمعية من خلال التبرع عبر إحدى الطرق التالية. نحن نضمن أمان العمليات وسرعة التوصيل، ويتم استخدام كل تبرع في مشاريع واقعية تخدم المجتمع. شكراً لمساهمتكم في التغيير.";
+        const options = document.querySelectorAll(".payment-option span");
+        options[0].textContent = "PayPal";
+        options[1].textContent = "Visa / MasterCard";
+        options[2].textContent = "Payoneer";
+        options[3].textContent = "Bitcoin";
+        document.getElementById("footer").textContent = "جميع الحقوق محفوظة © الجمعية اللبنانية للإنماء 2025";
+        currentLang = "ar";
+      }
+    }
+  </script>
+</body>
+</html>
