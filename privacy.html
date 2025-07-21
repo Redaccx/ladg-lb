@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privacy Policy |   الجمعية اللبنانية للأنماء</title>
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      color: #333;
+      direction: ltr;
+      transition: direction 0.3s;
+    }
+    h1 {
+      color: #C1272D;
+    }
+    h2 {
+      margin-top: 30px;
+      color: #C1272D;
+    }
+    a {
+      color: #C1272D;
+      text-decoration: none;
+    }
+    .lang-switch {
+      margin-bottom: 20px;
+    }
+    .lang-switch button {
+      margin-right: 10px;
+      padding: 5px 10px;
+      border: none;
+      background: #C1272D;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .arabic { display: none; direction: rtl; }
+  </style>
+</head>
+<body>
+
+  <div class="lang-switch">
+    <button onclick="switchLang('en')">English</button>
+    <button onclick="switchLang('ar')">العربية</button>
+  </div>
+
+  <!-- English Content -->
+  <div class="english">
+    <h1>Privacy Policy</h1>
+    <p>Last updated: July 18, 2025</p>
+    <p>Lebanese Association For Development ("we", "our", or "the Association") is committed to protecting your privacy...</p>
+
+    <h2>1. Information We Collect</h2>
+    <ul>
+      <li>Name</li>
+      <li>Phone number</li>
+      <li>Email address</li>
+      <li>Donation/payment details</li>
+      <li>Messages through the website</li>
+    </ul>
+
+    <h2>2. How We Use Your Information</h2>
+    <ul>
+      <li>Process donations</li>
+      <li>Send updates</li>
+      <li>Respond to inquiries</li>
+      <li>Comply with legal obligations</li>
+    </ul>
+
+    <h2>3. Sharing of Information</h2>
+    <p>We never sell or rent your data. We may share with trusted services like payment processors, if needed.</p>
+
+    <h2>4. Your Rights</h2>
+    <ul>
+      <li>Access and update your info</li>
+      <li>Delete your data</li>
+      <li>Withdraw consent</li>
+    </ul>
+
+    <h2>5. Contact</h2>
+    <p>Email: <a href="mailto:info@amalcharity.org">info@amalcharity.org</a><br>
+    Phone: <a href="tel:+96170232001">+961 70 232 001</a></p>
+  </div>
+
+  <!-- Arabic Content -->
+  <div class="arabic">
+    <h1>سياسة الخصوصية</h1>
+    <p>آخر تحديث: 18 تموز 2025</p>
+    <p>الجمعية اللبنانية للأنماء ("نحن"، "الجمعية") ملتزمة بحماية خصوصيتكم ومعلوماتكم الشخصية...</p>
+
+    <h2>١. المعلومات التي نجمعها</h2>
+    <ul>
+      <li>الاسم</li>
+      <li>رقم الهاتف</li>
+      <li>البريد الإلكتروني</li>
+      <li>تفاصيل الدفع والتبرع</li>
+      <li>الرسائل عبر الموقع</li>
+    </ul>
+
+    <h2>٢. كيف نستخدم معلوماتك</h2>
+    <ul>
+      <li>معالجة التبرعات</li>
+      <li>إرسال التحديثات</li>
+      <li>الرد على الاستفسارات</li>
+      <li>الامتثال للمتطلبات القانونية</li>
+    </ul>
+
+    <h2>٣. مشاركة المعلومات</h2>
+    <p>نحن لا نبيع أو نؤجر معلوماتك. قد نشارك مع خدمات موثوقة عند الحاجة (مثل بوابات الدفع).</p>
+
+    <h2>٤. حقوقك</h2>
+    <ul>
+      <li>الوصول إلى بياناتك وتعديلها</li>
+      <li>طلب حذف بياناتك</li>
+      <li>سحب الموافقة على التواصل</li>
+    </ul>
+
+    <h2>٥. تواصل معنا</h2>
+    <p>📧 البريد الإلكتروني: <a href="mailto:info@amalcharity.org">info@amalcharity.org</a><br>
+    ☎️ الهاتف: <a href="tel:+96181112046">+961 81 112 046</a></p>
+  </div>
+
+  <script>
+    function switchLang(lang) {
+      const en = document.querySelector('.english');
+      const ar = document.querySelector('.arabic');
+      if (lang === 'ar') {
+        en.style.display = 'none';
+        ar.style.display = 'block';
+        document.body.dir = 'rtl';
+        document.documentElement.lang = 'ar';
+      } else {
+        en.style.display = 'block';
+        ar.style.display = 'none';
+        document.body.dir = 'ltr';
+        document.documentElement.lang = 'en';
+      }
+    }
+  </script>
+
+</body>
+</html>
