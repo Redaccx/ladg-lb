@@ -90,7 +90,11 @@
 <body>
 
 <header>
-<button href="index.html" class="back-btn">←<span id="backText"> رجوع </span></button>
+  
+<button class="back-btn" onclick="window.location.href='index.html'">
+  ← <span id="backText">رجوع</span>
+</button>
+
   <button class="lang-btn" onclick="toggleLanguage()"><span id="langText">English</span></button>
   <h1 id="pageTitle"> اخر الاخبار</h1>
 </header>
@@ -144,7 +148,7 @@
         <h3>${post.title}</h3>
         <p>${post.content}</p>
         ${post.link ? `<a href="${post.link}" class="link" target="_blank">${post.link}</a>` : ""}
-        <small>📅 ${post.date}</small><br/>
+        <small>🗓️${post.date}</small><br/>
         <span class="heart ${isLiked(post.id) ? 'liked' : ''}" onclick="toggleLike(this, ${post.id})">♥</span>
         <span id="like-${post.id}">${post.likes}</span>
       `;
