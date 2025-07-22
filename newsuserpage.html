@@ -85,47 +85,69 @@
     .heart.liked {
       color: red;
     }
+
+    #loadingMessage {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 16px;
+      color: gray;
+    }
   </style>
 </head>
 <body>
 
 <header>
-  
-<button class="back-btn" onclick="window.location.href='index.html'">
-  ← <span id="backText">رجوع</span>
-</button>
-
+  <button class="back-btn" onclick="window.location.href='index.html'">← <span id="backText">رجوع</span></button>
   <button class="lang-btn" onclick="toggleLanguage()"><span id="langText">English</span></button>
-  <h1 id="pageTitle"> اخر الاخبار</h1>
+  <h1 id="pageTitle">اخر الاخبار</h1>
 </header>
 
-<div id="postsContainer"></div>
+<div id="loadingMessage">⏳ جاري تحميل المنشورات...</div>
+<div id="postsContainer" style="display:none;"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  let currentLang = localStorage.getItem("lang") || "ar";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxbcWmHfbEFfZp1aYToB9mmqKQIVY5lFQ",
+    authDomain: "my-newss-app.firebaseapp.com",
+    projectId: "my-newss-app",
+    storageBucket: "my-newss-app.firebasestorage.app",
+    messagingSenderId: "848384049969",
+    appId: "1:848384049969:web:1a2aca7a0c3315e4966610"
+  };
 
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let currentLang = localStorage.getItem("lang") || "ar";
   const translations = {
     ar: {
-      title: " اخر الاخبار",
+      title: "اخر الاخبار",
       back: "رجوع",
       like: "إعجاب",
+      loading: "⏳ جاري تحميل المنشورات...",
+      empty: "لا يوجد منشورات حاليا"
     },
     en: {
-      title: "last News",
+      title: "Last News",
       back: "Back",
       like: "Like",
+      loading: "⏳ Loading posts...",
+      empty: "No posts available"
     }
   };
 
   function applyLanguage() {
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
-
     document.getElementById("pageTitle").innerText = translations[currentLang].title;
     document.getElementById("backText").innerText = translations[currentLang].back;
     document.getElementById("langText").innerText = currentLang === "ar" ? "English" : "عربي";
-
-    displayPosts();
+    document.getElementById("loadingMessage").innerText = translations[currentLang].loading;
+    loadPosts();
   }
 
   function toggleLanguage() {
@@ -134,60 +156,60 @@
     applyLanguage();
   }
 
-  function displayPosts() {
-    const container = document.getElementById("postsContainer");
-    container.innerHTML = "";
-    const posts = JSON.parse(localStorage.getItem("news") || "[]");
-
-    posts.forEach(post => {
-      const div = document.createElement("div");
-      div.className = "post";
-
-      div.innerHTML = `
-        <img src="${post.image}" alt="Post image" />
-        <h3>${post.title}</h3>
-        <p>${post.content}</p>
-        ${post.link ? `<a href="${post.link}" class="link" target="_blank">${post.link}</a>` : ""}
-        <small>🗓️${post.date}</small><br/>
-        <span class="heart ${isLiked(post.id) ? 'liked' : ''}" onclick="toggleLike(this, ${post.id})">♥</span>
-        <span id="like-${post.id}">${post.likes}</span>
-      `;
-
-      container.appendChild(div);
-    });
-  }
-
-  function toggleLike(elem, id) {
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    let posts = JSON.parse(localStorage.getItem("news") || "[]");
-    const post = posts.find(p => p.id === id);
-
-    if (!post) return;
-
-    const liked = likedPosts.includes(id);
-    if (liked) {
-      post.likes--;
-      const index = likedPosts.indexOf(id);
-      likedPosts.splice(index, 1);
-    } else {
-      post.likes++;
-      likedPosts.push(id);
-    }
-
-    localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
-    localStorage.setItem("news", JSON.stringify(posts));
-    elem.classList.toggle("liked");
-    document.getElementById(`like-${id}`).innerText = post.likes;
-  }
-
   function isLiked(id) {
     const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
     return likedPosts.includes(id);
   }
 
-  window.onload = () => {
-    applyLanguage();
-  };
+  function toggleLike(elem, id) {
+    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+    const liked = likedPosts.includes(id);
+    if (liked) {
+      likedPosts.splice(likedPosts.indexOf(id), 1);
+    } else {
+      likedPosts.push(id);
+    }
+    localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
+    elem.classList.toggle("liked");
+  }
+
+  async function loadPosts() {
+    const container = document.getElementById("postsContainer");
+    const loadingText = document.getElementById("loadingMessage");
+
+    container.innerHTML = "";
+    loadingText.style.display = "block";
+    container.style.display = "none";
+
+    const snapshot = await db.collection("news").orderBy("date", "desc").get();
+
+    if (snapshot.empty) {
+      loadingText.innerText = translations[currentLang].empty;
+      return;
+    }
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const id = doc.id;
+
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `
+        <img src="${data.image}" alt="post">
+        <h3>${data.title}</h3>
+        <p>${data.content}</p>
+        ${data.link ? `<a href="${data.link}" class="link" target="_blank">${data.link}</a>` : ""}
+        <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small><br/>
+        <span class="heart ${isLiked(id) ? 'liked' : ''}" onclick="toggleLike(this, '${id}')">♥</span>
+      `;
+      container.appendChild(div);
+    });
+
+    loadingText.style.display = "none";
+    container.style.display = "block";
+  }
+
+  window.onload = applyLanguage;
 </script>
 
 </body>
