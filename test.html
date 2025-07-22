@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin News Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Tahoma; background: #f7f7f7; padding: 20px; margin: 0; }
+    .container { max-width: 600px; margin: 40px auto; }
+    .news-form, .post, .login-form {
+      background: white;
+      padding: 15px;
+      margin: 20px auto;
+      border-radius: 6px;
+      box-shadow: 0 0 5px #ccc;
+      max-width: 600px;
+    }
+    input, textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #C1272D;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .post img {
+      width: 100%;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .logout-btn {
+      background: #555;
+      margin-bottom: 20px;
+    }
+    .error-msg {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div id="login-form" class="login-form">
+    <h3>Admin Login</h3>
+    <input type="text" id="username" placeholder="Username" autocomplete="off" />
+    <input type="password" id="password" placeholder="Password" autocomplete="off" />
+    <button onclick="login()">Login</button>
+    <p id="login-error" class="error-msg"></p>
+  </div>
+
+  <div id="admin-panel" style="display:none;">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <div class="news-form">
+      <h3>Add News Post</h3>
+      <input type="text" id="title" placeholder="Title" />
+      <textarea id="content" placeholder="Content"></textarea>
+      <input type="text" id="link" placeholder="External link (optional)" />
+      <input type="file" id="image" accept="image/*" />
+      <button onclick="addPost()">Add</button>
+    </div>
+  </div>
+
+  <div id="posts"></div>
+</div>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<script>
+  // بيانات مشروع Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxbcWmHfbEFfZp1aYToB9mmqKQIVY5lFQ",
+    authDomain: "my-newss-app.firebaseapp.com",
+    projectId: "my-newss-app",
+    storageBucket: "my-newss-app.appspot.com",
+    messagingSenderId: "848384049969",
+    appId: "1:848384049969:web:1a2aca7a0c3315e4966610"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  // بيانات دخول الأدمن
+  const ADMIN_USERNAME = "Beweble";
+  const ADMIN_PASSWORD = "Lebanon2025$";
+
+  // عناصر DOM
+  const loginForm = document.getElementById("login-form");
+  const adminPanel = document.getElementById("admin-panel");
+  const loginError = document.getElementById("login-error");
+
+  // تحقق هل الأدمن مسجل دخول سابقاً
+  window.onload = () => {
+    if(localStorage.getItem("isAdmin") === "true") {
+      showAdminPanel();
+    }
+    loadPosts();
+  };
+
+  function login() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+
+    if(user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+      localStorage.setItem("isAdmin", "true");
+      showAdminPanel();
+      loginError.textContent = "";
+    } else {
+      loginError.textContent = "Wrong username or password.";
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("isAdmin");
+    loginForm.style.display = "block";
+    adminPanel.style.display = "none";
+  }
+
+  function showAdminPanel() {
+    loginForm.style.display = "none";
+    adminPanel.style.display = "block";
+  }
+
+  async function addPost() {
+    const title = document.getElementById("title").value.trim();
+    const content = document.getElementById("content").value.trim();
+    const link = document.getElementById("link").value.trim();
+    const imageFile = document.getElementById("image").files[0];
+
+    if (!title || !content || !imageFile) {
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    try {
+      const imageRef = storage.ref('news_images/' + Date.now() + '_' + imageFile.name);
+      await imageRef.put(imageFile);
+      const imageUrl = await imageRef.getDownloadURL();
+
+      await db.collection("news").add({
+        title,
+        content,
+        link,
+        image: imageUrl,
+        date: new Date().toISOString()
+      });
+
+      alert("News added!");
+      loadPosts();
+      clearForm();
+    } catch (error) {
+      alert("Error adding news: " + error.message);
+    }
+  }
+
+  function clearForm() {
+    document.getElementById("title").value = "";
+    document.getElementById("content").value = "";
+    document.getElementById("link").value = "";
+    document.getElementById("image").value = "";
+  }
+
+  async function loadPosts() {
+    const container = document.getElementById("posts");
+    container.innerHTML = "";
+    const snapshot = await db.collection("news").orderBy("date", "desc").get();
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `
+        <img src="${data.image}" alt="News image">
+        <h4>${data.title}</h4>
+        <p>${data.content}</p>
+        ${data.link ? `<a href="${data.link}" target="_blank">${data.link}</a>` : ""}
+        <p style="font-size: 12px; color: gray;">${new Date(data.date).toLocaleString()}</p>
+      `;
+      container.appendChild(div);
+    });
+  }
+</script>
+
+</body>
+</html>
