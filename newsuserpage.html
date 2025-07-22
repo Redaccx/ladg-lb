@@ -74,16 +74,14 @@
       margin-top: 5px;
     }
 
-    .heart {
-      cursor: pointer;
-      color: gray;
-      font-size: 20px;
+    .share-btn {
+      background-color: #C1272D;
+      color: white;
+      border: none;
+      padding: 6px 12px;
       margin-top: 10px;
-      display: inline-block;
-    }
-
-    .heart.liked {
-      color: red;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     #loadingMessage {
@@ -127,14 +125,14 @@
     ar: {
       title: "اخر الاخبار",
       back: "رجوع",
-      like: "إعجاب",
+      share: "مشاركة",
       loading: "⏳ جاري تحميل المنشورات...",
       empty: "لا يوجد منشورات حاليا"
     },
     en: {
       title: "Last News",
       back: "Back",
-      like: "Like",
+      share: "Share",
       loading: "⏳ Loading posts...",
       empty: "No posts available"
     }
@@ -154,23 +152,6 @@
     currentLang = currentLang === "ar" ? "en" : "ar";
     localStorage.setItem("lang", currentLang);
     applyLanguage();
-  }
-
-  function isLiked(id) {
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    return likedPosts.includes(id);
-  }
-
-  function toggleLike(elem, id) {
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    const liked = likedPosts.includes(id);
-    if (liked) {
-      likedPosts.splice(likedPosts.indexOf(id), 1);
-    } else {
-      likedPosts.push(id);
-    }
-    localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
-    elem.classList.toggle("liked");
   }
 
   async function loadPosts() {
@@ -200,9 +181,28 @@
         <p>${data.content}</p>
         ${data.link ? `<a href="${data.link}" class="link" target="_blank">${data.link}</a>` : ""}
         <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small><br/>
-        <span class="heart ${isLiked(id) ? 'liked' : ''}" onclick="toggleLike(this, '${id}')">♥</span>
+        <button class="share-btn" data-title="${data.title}">📤 ${translations[currentLang].share}</button>
       `;
       container.appendChild(div);
+    });
+
+    // إضافة أحداث المشاركة
+    const shareButtons = container.querySelectorAll(".share-btn");
+    shareButtons.forEach(btn => {
+      const title = btn.getAttribute("data-title");
+      btn.addEventListener("click", () => {
+        if (navigator.share) {
+          navigator.share({
+            title: document.title,
+            text: title,
+            url: window.location.href
+          }).catch(err => console.log("لم تتم المشاركة:", err));
+        } else {
+          navigator.clipboard.writeText(title)
+            .then(() => alert("تم نسخ العنوان للمشاركة!"))
+            .catch(() => alert("حدث خطأ أثناء النسخ"));
+        }
+      });
     });
 
     loadingText.style.display = "none";
