@@ -252,6 +252,48 @@
 .apply-btn:hover {
   background-color: #a11e24;
 }
+
+.stats-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  flex: 0 0 30%;
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.stat-box h3 {
+  font-size: 26px;
+  margin: 5px 0;
+  color: #C1272D;
+}
+
+.stat-box p {
+  font-size: 15px;
+  color: #333;
+  margin: 0;
+}
+
+.pair-desc {
+  flex: 1;
+  font-size: 15px;
+  color: #444;
+  background-color: #f7f7f7;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+
   </style>
 </head>
 <body>
@@ -297,6 +339,41 @@
       <h2>أهداف الجمعية</h2>
       <p>- دعم العائلات الفقيرة والأيتام<br>- توفير الغذاء والدواء<br>- تعليم الأطفال<br>- العمل المجتمعي والتطوعي</p>
     </section>
+    
+    
+    <section class="section" id="stats">
+<h2 id="statsTitle">إحصائيات الجمعية</h2>
+  
+  <div class="stats-line">
+    <div class="stat-box">
+<h3><span class="count" data-target="1500">0</span>+</h3>
+<p class="stat-text" data-ar="مستفيد من خدماتنا" data-en="Beneficiaries Served"> مستفيد من خداماتنا </p>
+</div>
+    <div class="stat-box">
+      
+<h3><span class="count" data-target="170">0</span></h3>
+<p class="stat-text" data-ar=" متطوع نشط " data-en="Active Volunteer">  متطوع نشط  </p>
+    </div>
+
+<div class="pair-desc" id="desc1" data-ar="نخدم مئات الأفراد بمساعدة شبكة من المتطوعين." data-en="We serve hundreds with the help of our volunteer network.">
+  نخدم مئات الأفراد بمساعدة شبكة من المتطوعين.
+</div>
+
+  <div class="stats-line">
+    <div class="stat-box">
+   <h3><span class="count" data-target="1675">0</span>+</h3>
+<p class="stat-text" data-ar="مشروع تم تنفيذه " data-en="Project Implemented">مشروع تم تنفيذه</p>
+    </div>
+    <div class="stat-box">
+  <h3><span class="count" data-target="8">0</span></h3>
+<p class="stat-text" data-ar=" محافظات مستهدفة " data-en="Targeted Governorates">محافظات مستهدفة</p>
+    </div>
+<div class="pair-desc" id="desc2" data-ar="نعمل بفعالية في معظم المحافظات اللبنانية." data-en="We operate effectively in most Lebanese governorates.">
+  نعمل بفعالية في معظم المحافظات اللبنانية.
+</div>
+  </div>
+</section>
+
 
     <section class="section" id="donate">
       <h2>التبرع</h2>
@@ -438,6 +515,24 @@
     '- Support poor families and orphans<br>- Provide food and medicine<br>- Educate children<br>- Community and volunteer work' :
     '- دعم العائلات الفقيرة والأيتام<br>- توفير الغذاء والدواء<br>- تعليم الأطفال<br>- العمل المجتمعي والتطوعي';
   
+  
+  // قسم الإحصائيات
+  document.getElementById("statsTitle").textContent = isArabic ? "Association Statistics" : "إحصائيات الجمعية";
+  
+  // النصوص داخل stat-box
+  document.querySelectorAll('.stat-text').forEach(p => {
+    p.textContent = isArabic ? p.dataset.en : p.dataset.ar;
+  });
+  
+  // الفقرات الجانبية
+  document.getElementById("desc1").textContent = isArabic ?
+    document.getElementById("desc1").dataset.en :
+    document.getElementById("desc1").dataset.ar;
+  
+  document.getElementById("desc2").textContent = isArabic ?
+    document.getElementById("desc2").dataset.en :
+    document.getElementById("desc2").dataset.ar;
+  
   document.querySelector('#donate h2').textContent = isArabic ? 'Donate' : 'التبرع';
   document.querySelector('#donate p').textContent = isArabic ?
     'Help us restore hope… A single tap on the donate button could change a life.' :
@@ -495,6 +590,32 @@ if (isArabic) {
     }
     });
     }
+    
+    
+function animateCounts() {
+  const counters = document.querySelectorAll('.count');
+  counters.forEach(counter => {
+    const target = +counter.getAttribute('data-target');
+    const duration = 4000; // المدة الكاملة بالميلي ثانية
+    const stepTime = Math.max(Math.floor(duration / target), 20); // تحديد سرعة العد
+    
+    let current = 0;
+    const increment = () => {
+      current++;
+      counter.textContent = current;
+      if (current < target) {
+        setTimeout(increment, stepTime);
+      } else {
+        counter.textContent = target; // للتأكد من الوصول للرقم
+      }
+    };
+    
+    increment();
+  });
+}
+
+// شغل الأنميشن بعد تحميل الصفحة
+window.addEventListener('DOMContentLoaded', animateCounts);
     
     
   </script>
