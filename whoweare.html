@@ -7,12 +7,15 @@
   <style>
     body {
       font-family: Tahoma, sans-serif;
-      margin: 20px auto;
-      max-width: 720px; /* ضيقنا العرض لتسهيل القراءة */
+      margin: 20px auto 60px auto; /* مساحة سفلية لحقوق */
+      max-width: 720px;
       background: #f9f9f9;
       color: #333;
       padding: 0 20px;
       transition: direction 0.3s ease, text-align 0.3s ease;
+      min-height: 100vh;
+      box-sizing: border-box;
+      position: relative;
     }
     h1 {
       text-align: center;
@@ -46,6 +49,22 @@
       z-index: 1000;
       user-select: none;
     }
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      background-color: #C1272D;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+      box-sizing: border-box;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -73,6 +92,10 @@
     نلتزم في الجمعية اللبنانية للأنماء بالقيم الإنسانية، ونسعى لبناء مستقبل أفضل من خلال العمل المجتمعي، التعاون، والشفافية في كل خطواتنا.
   </p>
 
+  <footer>
+    © 2025 الجمعية اللبنانية للأنماء - جميع الحقوق محفوظة
+  </footer>
+
 <script>
   const langToggleBtn = document.getElementById('langToggle');
   const pageTitle = document.getElementById('pageTitle');
@@ -85,6 +108,7 @@
   const section3 = document.getElementById('section3');
   const section4 = document.getElementById('section4');
   const body = document.body;
+  const footer = document.querySelector('footer');
 
   let isArabic = true;
 
@@ -97,7 +121,8 @@
     title3: "مجالات العمل",
     sec3: "تعمل الجمعية على تنفيذ مبادرات في مجالات التعليم، الصحة، دعم الأسر المحتاجة، تمكين الشباب والمرأة، وتنمية المهارات، وذلك عبر برامج شفافة ومتكاملة تلبّي احتياجات المجتمع اللبناني بكل فئاته.",
     title4: "قيمنا",
-    sec4: "نلتزم في الجمعية اللبنانية للأنماء بالقيم الإنسانية، ونسعى لبناء مستقبل أفضل من خلال العمل المجتمعي، التعاون، والشفافية في كل خطواتنا."
+    sec4: "نلتزم في الجمعية اللبنانية للأنماء بالقيم الإنسانية، ونسعى لبناء مستقبل أفضل من خلال العمل المجتمعي، التعاون، والشفافية في كل خطواتنا.",
+    footer: "© 2025 الجمعية اللبنانية للأنماء - جميع الحقوق محفوظة"
   };
 
   const contentEnglish = {
@@ -109,7 +134,8 @@
     title3: "Fields of Work",
     sec3: "It implements initiatives in education, health, support for needy families, youth and women empowerment, and skills development through transparent and comprehensive programs that meet the needs of all Lebanese society segments.",
     title4: "Our Values",
-    sec4: "The Lebanese Development Association is committed to human values and strives to build a better future through community work, cooperation, and transparency in all its steps."
+    sec4: "The Lebanese Development Association is committed to human values and strives to build a better future through community work, cooperation, and transparency in all its steps.",
+    footer: "© 2025 Lebanese Development Association - All Rights Reserved"
   };
 
   langToggleBtn.addEventListener('click', () => {
@@ -124,6 +150,7 @@
       section3.textContent = contentEnglish.sec3;
       title4.textContent = contentEnglish.title4;
       section4.textContent = contentEnglish.sec4;
+      footer.textContent = contentEnglish.footer;
 
       langToggleBtn.textContent = "العربية";
       document.documentElement.lang = "en";
@@ -144,6 +171,7 @@
       section3.textContent = contentArabic.sec3;
       title4.textContent = contentArabic.title4;
       section4.textContent = contentArabic.sec4;
+      footer.textContent = contentArabic.footer;
 
       langToggleBtn.textContent = "English";
       document.documentElement.lang = "ar";
