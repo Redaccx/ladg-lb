@@ -284,12 +284,12 @@
 
 
     <section class="section" id="about">
-      <h2>من نحن</h2>
-      <p>الجمعية اللبنانية للأنماء هي جمعية غير ربحية تأسست في ١٢ أيلول ٢٠٠٧، وتسعى إلى تعزيز التنمية المستدامة في مختلف المناطق اللبنانية. انطلقت الجمعية من إيمانٍ عميق بأهمية تمكين الأفراد والمجتمعات، والعمل على تحسين ظروفهم المعيشية والاقتصادية والاجتماعية من خلال مشاريع تنموية هادفة وشراكات فاعلة.
-
-تعمل الجمعية على تنفيذ مبادرات في مجالات التعليم، الصحة، دعم الأسر المحتاجة، تمكين الشباب والمرأة، وتنمية المهارات، وذلك عبر برامج شفافة ومتكاملة تلبّي احتياجات المجتمع اللبناني بكل فئاته.
-
-نلتزم في الجمعية اللبنانية للإنماء بالقيم الإنسانية، ونسعى لبناء مستقبل أفضل من خلال العمل المجتمعي، التعاون، والشفافية في كل خطواتنا.
+      <h2> رسالتنا</h2>
+      <p>
+في الجمعية اللبنانية للأنماء، نؤمن بأن لكل فرد الحق في حياة كريمة وفرص متساوية للنمو والتقدّم.
+رسالتنا تتمثّل في تمكين الإنسان وبناء قدراته، وتعزيز روح المسؤولية والمشاركة المجتمعية.
+نعمل على تطوير مشاريع تنموية مستدامة، تركّز على التعليم، والصحة، والدعم الاجتماعي، بهدف تحسين نوعية الحياة في مختلف المناطق اللبنانية.
+نلتزم بالشفافية، والعدالة، والتعاون مع الشركاء المحليين والدوليين لتحقيق أثر فعلي ومستدام في المجتمع
 </p>
     </section>
 
@@ -332,7 +332,7 @@
 <a href="newsuserpage.html" data-ar="أخر الأخبار" data-en="Last news">اخر الاخبار</a>
 
 <a href="#goals" data-ar="أهداف الجمعية" data-en="Association Goals">أهداف الجمعية </a>
-<a href="#about" data-ar="من نحن" data-en="Who we are">من نحن</a>
+<a href="whoweare.html" data-ar="من نحن" data-en="Who we are">من نحن</a>
 <a href="privacy.html" data-ar="سياسة الخصوصية" data-en="Privacy Policy">سياسة الخصوصية</a>
   </div>
 
@@ -424,14 +424,14 @@
   document.documentElement.dir = isArabic ? 'ltr' : 'rtl';
   langBtn.textContent = isArabic ? 'العربية' : 'English';
   
-  document.querySelector('#about h2').textContent = isArabic ? 'Who We Are' : 'من نحن';
+  document.querySelector('#about h2').textContent = isArabic ? 'Our Mission' : 'رسالتنا ';
   
   // تحديث النصوص في الأقسام الرئيسية
   document.querySelector('#about p').textContent = isArabic ? 
   
-    '-The Lebanese Development Association is a non-profit organization established on september 12 2007 Our mission is to promote sustainable developmentacross various regions in Lebanon. The association was founded on a deep belief in the importance of empowering individuals and communities, and in improving their living, economic, and social conditions through purposeful development projects and effective partnerships.We implement initiatives in the fields of education, health, support for underprivileged families, youth and women empowerment, and skills development. Our programs are designed to be transparent, comprehensive, and responsive to the needs of all segments of Lebanese society.At the Lebanese Development Association, we are committed to human values and strive to build a better future through community work ,cooperation, and transparency in every step we take.' :
+    'At the Lebanese Development Association, we believe that every individual has the right to a dignified life and equal opportunities for growth and progress.Our mission is to empower people, build their capacities, and foster a spirit of responsibility and community participation.We work to develop sustainable development projects focusing on education, health, and social support, aiming to improve the quality of life across various regions in Lebanon We are committed to transparency, justice, and collaboration with local and international partners to create a real and lasting impact in society.' :
     
-    '-جمعية الأمل هي منظمة غير ربحية تعمل على دعم الأسر المحتاجة، وتوفير المساعدات الإنسانية، والتعليم، والرعاية الصحية.';
+    'في الجمعية اللبنانية للأنماء، نؤمن بأن لكل فرد الحق في حياة كريمة وفرص متساوية للنمو والتقدّم.رسالتنا تتمثّل في تمكين الإنسان وبناء قدراته، وتعزيز روح المسؤولية والمشاركة المجتمعية.نعمل على تطوير مشاريع تنموية مستدامة، تركّز على التعليم، والصحة، والدعم الاجتماعي، بهدف تحسين نوعية الحياة في مختلف المناطق اللبنانية.نلتزم بالشفافية، والعدالة، والتعاون مع الشركاء المحليين والدوليين لتحقيق أثر فعلي ومستدام في المجتمع';
   
   document.querySelector('#goals h2').textContent = isArabic ? 'Our Goals' : 'أهداف الجمعية';
   document.querySelector('#goals p').innerHTML = isArabic ?
