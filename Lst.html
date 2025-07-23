@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>آخر الأخبار</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+    }
+    #post-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: 30px auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #C1272D;
+    }
+    small {
+      display: block;
+      margin-top: 10px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>آخر الأخبار</h2>
+  <div id="post-content">جارٍ التحميل...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxbcWmHfbEFfZp1aYToB9mmqKQIVY5lFQ",
+      authDomain: "my-newss-app.firebaseapp.com",
+      projectId: "my-newss-app",
+      storageBucket: "my-newss-app.appspot.com",
+      messagingSenderId: "848384049969",
+      appId: "1:848384049969:web:7cc7fb699503d466966610"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function getLatestPost() {
+      const container = document.getElementById("post-content");
+      try {
+        const postsRef = collection(db, "posts");
+        const q = query(postsRef, orderBy("timestamp", "desc"), limit(1));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          container.textContent = "لا يوجد أخبار حالياً.";
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const time = data.timestamp
+            ? new Date(data.timestamp.seconds * 1000).toLocaleString('ar-EG', {
+                year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+              })
+            : "تاريخ غير متوفر";
+
+          container.innerHTML = `
+            <h3>${data.title || 'عنوان غير متوفر'}</h3>
+            <p>${data.content || 'محتوى غير متوفر'}</p>
+            <small>تاريخ النشر: ${time}</small>
+          `;
+        });
+      } catch (error) {
+        console.error("حدث خطأ أثناء جلب الأخبار:", error);
+        container.textContent = "حدث خطأ أثناء جلب الأخبار، الرجاء المحاولة لاحقاً.";
+      }
+    }
+
+    getLatestPost();
+  </script>
+
+</body>
+</html>
