@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تبرع عبر ويش ماني - جمعية الأمل الخيرية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      color: #333;
+      direction: rtl;
+      text-align: center;
+    }
+
+    header {
+      background-color: #c1272d;
+      color: white;
+      padding: 15px 10px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .lang-toggle, .back-btn {
+      padding: 5px 15px;
+      background: #fff;
+      color: #c1272d;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+
+    .header-center {
+      flex: 1;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      direction: rtl;
+    }
+
+    .logo {
+      width: 100px;
+      margin-top: 20px;
+    }
+
+    h1 {
+      color: #c1272d;
+      margin: 20px 0 10px;
+      font-size: 20px;
+    }
+
+    p {
+      max-width: 600px;
+      margin: 20px auto;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .donate-box {
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+    }
+
+    .donate-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      background: #c1272d;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      text-decoration: none;
+      margin-top: 15px;
+    }
+
+    .donate-btn:hover {
+      background: #a61f24;
+    }
+
+    .phone-number {
+      font-size: 20px;
+      margin-top: 10px;
+      color: #444;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 10px;
+      }
+
+      .header-center {
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="lang-toggle" onclick="toggleLanguage()">English</button>
+  <div class="header-center" id="assoc-name">الجمعية اللبنانية للأنماء</div>
+  <button class="back-btn" onclick="history.back()" id="back-btn">← رجوع</button>
+</header>
+
+<img src="https://f.top4top.io/p_34902je5a1.jpg" class="logo" alt="Wish Money Logo">
+
+<h1 id="title">تبرع الآن عبر Western Union </h1>
+<p id="desc">
+  تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج.
+</p>
+
+<div class="donate-box">
+  <div class="phone-number" id="phone-label"> أحلام النمر :</div>
+  <div class="phone-number" id="phone">81866177‬</div>
+  <a href="#donate" class="donate-btn" id="donate-btn">إرسال مستند التبرع </a>
+</div>
+
+<script>
+  function toggleLanguage() {
+    const isArabic = document.documentElement.lang === 'ar';
+
+    document.documentElement.lang = isArabic ? 'en' : 'ar';
+    document.body.dir = isArabic ? 'ltr' : 'rtl';
+
+    document.getElementById('assoc-name').textContent = isArabic ? ' Lebanese  Association for Development' : 'جمعية اللبنانية للأنماء ';
+    document.getElementById('title').textContent = isArabic ? 'Donate Now via Western Union ' : '  تبرع الآن عبر   Western Union ';
+    document.getElementById('desc').textContent = isArabic
+      ? 'A one-dollar donation might be small for you, but it can make a big difference in someone’s life'
+      : 'تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج..';
+    document.getElementById('phone-label').textContent = isArabic ? ' Ahlam al nemer:' : ' أحلام النمر :';
+    document.getElementById('donate-btn').textContent = isArabic ? 'Submit Donation Document' : 'إرسال مستند التبرع ';
+    document.querySelector('.lang-toggle').textContent = isArabic ? 'العربية' : 'English';
+    document.getElementById('back-btn').textContent = isArabic ? '← Back' : '← رجوع';
+  }
+</script>
+
+</body>
+</html>
