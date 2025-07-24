@@ -292,8 +292,15 @@
   border-radius: 8px;
   text-align: center;
 }
-
-
+.news-item {
+      background: #fff;
+      margin: 15px auto;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      max-width: 800px;
+    }
+    .news-item small { color: #777; }
   </style>
 </head>
 <body>
@@ -339,6 +346,7 @@
       <h2>أهداف الجمعية</h2>
       <p>- دعم العائلات الفقيرة والأيتام<br>- توفير الغذاء والدواء<br>- تعليم الأطفال<br>- العمل المجتمعي والتطوعي</p>
     </section>
+    
     
     
     <section class="section" id="stats">
@@ -395,6 +403,17 @@
   </a>
 </section>
 
+<section id="news" style="padding: 40px; background: #f9f9f9;">
+  <div style="max-width: 900px; margin: auto; text-align: center;">
+    <h2>آخر الأخبار</h2>
+    <div id="news-list"></div>
+    
+    <!-- زر "عرض المزيد" -->
+    <a href="newsuserpage" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #C1272D; color: white; text-decoration: none; border-radius: 5px;">
+      عرض المزيد
+    </a>
+  </div>
+</section>
 </section>
 
   </div>
@@ -429,7 +448,106 @@
   <a href="https://wa.me/96170232001" target="_blank" class="whatsapp-btn" title="تواصل عبر واتساب">
     <img src="https://cdn-icons-png.flaticon.com/32/733/733585.png" alt="WhatsApp" />
   </a>
+  
+    
+  <!-- 🔽 Firebase + JavaScript: لازم يكونوا آخر شي 🔽 -->
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxbcWmHfbEFfZp1aYToB9mmqKQIVY5lFQ",
+    authDomain: "my-newss-app.firebaseapp.com",
+    projectId: "my-newss-app",
+    storageBucket: "my-newss-app.firebasestorage.app",
+    messagingSenderId: "848384049969",
+    appId: "1:848384049969:web:1a2aca7a0c3315e4966610"
+  };
 
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  
+  const titleElement = document.getElementById("news-title");
+if (titleElement) {
+  titleElement.textContent = isArabic ? "آخر الأخبار" : "Latest News";
+}
+  const container = document.getElementById("news-list");
+  
+  db.collection("news")
+.orderBy("date", "desc")
+.limit(1)
+.get()
+.then((snapshot) => {
+if (!snapshot.empty) {
+const doc = snapshot.docs[0];
+const data = doc.data();
+
+ const image = data.image || "https://via.placeholder.com/800x400?text=No+Image";
+
+      const imgElement = document.createElement("img");
+      imgElement.src = image;
+      imgElement.alt = "صورة الخبر";
+      imgElement.style = "width: 100%; max-width: 800px; cursor: pointer; border-radius: 10px;";
+      imgElement.onclick = () => {
+        window.location.href = "news.html";
+      };
+
+    
+
+// تعامُل مع التاريخ:
+let dateObj = null;
+
+if (data.date) {
+if (typeof data.date.toDate === "function") {
+// إذا التاريخ Timestamp من Firestore
+dateObj = data.date.toDate();
+} else if (typeof data.date === "string") {
+// إذا التاريخ نص، حاول تحوله لكائن Date
+dateObj = new Date(data.date);
+if (isNaN(dateObj.getTime())) {
+dateObj = null; // إذا التاريخ غير صالح
+}
+}
+}
+
+const container = document.getElementById("news-list");
+
+// عرض التاريخ لو موجود
+if (dateObj) {
+const dateElement = document.createElement("p");
+dateElement.textContent = formatDate(dateObj);
+dateElement.style = "color: #777; margin-bottom: 10px;";
+container.appendChild(dateElement);
+}
+
+// عرض الصورة
+const img = document.createElement("img");
+img.src = image;
+img.alt = "صورة الخبر";
+img.style = "width: 100%; max-width: 800px; border-radius: 10px; cursor: pointer;";
+img.onclick = () => window.location.href = link;
+
+container.appendChild(img);
+} else {
+document.getElementById("news-list").innerHTML = "<p>لا توجد أخبار حالياً</p>";
+}
+})
+.catch((error) => {
+console.error("🚨 خطأ:", error);
+});
+
+// دالة تنسيق التاريخ (عربي)
+function formatDate(date) {
+const months = [
+"كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+"تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+];
+const day = date.getDate();
+const month = months[date.getMonth()];
+const year = date.getFullYear();
+return `${day} ${month} ${year}`;
+}
+</script>
   <script>
     function openNav() {
       document.getElementById("mySidebar").style.width = "250px";
@@ -496,7 +614,7 @@
     link.textContent = isArabic ? link.dataset.en : link.dataset.ar;
   });
   
-  document.getElementById('donate-btn-top').innerHTML = isArabic ? 'تبرع الآن' : 'Donate Now';
+  document.getElementById('donate-btn-top').innerHTML = isArabic ? ' Donate Now' : ' تبرع الأن';
   document.documentElement.lang = isArabic ? 'en' : 'ar';
   document.documentElement.dir = isArabic ? 'ltr' : 'rtl';
   langBtn.textContent = isArabic ? 'العربية' : 'English';
@@ -539,7 +657,14 @@
     'بمساعدة صغيرة منك، فينا نرجّع الأمل… زر التبرع بين إيديك.';
   
   document.querySelector('#donate a').textContent = isArabic ? 'Donate  ' : 'تبرع الأن ';
-  
+
+// عنوان قسم آخر الأخبار
+document.querySelector('#news h2').textContent = isArabic ? "Latest News" : "آخر الأخبار";
+
+// زر عرض المزيد
+const moreBtn = document.querySelector('#news a');
+if (moreBtn) moreBtn.textContent = isArabic ? "View More" : "عرض المزيد";  
+
   document.querySelector('footer div:nth-child(3)').textContent = isArabic ?
     '© 2025 Lebanese Association For Development - All Rights Reserved' :
     '© 2025 الجمعية اللبنانية للأنماء - جميع الحقوق محفوظة';
@@ -614,10 +739,11 @@ function animateCounts() {
   });
 }
 
+
 // شغل الأنميشن بعد تحميل الصفحة
 window.addEventListener('DOMContentLoaded', animateCounts);
-    
-    
-  </script>
+
+
+</script>
 </body>
 </html>
