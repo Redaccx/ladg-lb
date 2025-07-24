@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>نظام تتبع المبيعات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #f4f6f9;
+      color: #333;
+      padding: 0 10px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto 50px auto;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+    }
+
+    input, select, button {
+      padding: 8px;
+      margin: 6px 0;
+      width: 100%;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .sale-item {
+      background: #fafafa;
+      padding: 12px 15px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .sale-info {
+      flex: 1;
+      padding-right: 10px;
+      word-break: break-word;
+    }
+
+    .btn-group button {
+      margin-left: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 4px;
+    }
+
+    .print-btn {
+      background-color: #28a745;
+    }
+
+    .print-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+    }
+
+    .delete-btn:hover {
+      background-color: #a71d2a;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .stats {
+      background: #f1f1f1;
+      padding: 15px;
+      margin-top: 25px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 15px;
+    }
+
+    /* Responsive */
+    @media(max-width: 480px) {
+      .sale-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn-group {
+        margin-top: 8px;
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+      }
+      .btn-group button {
+        margin-left: 0;
+        margin-right: 8px;
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="loginBox">
+    <h1>تسجيل الدخول</h1>
+    <input type="text" id="username" placeholder="أدخل اسم المستخدم" />
+    <input type="password" id="password" placeholder="كلمة المرور" />
+    <button onclick="login()">دخول</button>
+    <p>المستخدمون: رضا(123)، حسن(456)، علي(789)</p>
+  </div>
+
+  <div class="container hidden" id="mainBox">
+    <div class="topbar">
+      <span>مرحباً <strong id="userWelcome"></strong></span>
+      <div>
+        <button onclick="logout()" style="background:#6c757d; margin-left: 10px;">🚪 تسجيل خروج</button>
+        <button onclick="clearAll()" style="background:#dc3545;">🗑 حذف الكل</button>
+      </div>
+    </div>
+
+    <h2>إضافة عملية بيع</h2>
+    <select id="type" onchange="toggleFields()">
+      <option value="موقع">موقع</option>
+      <option value="سوشال">خدمات سوشال ميديا</option>
+      <option value="تطبيق">تطبيق</option>
+    </select>
+
+    <input type="text" id="title" placeholder="عنوان العملية" />
+    <input type="number" id="price" placeholder="المبلغ بالدولار" />
+
+    <input type="text" id="link" placeholder="رابط المشروع (للمواقع فقط)" />
+
+    <select id="socialType" class="hidden">
+      <option>استرجاع حساب مهكر</option>
+      <option>استرجاع حساب مبند</option>
+      <option>استرجاع حساب معطل</option>
+      <option>استرجاع حساب مخفي</option>
+      <option>غير ذلك</option>
+    </select>
+
+    <select id="paid">
+      <option value="مدفوع">مدفوع</option>
+      <option value="غير مدفوع">غير مدفوع</option>
+    </select>
+
+    <button onclick="addSale()">➕ إضافة</button>
+
+    <h3>قائمة المبيعات</h3>
+    <input type="text" id="search" placeholder="بحث..." oninput="renderSales()" />
+
+    <ul id="salesList"></ul>
+
+    <div class="stats" id="stats">
+      <h3>الإحصائيات</h3>
+      <div>عدد المواقع: <span id="siteCount">0</span></div>
+      <div>عدد خدمات السوشال: <span id="socialCount">0</span></div>
+      <div>عدد التطبيقات: <span id="appCount">0</span></div>
+      <div>إجمالي المدفوع: $<span id="totalPaid">0</span></div>
+      <div>إجمالي غير المدفوع: $<span id="totalUnpaid">0</span></div>
+    </div>
+  </div>
+
+<script>
+  const users = {
+    "رضا": "123",
+    "حسن": "456",
+    "علي": "789"
+  };
+
+  let currentUser = "";
+  let sales = [];
+
+  function login() {
+    const u = document.getElementById("username").value.trim();
+    const p = document.getElementById("password").value.trim();
+    if(users[u] && users[u] === p) {
+      currentUser = u;
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("mainBox").classList.remove("hidden");
+      document.getElementById("userWelcome").textContent = u;
+      loadSales();
+      toggleFields();
+    } else {
+      alert("بيانات الدخول غير صحيحة");
+    }
+  }
+
+  function logout() {
+    currentUser = "";
+    sales = [];
+    document.getElementById("loginBox").classList.remove("hidden");
+    document.getElementById("mainBox").classList.add("hidden");
+    document.getElementById("username").value = "";
+    document.getElementById("password").value = "";
+  }
+
+  function toggleFields() {
+    const type = document.getElementById("type").value;
+    document.getElementById("link").classList.toggle("hidden", type !== "موقع");
+    document.getElementById("socialType").classList.toggle("hidden", type !== "سوشال");
+  }
+
+  function addSale() {
+    const type = document.getElementById("type").value;
+    const title = document.getElementById("title").value.trim();
+    const price = parseFloat(document.getElementById("price").value);
+    const link = document.getElementById("link").value.trim();
+    const paid = document.getElementById("paid").value;
+    const socialType = document.getElementById("socialType").value;
+    const date = new Date().toLocaleString();
+
+    if (!title || isNaN(price)) {
+      alert("يرجى تعبئة الاسم والسعر بشكل صحيح");
+      return;
+    }
+
+    let detail = `${title} - $${price.toFixed(2)} - ${paid} - ${date}`;
+    if (type === "موقع") detail += ` - رابط: ${link}`;
+    if (type === "سوشال") detail += ` - نوع الخدمة: ${socialType}`;
+
+    sales.push({type, detail, price, paid});
+    saveSales();
+    renderSales();
+    clearInputs();
+  }
+
+  function clearInputs() {
+    document.getElementById("title").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("link").value = "";
+  }
+
+  function saveSales() {
+    localStorage.setItem(currentUser + "_sales", JSON.stringify(sales));
+  }
+
+  function loadSales() {
+    sales = JSON.parse(localStorage.getItem(currentUser + "_sales") || "[]");
+    renderSales();
+  }
+
+  // حذف عملية محددة
+  function deleteSale(index) {
+    if (confirm("هل تريد حذف هذه العملية؟")) {
+      sales.splice(index, 1);
+      saveSales();
+      renderSales();
+    }
+  }
+
+  function renderSales() {
+    const list = document.getElementById("salesList");
+    const searchTerm = document.getElementById("search").value.trim().toLowerCase();
+    list.innerHTML = "";
+
+    let countSite = 0, countSocial = 0, countApp = 0;
+    let totalPaid = 0, totalUnpaid = 0;
+
+    sales.forEach((sale, i) => {
+      if (!sale.detail || typeof sale.detail !== "string" || !sale.detail.toLowerCase().includes(searchTerm)) return;
+
+      if (sale.type === "موقع") countSite++;
+      else if (sale.type === "سوشال") countSocial++;
+      else if (sale.type === "تطبيق") countApp++;
+
+      if (sale.paid === "مدفوع") totalPaid += sale.price;
+      else totalUnpaid += sale.price;
+
+      const li = document.createElement("li");
+      li.className = "sale-item";
+
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "sale-info";
+      infoDiv.textContent = `${sale.type} - ${sale.detail}`;
+
+      const btnGroup = document.createElement("div");
+      btnGroup.className = "btn-group";
+
+      const btnPrint = document.createElement("button");
+      btnPrint.textContent = "🖨 طباعة";
+      btnPrint.className = "print-btn";
+      btnPrint.onclick = () => printSale(sale);
+
+      const btnDelete = document.createElement("button");
+      btnDelete.textContent = "❌ حذف";
+      btnDelete.className = "delete-btn";
+      btnDelete.onclick = () => deleteSale(i);
+
+      btnGroup.appendChild(btnPrint);
+      btnGroup.appendChild(btnDelete);
+
+      li.appendChild(infoDiv);
+      li.appendChild(btnGroup);
+
+      list.appendChild(li);
+    });
+
+    document.getElementById("siteCount").textContent = countSite;
+    document.getElementById("socialCount").textContent = countSocial;
+    document.getElementById("appCount").textContent = countApp;
+    document.getElementById("totalPaid").textContent = totalPaid.toFixed(2);
+    document.getElementById("totalUnpaid").textContent = totalUnpaid.toFixed(2);
+  }
+
+  function printSale(sale) {
+    const content = `
+نوع العملية: ${sale.type}
+التفاصيل: ${sale.detail}
+السعر: $${sale.price.toFixed(2)}
+حالة الدفع: ${sale.paid}
+    `;
+    const win = window.open("", "Print", "width=600,height=400");
+    win.document.write("<pre style='font-size:16px; font-family: Tahoma, sans-serif;'>" + content + "</pre>");
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
+  }
+
+  function clearAll() {
+    if(confirm("هل تريد حذف كل البيانات؟")) {
+      sales = [];
+      saveSales();
+      renderSales();
+    }
+  }
+</script>
+
+</body>
+</html>
