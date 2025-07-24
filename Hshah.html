@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فاتورة البيع</title>
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    .form-section, .invoice-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 800px;
+      margin: 20px auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .invoice {
+      direction: rtl;
+    }
+
+    .invoice-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    .total {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .invoice-section, .invoice-section * {
+        visibility: visible;
+      }
+      .invoice-section {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        margin: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>مولد فاتورة</h1>
+
+  <div class="form-section">
+    <label>اسم العميل:</label>
+    <input type="text" id="clientName">
+
+    <label>التاريخ:</label>
+    <input type="date" id="invoiceDate">
+
+    <label>اسم المنتج / الخدمة:</label>
+    <input type="text" id="itemName">
+
+    <label>الكمية:</label>
+    <input type="number" id="quantity" value="1">
+
+    <label>السعر للوحدة ($):</label>
+    <input type="number" id="price" value="0">
+
+    <label>ملاحظات:</label>
+    <textarea id="notes" placeholder="مثلاً: شكراً لثقتكم بنا..."></textarea>
+
+    <button onclick="generateInvoice()">إنشاء الفاتورة</button>
+  </div>
+
+  <div class="invoice-section" id="invoiceSection" style="display:none;">
+    <div class="invoice">
+      <div class="invoice-header">
+        <h2>فاتورة بيع</h2>
+      </div>
+      <p><strong>العميل:</strong> <span id="outClient"></span></p>
+      <p><strong>التاريخ:</strong> <span id="outDate"></span></p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>المنتج</th>
+            <th>الكمية</th>
+            <th>السعر للوحدة</th>
+            <th>الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="outItem"></td>
+            <td id="outQty"></td>
+            <td id="outPrice"></td>
+            <td id="outTotal"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="total">الإجمالي الكلي: $<span id="finalTotal"></span></p>
+      <p><strong>ملاحظات:</strong> <span id="outNotes"></span></p>
+
+      <button onclick="window.print()">🖨 طباعة الفاتورة</button>
+    </div>
+  </div>
+
+  <script>
+    function generateInvoice() {
+      const name = document.getElementById("clientName").value;
+      const date = document.getElementById("invoiceDate").value;
+      const item = document.getElementById("itemName").value;
+      const qty = parseInt(document.getElementById("quantity").value);
+      const price = parseFloat(document.getElementById("price").value);
+      const notes = document.getElementById("notes").value;
+
+      if (!name || !date || !item || qty <= 0 || price <= 0) {
+        alert("يرجى تعبئة جميع الحقول بشكل صحيح.");
+        return;
+      }
+
+      document.getElementById("outClient").textContent = name;
+      document.getElementById("outDate").textContent = date;
+      document.getElementById("outItem").textContent = item;
+      document.getElementById("outQty").textContent = qty;
+      document.getElementById("outPrice").textContent = `$${price.toFixed(2)}`;
+      document.getElementById("outTotal").textContent = `$${(qty * price).toFixed(2)}`;
+      document.getElementById("finalTotal").textContent = (qty * price).toFixed(2);
+      document.getElementById("outNotes").textContent = notes;
+
+      document.getElementById("invoiceSection").style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
