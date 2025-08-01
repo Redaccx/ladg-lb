@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>التحقق من بطاقة الموظف</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -55,6 +55,8 @@
       margin-top: 10px;
       font-size: 14px;
       opacity: 0.8;
+      direction: ltr;
+      unicode-bidi: embed;
     }
     
     #name-display {
@@ -107,7 +109,6 @@
   </footer>
 
   <script>
-    // كائن يربط رقم البطاقة باسم الموظف
     const employees = {
       "123-456-7895": "أحمد محمد",
       "123-456-7894": "سارة علي",
@@ -132,7 +133,7 @@
     if (!id) {
       showResult("⚠️ لم يتم إدخال رقم بطاقة في الرابط.", "yellow");
     } else {
-      idDisplay.innerHTML = `رقم البطاقة: <strong>${id}</strong>`;
+      idDisplay.innerHTML = `ID: <strong>${id}</strong>`;
       setTimeout(() => {
         if (employees.hasOwnProperty(id)) {
           showResult("✅ بطاقة موثقة - الموظف مسجل رسميًا", "#66ff88");
@@ -141,7 +142,7 @@
           showResult("❌ هذه البطاقة غير مسجلة في النظام", "#ffdd66");
           nameDisplay.textContent = "";
         }
-      }, 2000); // محاكاة تحقق
+      }, 2000);
     }
   </script>
 
