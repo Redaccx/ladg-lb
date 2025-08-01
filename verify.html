@@ -1,214 +1,88 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <title>التحقق من بطاقة الموظف</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>التحقق من البطاقة - الجمعية اللبنانية للإنماء</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: linear-gradient(135deg, #C1272D, #650000);
+      background: linear-gradient(to right, #C1272D, #870000);
+      color: white;
       margin: 0;
       padding: 0;
-      color: white;
       direction: rtl;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
     }
 
-    .card {
-      background-color: rgba(255, 255, 255, 0.1);
-      padding: 20px 25px;
+    .box {
+      background-color: rgba(255,255,255,0.08);
+      padding: 40px;
       border-radius: 15px;
       text-align: center;
-      width: 85%;
-      max-width: 320px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-      animation: slideIn 1s ease-out;
-      border: 3px solid transparent;
-      transition: border-color 0.3s ease;
-      position: relative;
-    }
-
-    .card.verified {
-      border-color: #2196f3; /* أزرق توثيق */
-      box-shadow: 0 0 25px #2196f3;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      animation: fadeIn 1.2s ease-in-out;
+      max-width: 400px;
     }
 
     h1 {
-      font-size: 26px;
+      font-size: 24px;
       margin-bottom: 20px;
-      color: #fff;
     }
 
-    #check-msg {
-      font-size: 18px;
-      margin: 15px 0;
-      color: #ffd;
-      display: none;
-    }
-
-    #status {
+    #result {
+      font-size: 20px;
       margin-top: 20px;
-      font-size: 22px;
       font-weight: bold;
-      min-height: 50px;
-      transition: all 0.3s ease-in-out;
     }
 
-    #id-display {
-      margin-top: 10px;
-      font-size: 16px;
-      opacity: 0.8;
-    }
-
-    button {
-      margin-top: 15px;
-      padding: 10px 25px;
-      background-color: #ffffff;
-      color: #C1272D;
-      border: none;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      width: 100%;
-      font-size: 16px;
-    }
-
-    button:hover {
-      background-color: #C1272D;
-      color: white;
-    }
-
-    /* لودينغ دوار */
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #C1272D;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      vertical-align: middle;
-      margin-left: 10px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     footer {
-      position: absolute;
+      position: fixed;
       bottom: 10px;
-      text-align: center;
-      font-size: 12px;
-      opacity: 0.6;
       width: 100%;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateY(30px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.6;
     }
   </style>
 </head>
 <body>
-
-  <div class="card" id="card">
-    <h1>نظام التحقق من بطاقة موظف</h1>
-    <input type="text" id="cardNumber" placeholder="ادخل رقم البطاقة أو ضع الرابط هنا" />
-    <button id="verifyBtn">تحقق</button>
-    <div id="check-msg"><span class="loader"></span> جاري التحقق...</div>
-    <div id="status"></div>
-    <div id="id-display"></div>
+  <div class="box">
+    <h1>التحقق من بطاقة موظف</h1>
+    <div id="result">جاري التحقق...</div>
   </div>
 
   <footer>
-    © 2025 الجمعية اللبنانية للأنماء
+    © الجمعية اللبنانية للإنماء - 2025
   </footer>
 
   <script>
+    // معرفات صالحة مسبقًا
     const validIDs = ["124578", "998877", "202512", "775533", "000111"];
 
-    const cardInput = document.getElementById("cardNumber");
-    const status = document.getElementById("status");
-    const idDisplay = document.getElementById("id-display");
-    const checkMsg = document.getElementById("check-msg");
-    const verifyBtn = document.getElementById("verifyBtn");
-    const cardDiv = document.getElementById("card");
-
-    function clearStatus() {
-      status.textContent = "";
-      idDisplay.textContent = "";
-      cardDiv.classList.remove("verified");
-    }
-
-    function verifyID(id) {
-      checkMsg.style.display = "inline-block";
-      status.textContent = "";
-      idDisplay.textContent = "";
-      cardDiv.classList.remove("verified");
-
-      setTimeout(() => {
-        checkMsg.style.display = "none";
-        idDisplay.innerHTML = `رقم البطاقة: <strong>${id}</strong>`;
-
-        if (validIDs.includes(id)) {
-          status.textContent = "✅ بطاقة موثقة - الموظف مسجل رسميًا";
-          status.style.color = "#2196f3"; // أزرق توثيق
-          cardDiv.classList.add("verified");
-        } else {
-          status.textContent = "❌ هذه البطاقة غير مسجلة في النظام";
-          status.style.color = "#ffdd66";
-        }
-      }, 2000);
-    }
-
-    verifyBtn.addEventListener("click", () => {
-      clearStatus();
-      let val = cardInput.value.trim();
-
-      if (!val) {
-        status.textContent = "⚠️ الرجاء إدخال رقم البطاقة أو رابط يحتوي على id";
-        status.style.color = "yellow";
-        return;
-      }
-
-      // إذا المستخدم حط رابط كامل، حاول نجيب قيمة id منه
-      if (val.includes("?id=")) {
-        try {
-          const urlParams = new URLSearchParams(val.split("?")[1]);
-          const extractedId = urlParams.get("id");
-          if (extractedId) {
-            val = extractedId;
-          }
-        } catch (e) {
-          // إذا الرابط مش صحيح، نستخدم النص كما هو
-        }
-      }
-
-      verifyID(val);
-    });
-
-    // لو في id بالرابط، نعرضه تلقائي في الحقل
+    // استخراج id من الرابط
     const urlParams = new URLSearchParams(window.location.search);
-    const initialId = urlParams.get("id");
-    if (initialId) {
-      cardInput.value = initialId;
-      verifyID(initialId);
+    const id = urlParams.get('id');
+    const result = document.getElementById("result");
+
+    if (!id) {
+      result.innerHTML = "⚠️ لم يتم إدخال رقم بطاقة.";
+      result.style.color = "yellow";
+    } else if (validIDs.includes(id)) {
+      result.innerHTML = "✅ بطاقة موثوقة - الموظف مسجل في النظام";
+      result.style.color = "lightgreen";
+    } else {
+      result.innerHTML = "❌ هذه البطاقة غير مسجلة - يرجى التأكد";
+      result.style.color = "#ffd700";
     }
   </script>
-
 </body>
 </html>
