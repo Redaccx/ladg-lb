@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verified Staff ID</title>
+  <style>
+    body {
+      background: #f2f2f2;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      padding: 30px 40px;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .check {
+      font-size: 2.2rem;
+      color: green;
+      animation: bounce 1s infinite alternate;
+    }
+
+    .title {
+      font-size: 1.6rem;
+      color: #C1272D; /* اللون المطلوب */
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .desc {
+      font-size: 1rem;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-5px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="check">✅</div>
+    <div class="title">Verified Staff ID</div>
+    <div class="desc">
+      This ID card is officially issued by <br>
+      <strong style="color: #C1272D;">The Lebanese Association for Development</strong>.
+    </div>
+  </div>
+</body>
+</html>
