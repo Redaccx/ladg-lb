@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>التحقق من بطاقة الموظف</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -19,16 +19,24 @@
       overflow: hidden;
     }
 
-.card {
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 20px 25px;
-  border-radius: 15px;
-  text-align: center;
-  width: 85%;
-  max-width: 320px; /* ← هنا صغّرنا البطاقة */
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
-  animation: slideIn 1s ease-out;
-}
+    .card {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px 25px;
+      border-radius: 15px;
+      text-align: center;
+      width: 85%;
+      max-width: 320px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      animation: slideIn 1s ease-out;
+      border: 3px solid transparent;
+      transition: border-color 0.3s ease;
+      position: relative;
+    }
+
+    .card.verified {
+      border-color: #2196f3; /* أزرق توثيق */
+      box-shadow: 0 0 25px #2196f3;
+    }
 
     h1 {
       font-size: 26px;
@@ -37,10 +45,10 @@
     }
 
     #check-msg {
-      font-size: 20px;
+      font-size: 18px;
       margin: 15px 0;
-      animation: pulse 1s infinite;
       color: #ffd;
+      display: none;
     }
 
     #status {
@@ -57,6 +65,43 @@
       opacity: 0.8;
     }
 
+    button {
+      margin-top: 15px;
+      padding: 10px 25px;
+      background-color: #ffffff;
+      color: #C1272D;
+      border: none;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #C1272D;
+      color: white;
+    }
+
+    /* لودينغ دوار */
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #C1272D;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     footer {
       position: absolute;
       bottom: 10px;
@@ -64,12 +109,6 @@
       font-size: 12px;
       opacity: 0.6;
       width: 100%;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.6; }
-      50% { opacity: 1; }
-      100% { opacity: 0.6; }
     }
 
     @keyframes slideIn {
@@ -86,9 +125,11 @@
 </head>
 <body>
 
-  <div class="card">
+  <div class="card" id="card">
     <h1>نظام التحقق من بطاقة موظف</h1>
-    <div id="check-msg">🔄 جاري التحقق...</div>
+    <input type="text" id="cardNumber" placeholder="ادخل رقم البطاقة أو ضع الرابط هنا" />
+    <button id="verifyBtn">تحقق</button>
+    <div id="check-msg"><span class="loader"></span> جاري التحقق...</div>
     <div id="status"></div>
     <div id="id-display"></div>
   </div>
@@ -100,29 +141,72 @@
   <script>
     const validIDs = ["124578", "998877", "202512", "775533", "000111"];
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get("id");
+    const cardInput = document.getElementById("cardNumber");
     const status = document.getElementById("status");
     const idDisplay = document.getElementById("id-display");
     const checkMsg = document.getElementById("check-msg");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const cardDiv = document.getElementById("card");
 
-    function showResult(message, color) {
-      status.textContent = message;
-      status.style.color = color;
-      checkMsg.style.display = "none";
+    function clearStatus() {
+      status.textContent = "";
+      idDisplay.textContent = "";
+      cardDiv.classList.remove("verified");
     }
 
-    if (!id) {
-      showResult("⚠️ لم يتم إدخال رقم بطاقة في الرابط.", "yellow");
-    } else {
-      idDisplay.innerHTML = `رقم البطاقة: <strong>${id}</strong>`;
+    function verifyID(id) {
+      checkMsg.style.display = "inline-block";
+      status.textContent = "";
+      idDisplay.textContent = "";
+      cardDiv.classList.remove("verified");
+
       setTimeout(() => {
+        checkMsg.style.display = "none";
+        idDisplay.innerHTML = `رقم البطاقة: <strong>${id}</strong>`;
+
         if (validIDs.includes(id)) {
-          showResult("✅ بطاقة موثقة - الموظف مسجل رسميًا", "#66ff88");
+          status.textContent = "✅ بطاقة موثقة - الموظف مسجل رسميًا";
+          status.style.color = "#2196f3"; // أزرق توثيق
+          cardDiv.classList.add("verified");
         } else {
-          showResult("❌ هذه البطاقة غير مسجلة في النظام", "#ffdd66");
+          status.textContent = "❌ هذه البطاقة غير مسجلة في النظام";
+          status.style.color = "#ffdd66";
         }
-      }, 2000); // محاكاة تحقق
+      }, 2000);
+    }
+
+    verifyBtn.addEventListener("click", () => {
+      clearStatus();
+      let val = cardInput.value.trim();
+
+      if (!val) {
+        status.textContent = "⚠️ الرجاء إدخال رقم البطاقة أو رابط يحتوي على id";
+        status.style.color = "yellow";
+        return;
+      }
+
+      // إذا المستخدم حط رابط كامل، حاول نجيب قيمة id منه
+      if (val.includes("?id=")) {
+        try {
+          const urlParams = new URLSearchParams(val.split("?")[1]);
+          const extractedId = urlParams.get("id");
+          if (extractedId) {
+            val = extractedId;
+          }
+        } catch (e) {
+          // إذا الرابط مش صحيح، نستخدم النص كما هو
+        }
+      }
+
+      verifyID(val);
+    });
+
+    // لو في id بالرابط، نعرضه تلقائي في الحقل
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialId = urlParams.get("id");
+    if (initialId) {
+      cardInput.value = initialId;
+      verifyID(initialId);
     }
   </script>
 
