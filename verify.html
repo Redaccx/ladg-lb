@@ -19,16 +19,16 @@
       overflow: hidden;
     }
 
- .card {
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 20px 25px;
-  border-radius: 15px;
-  text-align: center;
-  width: 85%;
-  max-width: 320px; /* ← هنا صغّرنا البطاقة */
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
-  animation: slideIn 1s ease-out;
-}
+    .card {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px 25px;
+      border-radius: 15px;
+      text-align: center;
+      width: 85%;
+      max-width: 320px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      animation: slideIn 1s ease-out;
+    }
 
     h1 {
       font-size: 22px;
@@ -55,6 +55,14 @@
       margin-top: 10px;
       font-size: 14px;
       opacity: 0.8;
+    }
+    
+    #name-display {
+      margin-top: 5px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #aaf;
+      opacity: 0.9;
     }
 
     footer {
@@ -91,6 +99,7 @@
     <div id="check-msg">🔄 جاري التحقق...</div>
     <div id="status"></div>
     <div id="id-display"></div>
+    <div id="name-display"></div>
   </div>
 
   <footer>
@@ -98,12 +107,20 @@
   </footer>
 
   <script>
-    const validIDs = ["123-456-7895", "123-456-7894", "123-456-7893", "123-456-7892", "123-456-7891"];
+    // كائن يربط رقم البطاقة باسم الموظف
+    const employees = {
+      "123-456-7895": "أحمد محمد",
+      "123-456-7894": "سارة علي",
+      "123-456-7893": "محمود حسن",
+      "123-456-7892": "ليلى عبد الله",
+      "123-456-7891": "يوسف إبراهيم"
+    };
 
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");
     const status = document.getElementById("status");
     const idDisplay = document.getElementById("id-display");
+    const nameDisplay = document.getElementById("name-display");
     const checkMsg = document.getElementById("check-msg");
 
     function showResult(message, color) {
@@ -117,10 +134,12 @@
     } else {
       idDisplay.innerHTML = `رقم البطاقة: <strong>${id}</strong>`;
       setTimeout(() => {
-        if (validIDs.includes(id)) {
+        if (employees.hasOwnProperty(id)) {
           showResult("✅ بطاقة موثقة - الموظف مسجل رسميًا", "#66ff88");
+          nameDisplay.textContent = `الاسم: ${employees[id]}`;
         } else {
           showResult("❌ هذه البطاقة غير مسجلة في النظام", "#ffdd66");
+          nameDisplay.textContent = "";
         }
       }, 2000); // محاكاة تحقق
     }
