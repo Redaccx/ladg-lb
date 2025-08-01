@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>التحقق من البطاقة - الجمعية اللبنانية للإنماء</title>
+  <title>نظام التحقق - الجمعية اللبنانية للإنماء</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -12,76 +12,104 @@
       margin: 0;
       padding: 0;
       direction: rtl;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
     }
 
-    .box {
+    .container {
+      max-width: 500px;
+      margin: 100px auto;
       background-color: rgba(255,255,255,0.08);
-      padding: 40px;
+      padding: 30px;
       border-radius: 15px;
-      text-align: center;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      animation: fadeIn 1.2s ease-in-out;
-      max-width: 400px;
+      text-align: center;
+      animation: fadeIn 1.5s ease-in-out;
     }
 
     h1 {
-      font-size: 24px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+      font-size: 26px;
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      border-radius: 8px;
+      border: none;
+      margin-top: 15px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 30px;
+      background-color: #ffffff;
+      color: #C1272D;
+      border: none;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #C1272D;
+      color: white;
     }
 
     #result {
-      font-size: 20px;
       margin-top: 20px;
+      font-size: 18px;
       font-weight: bold;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 14px;
+      opacity: 0.7;
     }
 
-    footer {
-      position: fixed;
-      bottom: 10px;
-      width: 100%;
-      text-align: center;
-      font-size: 13px;
-      opacity: 0.6;
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>التحقق من بطاقة موظف</h1>
-    <div id="result">جاري التحقق...</div>
+  <div class="container">
+    <h1>نظام التحقق من بطاقة الموظف</h1>
+    <p>الرجاء إدخال رقم البطاقة للتحقق:</p>
+    <input type="text" id="cardNumber" placeholder="مثال: 124578">
+    <button onclick="verifyID()">تحقق</button>
+    <div id="result"></div>
   </div>
 
   <footer>
-    © الجمعية اللبنانية للإنماء - 2025
+    <p>© 2025 الجمعية اللبنانية للإنماء</p>
   </footer>
 
   <script>
-    // معرفات صالحة مسبقًا
+    // قاعدة البيانات البسيطة - أرقام موثوقة
     const validIDs = ["124578", "998877", "202512", "775533", "000111"];
 
-    // استخراج id من الرابط
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    const result = document.getElementById("result");
+    function verifyID() {
+      const cardInput = document.getElementById('cardNumber').value.trim();
+      const resultDiv = document.getElementById('result');
 
-    if (!id) {
-      result.innerHTML = "⚠️ لم يتم إدخال رقم بطاقة.";
-      result.style.color = "yellow";
-    } else if (validIDs.includes(id)) {
-      result.innerHTML = "✅ بطاقة موثوقة - الموظف مسجل في النظام";
-      result.style.color = "lightgreen";
-    } else {
-      result.innerHTML = "❌ هذه البطاقة غير مسجلة - يرجى التأكد";
-      result.style.color = "#ffd700";
+      if (cardInput === "") {
+        resultDiv.innerHTML = "⚠️ الرجاء إدخال رقم البطاقة";
+        resultDiv.style.color = "yellow";
+        return;
+      }
+
+      if (validIDs.includes(cardInput)) {
+        resultDiv.innerHTML = "✅ بطاقة موثوقة - موظف رسمي في الجمعية";
+        resultDiv.style.color = "lightgreen";
+      } else {
+        resultDiv.innerHTML = "❌ البطاقة غير موجودة في النظام - يرجى التأكد";
+        resultDiv.style.color = "#ffd700";
+      }
     }
   </script>
 </body>
