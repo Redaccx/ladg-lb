@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>التحقق من البطاقة</title>
+  <style>
+    body {
+      font-family: Tahoma;
+      direction: rtl;
+      text-align: center;
+      padding: 40px;
+      background: #f4f4f4;
+    }
+    .status {
+      font-size: 24px;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+    .valid {
+      color: green;
+      background-color: #e0fbe0;
+      border: 2px solid green;
+    }
+    .invalid {
+      color: red;
+      background-color: #ffe0e0;
+      border: 2px solid red;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔍 التحقق من بطاقة الهوية</h1>
+  <div id="result" class="status">جاري التحقق...</div>
+
+  <script src="data.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const idParam = urlParams.get("id");
+    const result = document.getElementById("result");
+
+    const match = idCards.find(card => card.id === idParam);
+
+    if (match) {
+      result.classList.add("valid");
+      result.innerHTML = `
+        ✅ هذه البطاقة <strong>موثقة</strong><br><br>
+        👤 الاسم: ${match.name}<br>
+        📌 المنصب: ${match.position}<br>
+        🆔 رقم البطاقة: ${match.id}
+      `;
+    } else {
+      result.classList.add("invalid");
+      result.innerHTML = `
+        ❌ هذه البطاقة غير موجودة أو مزورة<br><br>
+        🔎 رقم البطاقة المدخل: ${idParam}
+      `;
+    }
+  </script>
+</body>
+</html>
