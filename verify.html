@@ -1,153 +1,175 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>التحقق من بطاقة الموظف</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>طرق الدفع - الجمعية اللبنانية للإنماء</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: linear-gradient(135deg, #C1272D, #650000);
-      margin: 0;
-      padding: 0;
-      color: white;
-      direction: rtl;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
+    * {
+      box-sizing: border-box;
     }
 
-    .card {
-      background-color: rgba(255, 255, 255, 0.1);
-      padding: 20px 25px;
-      border-radius: 15px;
+    body {
+      font-family: 'Tahoma', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
       text-align: center;
-      width: 85%;
-      max-width: 320px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      animation: slideIn 1s ease-out;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    .language-toggle {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background-color: #C1272D;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .logo {
+      margin: 50px auto 10px;
+    }
+
+    .logo img {
+      width: 140px;
+      border-radius: 10px;
     }
 
     h1 {
-      font-size: 22px;
-      margin-bottom: 20px;
-      color: #fff;
-    }
-
-    #check-msg {
-      font-size: 18px;
-      margin: 15px 0;
-      animation: pulse 1s infinite;
-      color: #ffd;
-    }
-
-    #status {
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
-      min-height: 50px;
-      transition: all 0.3s ease-in-out;
-    }
-
-    #id-display {
       margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
-      direction: ltr;
-      unicode-bidi: embed;
+      font-size: 24px;
+      color: #C1272D;
     }
-    
-    #name-display {
-      margin-top: 5px;
+
+    .description {
       font-size: 16px;
-      font-weight: 600;
-      color: #aaf;
-      opacity: 0.9;
+      margin: 15px auto 30px;
+      color: #555;
+      max-width: 90%;
+      line-height: 1.8;
+    }
+
+    .payment-methods {
+      max-width: 420px;
+      margin: auto;
+      padding: 0 20px;
+    }
+
+    .payment-option {
+      background-color: #fff;
+      border: 2px solid #C1272D;
+      border-radius: 10px;
+      margin: 12px 0;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      text-decoration: none;
+      color: inherit;
+      transition: 0.2s;
+    }
+
+    .payment-option:hover {
+      background-color: #C1272D;
+      color: #fff;
+      transform: scale(1.02);
+    }
+
+    .payment-option span {
+      font-size: 17px;
+    }
+
+    .payment-option img {
+      width: 32px;
+      height: 32px;
     }
 
     footer {
-      position: absolute;
-      bottom: 10px;
+      margin-top: 40px;
+      padding: 15px 20px;
+      background-color: #C1272D;
+      color: #fff;
+      font-size: 14px;
       text-align: center;
-      font-size: 12px;
-      opacity: 0.6;
-      width: 100%;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.6; }
-      50% { opacity: 1; }
-      100% { opacity: 0.6; }
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateY(30px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h1>نظام التحقق من بطاقة موظف</h1>
-    <div id="check-msg">🔄 جاري التحقق...</div>
-    <div id="status"></div>
-    <div id="id-display"></div>
-    <div id="name-display"></div>
+  <button class="language-toggle" onclick="toggleLanguage()">EN</button>
+
+  <div class="logo">
+    <img src="https://l.top4top.io/p_34860y2ax1.jpg" alt="شعار الجمعية">
   </div>
 
-  <footer>
-    © 2025 الجمعية اللبنانية للأنماء
+  <h1 id="title">طرق الدفع</h1>
+
+  <div class="description" id="description">
+    الجمعية اللبنانية للإنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة.  
+    يمكنك دعم الجمعية من خلال التبرع عبر إحدى الطرق التالية. نحن نضمن أمان العمليات وسرعة التوصيل، ويتم استخدام كل تبرع في مشاريع واقعية تخدم المجتمع. شكراً لمساهمتكم في التغيير.
+  </div>
+
+  <div class="payment-methods" id="payments">
+    <a href="whishmoney" class="payment-option">
+      <span>whish Money</span>
+      <img src="https://j.top4top.io/p_3490h7fyo1.jpg" alt="Whish Money">
+    </a>
+    <a href="westernunion" class="payment-option">
+      <span>Western Union</span>
+      <img src="https://f.top4top.io/p_34902je5a1.jpg" alt="Western Union">
+    </a>
+    <a href="bobfinance" class="payment-option">
+      <span>BoB Finance</span>
+      <img src="https://b.top4top.io/p_34904cpj21.jpg" alt="BoB Finance">
+    </a>
+
+  </div>
+
+  <footer id="footer">
+    جميع الحقوق محفوظة © الجمعية اللبنانية للأنماء 2025
   </footer>
 
   <script>
-    const employees = {
-      "123-456-7897": "محمد الموسوي"
-      "123-456-7896": "جنى عبد الساتر"
-      "123-456-7895": " نور نبها",
-      "123-456-7894": " جاد نبها",
-      "123-456-7893": "حسن حسن",
-      "123-456-7892": "هادي عبد الساتر",
-      "123-456-7891": "رضا الجمعة"
-      "123-456-7890": "جاكلين جعفر "
-    };
+    let currentLang = "ar";
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get("id");
-    const status = document.getElementById("status");
-    const idDisplay = document.getElementById("id-display");
-    const nameDisplay = document.getElementById("name-display");
-    const checkMsg = document.getElementById("check-msg");
-
-    function showResult(message, color) {
-      status.textContent = message;
-      status.style.color = color;
-      checkMsg.style.display = "none";
-    }
-
-    if (!id) {
-      showResult("⚠️ لم يتم إدخال رقم بطاقة في الرابط.", "yellow");
-    } else {
-      idDisplay.innerHTML = `ID: <strong>${id}</strong>`;
-      setTimeout(() => {
-        if (employees.hasOwnProperty(id)) {
-          showResult("✅ بطاقة موثقة - الموظف مسجل رسميًا", "#66ff88");
-          nameDisplay.textContent = `الاسم: ${employees[id]}`;
-        } else {
-          showResult("❌ هذه البطاقة غير مسجلة في النظام", "#ffdd66");
-          nameDisplay.textContent = "";
-        }
-      }, 2000);
+    function toggleLanguage() {
+      if (currentLang === "ar") {
+        document.documentElement.lang = "en";
+        document.documentElement.dir = "ltr";
+        document.querySelector(".language-toggle").textContent = "عربي";
+        document.getElementById("title").textContent = "Payment Methods";
+        document.getElementById("description").textContent =
+          "The Lebanese Development Association is a non-profit organization dedicated to supporting families in need and empowering youth through sustainable programs. You can support us by donating using one of the secure methods below. Every donation contributes to real, impactful projects. Thank you for making a difference.";
+        const options = document.querySelectorAll(".payment-option span");
+        options[0].textContent = "Whish Money";
+        options[1].textContent = "Western Union";
+        options[2].textContent = "BoB Finance";
+      
+        document.getElementById("footer").textContent = "All rights reserved © Lebanese Development Association 2025";
+        currentLang = "en";
+      } else {
+        document.documentElement.lang = "ar";
+        document.documentElement.dir = "rtl";
+        document.querySelector(".language-toggle").textContent = "EN";
+        document.getElementById("title").textContent = "طرق الدفع";
+        document.getElementById("description").textContent =
+          "الجمعية اللبنانية للإنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة. يمكنك دعم الجمعية من خلال التبرع عبر إحدى الطرق التالية. نحن نضمن أمان العمليات وسرعة التوصيل، ويتم استخدام كل تبرع في مشاريع واقعية تخدم المجتمع. شكراً لمساهمتكم في التغيير.";
+        const options = document.querySelectorAll(".payment-option span");
+        options[0].textContent = "Whish Money";
+        options[1].textContent = "Western Union";
+        options[2].textContent = "BoB Finance";
+        
+        document.getElementById("footer").textContent = "جميع الحقوق محفوظة © الجمعية اللبنانية للأنماء 2025";
+        currentLang = "ar";
+      }
     }
   </script>
-
 </body>
 </html>
