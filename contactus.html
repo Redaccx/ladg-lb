@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>تواصل معنا</title>
+  <style>
+    body {
+      margin:0; padding:0;
+      font-family: system-ui, "Noto Naskh Arabic UI", sans-serif;
+      background:#f3f4f7; color:#222;
+      display:flex; justify-content:center; align-items:center;
+      min-height:100vh;
+    }
+    .card {
+      background:#fff;
+      padding:24px 24px 40px 24px;
+      border-radius:12px;
+      box-shadow:0 4px 20px rgba(0,0,0,.1);
+      width:100%; 
+      max-width:600px;
+      margin:auto;
+      position:relative;
+    }
+    h1 {margin-top:0; text-align:center; font-size:24px;}
+    .langBtn {
+      background:#C1272D;
+      color:#fff;
+      border:none;
+      border-radius:20px;
+      padding:6px 14px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      transition:.3s;
+      margin-bottom:20px;
+    }
+    .langBtn:hover { background:#650000; }
+    form {
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-items:center;
+    }
+    form > div, 
+    input, textarea, select, button {
+      width:100%;
+      max-width:500px;
+      box-sizing:border-box;
+    }
+    label {font-weight:600; display:block; margin-bottom:6px}
+    input, textarea, select, button {
+      padding:12px; border-radius:8px;
+      border:1px solid #ccc; font-size:15px;
+    }
+    textarea {min-height:120px; resize:vertical}
+    button.submitBtn {
+      background:#C1272D; color:#fff; border:none;
+      font-weight:700; cursor:pointer;
+      transition:.2s;
+    }
+    button.submitBtn:hover {background:#650000}
+    .status {
+      margin-top:8px; padding:10px;
+      border-radius:8px; font-size:14px; display:none;
+      max-width:500px;
+      text-align:center;
+    }
+    .status.ok {background:#d1fae5; color:#065f46}
+    .status.err {background:#fee2e2; color:#991b1b}
+    .hint {font-size:13px; color:#666}
+    .lang-container { display:flex; justify-content:center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="formTitle">📩 تواصل معنا</h1>
+
+    <!-- زر تبديل اللغة -->
+    <div class="lang-container">
+      <button class="langBtn" id="toggleLang">English</button>
+    </div>
+
+    <form id="contactForm" 
+          action="https://formspree.io/f/mqalvegz" 
+          method="POST" 
+          
+          
+          >
+          
+          
+      <div>
+        <label id="labelName" for="name">الاسم الكامل *</label>
+        <input id="name" name="name" type="text" required>
+      </div>
+
+      <div>
+        <label id="labelEmail" for="email">البريد الإلكتروني *</label>
+        <input id="email" name="email" type="email" required>
+      </div>
+
+      <div>
+        <label id="labelPhone" for="phone">رقم الهاتف</label>
+        <input id="phone" name="phone" type="tel">
+      </div>
+
+      <div>
+        <label id="labelTopic" for="topic">الموضوع *</label>
+        <select id="topic" name="topic" required>
+          <option value="" hidden>اختر موضوع الرسالة</option>
+          <option>تقديم طلب تطوع</option>
+          <option>تقديم طلب عمل</option>
+          <option>استفسار</option>
+          <option>دعم فني</option>
+          <option>مقترح</option>
+          <option>شكوى</option>
+          <option>أخرى</option>
+        </select>
+      </div>
+
+      <div>
+        <label id="labelMessage" for="message">الرسالة *</label>
+        <textarea id="message" name="message" required></textarea>
+      </div>
+
+
+      <input type="hidden" name="_subject" value="رسالة جديدة من نموذج التواصل">
+
+      <button type="submit" id="submitBtn" class="submitBtn">إرسال / Send</button>
+      <div id="formStatus" class="status"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('contactForm');
+    const statusBox = document.getElementById('formStatus');
+    const btn = document.getElementById('submitBtn');
+    const toggleLangBtn = document.getElementById('toggleLang');
+
+    const elements = {
+      title: document.getElementById('formTitle'),
+      labelName: document.getElementById('labelName'),
+      labelEmail: document.getElementById('labelEmail'),
+      labelPhone: document.getElementById('labelPhone'),
+      labelTopic: document.getElementById('labelTopic'),
+      topicSelect: document.getElementById('topic'),
+      labelMessage: document.getElementById('labelMessage'),
+      labelFile: document.getElementById('labelFile'),
+      hintFile: document.getElementById('hintFile'),
+      submitBtn: btn
+    };
+
+    const texts = {
+      ar: {
+        title: "📩 تواصل معنا",
+        labelName: "الاسم الكامل *",
+        labelEmail: "البريد الإلكتروني *",
+        labelPhone: "رقم الهاتف",
+        labelTopic: "الموضوع *",
+        topicOptions: ["اختر موضوع الرسالة", "تقديم طلب تطوع", "تقديم طلب عمل", "استفسار", "دعم فني", "مقترح", "شكوى", "أخرى"],
+        labelMessage: "الرسالة *",
+        labelFile: "إرفاق صورة",
+        hintFile: "يمكنك رفع صورة (JPG, PNG, PDF) حتى 5MB",
+        submitBtn: "إرسال / Send",
+        toggleBtn: "English"
+      },
+      en: {
+        title: "📩 Contact Us",
+        labelName: "Full Name *",
+        labelEmail: "Email *",
+        labelPhone: "Phone",
+        labelTopic: "Topic *",
+        topicOptions: ["Select topic", "Volunteer Application", "Job Application", "Inquiry", "Technical Support", "Suggestion", "Complaint", "Other"],
+        labelMessage: "Message *",
+        labelFile: "Attach File",
+        hintFile: "You can upload an image (JPG, PNG, PDF) up to 5MB",
+        submitBtn: "Send",
+        toggleBtn: "عربي"
+      }
+    };
+
+    let currentLang = 'ar';
+
+    toggleLangBtn.addEventListener('click', () => {
+      currentLang = currentLang === 'ar' ? 'en' : 'ar';
+      const t = texts[currentLang];
+
+      elements.title.textContent = t.title;
+      elements.labelName.textContent = t.labelName;
+      elements.labelEmail.textContent = t.labelEmail;
+      elements.labelPhone.textContent = t.labelPhone;
+      elements.labelTopic.textContent = t.labelTopic;
+
+      elements.topicSelect.innerHTML = '';
+      t.topicOptions.forEach((opt, i) => {
+        const option = document.createElement('option');
+        option.value = i === 0 ? "" : opt;
+        option.hidden = i === 0;
+        option.textContent = opt;
+        elements.topicSelect.appendChild(option);
+      });
+
+      elements.labelMessage.textContent = t.labelMessage;
+      elements.labelFile.textContent = t.labelFile;
+      elements.hintFile.textContent = t.hintFile;
+      elements.submitBtn.textContent = t.submitBtn;
+      toggleLangBtn.textContent = t.toggleBtn;
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusBox.style.display = "block";
+      statusBox.className = "status";
+      statusBox.textContent = currentLang === 'ar' ? "جارٍ الإرسال..." : "Sending...";
+      btn.disabled = true;
+
+      try {
+        const data = new FormData(form);
+        const res = await fetch(form.action, {
+          method: form.method,
+          body: data,
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (res.ok) {
+          form.reset();
+          statusBox.classList.add("ok");
+          statusBox.textContent = currentLang === 'ar' ? "✅ تم إرسال الرسالة بنجاح!" : "✅ Message sent successfully!";
+        } else {
+          const json = await res.json();
+          throw new Error(json.errors ? json.errors.map(e=>e.message).join(", ") : "Unknown error");
+        }
+      } catch (err) {
+        statusBox.classList.add("err");
+        statusBox.textContent = (currentLang === 'ar' ? "❌ فشل الإرسال: " : "❌ Failed to send: ") + err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
