@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>نظام الحضور والغياب</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 220px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 18px;
+      margin: 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .in { background: #27ae60; color: white; }
+    .out { background: #e74c3c; color: white; }
+    .edit { background: #f1c40f; color: black; }
+    .delete { background: #7f8c8d; color: white; }
+    .excel { background: #2980b9; color: white; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background: #34495e;
+      color: white;
+    }
+
+    td button {
+      font-size: 12px;
+      padding: 6px 10px;
+      margin: 2px;
+    }
+
+    /* 📱 متجاوب للهاتف */
+    @media (max-width: 768px) {
+      input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      button {
+        width: 100%;
+        margin: 5px 0;
+      }
+
+      table, th, td {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>📋 نظام تسجيل الحضور والغياب</header>
+  <main>
+    <div class="controls">
+      <input type="text" id="name" placeholder="ادخل اسم الموظف">
+      <br>
+      <button class="in" onclick="checkIn()">تسجيل دخول</button>
+      <button class="out" onclick="checkOut()">تسجيل خروج</button>
+      <button class="excel" onclick="exportExcel()">📊 تصدير Excel</button>
+    </div>
+
+    <h2>📑 السجلات</h2>
+    <table id="attendanceTable">
+      <tr>
+        <th>الاسم</th>
+        <th>التاريخ</th>
+        <th>الدخول</th>
+        <th>الخروج</th>
+        <th>خيارات</th>
+      </tr>
+    </table>
+  </main>
+
+  <script>
+    function loadData() {
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      const table = document.getElementById("attendanceTable");
+      table.innerHTML = `
+        <tr>
+          <th>الاسم</th>
+          <th>التاريخ</th>
+          <th>الدخول</th>
+          <th>الخروج</th>
+          <th>خيارات</th>
+        </tr>`;
+      records.forEach((r, i) => {
+        const row = table.insertRow();
+        row.insertCell(0).innerText = r.name;
+        row.insertCell(1).innerText = r.date;
+        row.insertCell(2).innerText = r.checkin;
+        row.insertCell(3).innerText = r.checkout || "-";
+        const actions = row.insertCell(4);
+        actions.innerHTML = `
+          <button class="edit" onclick="editCheckout(${i})">تعديل</button>
+          <button class="delete" onclick="deleteRecord(${i})">حذف</button>
+        `;
+      });
+    }
+
+    function checkIn() {
+      const name = document.getElementById("name").value.trim();
+      if (!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
+
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      const now = new Date();
+      records.push({
+        name,
+        date: now.toLocaleDateString(),
+        checkin: now.toLocaleTimeString(),
+        checkout: null,
+      });
+      localStorage.setItem("attendance", JSON.stringify(records));
+      loadData();
+    }
+
+    function checkOut() {
+      const name = document.getElementById("name").value.trim();
+      if (!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
+
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      const now = new Date();
+      const record = [...records].reverse().find(r => r.name === name && !r.checkout);
+      if (record) {
+        record.checkout = now.toLocaleTimeString();
+        localStorage.setItem("attendance", JSON.stringify(records));
+      } else {
+        alert("⚠️ الموظف لم يسجّل دخول بعد");
+      }
+      loadData();
+    }
+
+    function editCheckout(index) {
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      const newTime = prompt("🕒 أدخل وقت الخروج الجديد:", records[index].checkout || "");
+      if (newTime) {
+        records[index].checkout = newTime;
+        localStorage.setItem("attendance", JSON.stringify(records));
+        loadData();
+      }
+    }
+
+    function deleteRecord(index) {
+      if (!confirm("⚠️ هل أنت متأكد من حذف هذا السجل؟")) return;
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      records.splice(index, 1);
+      localStorage.setItem("attendance", JSON.stringify(records));
+      loadData();
+    }
+
+    function exportExcel() {
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      if (records.length === 0) return alert("⚠️ لا توجد بيانات للتصدير");
+
+      let csv = "الاسم,التاريخ,الدخول,الخروج\n";
+      records.forEach(r => {
+        csv += `${r.name},${r.date},${r.checkin},${r.checkout || "-"}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "attendance.csv";
+      link.click();
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
