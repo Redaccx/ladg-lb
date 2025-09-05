@@ -54,12 +54,14 @@
 </main>
 </div>
 
-<!-- إضافة مكتبة SheetJS -->
+<!-- مكتبة SheetJS لتصدير Excel -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
+// بيانات الدخول
 const savedUser = { username:"admin", password:"alanmaa@$2025" };
 document.getElementById("loginPage").style.display="block";
 
+// تسجيل الدخول
 function login(){
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -70,6 +72,7 @@ function login(){
   } else alert("⚠️ اسم المستخدم أو كلمة السر غير صحيحة");
 }
 
+// تسجيل الخروج
 function logout(){
   document.getElementById("app").style.display="none";
   document.getElementById("loginPage").style.display="block";
@@ -77,6 +80,7 @@ function logout(){
   document.getElementById("password").value="";
 }
 
+// تحميل البيانات وعرضها في الجدول
 function loadData(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const table = document.getElementById("attendanceTable");
@@ -84,48 +88,54 @@ function loadData(){
   records.forEach((r,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = r.name;
-    row.insertCell(1).innerText = r.date;
-    row.insertCell(2).innerText = r.checkin;
-    row.insertCell(3).innerText = r.checkout||"-";
+    row.insertCell(1).innerText = new Date(r.date).toLocaleDateString();
+    row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString();
+    row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString() : "-";
     const actions = row.insertCell(4);
     actions.innerHTML = `<button class="edit" onclick="editCheckout(${i})">تعديل</button>
                          <button class="delete" onclick="deleteRecord(${i})">حذف</button>`;
   });
 }
 
+// تسجيل دخول موظف
 function checkIn(){
   const name = document.getElementById("name").value.trim();
   if(!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const now = new Date();
-  records.push({name, date: now.toLocaleDateString(), checkin: now, checkout:null});
+  records.push({name, date: now.toISOString(), checkin: now.toISOString(), checkout:null});
   localStorage.setItem("attendance", JSON.stringify(records));
   loadData();
 }
 
+// تسجيل خروج موظف
 function checkOut(){
   const name = document.getElementById("name").value.trim();
   if(!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const record = [...records].reverse().find(r=>r.name===name && !r.checkout);
   if(record){
-    record.checkout = new Date();
+    record.checkout = new Date().toISOString();
     localStorage.setItem("attendance", JSON.stringify(records));
   } else alert("⚠️ الموظف لم يسجّل دخول بعد");
   loadData();
 }
 
+// تعديل وقت الخروج
 function editCheckout(index){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const newTime = prompt("🕒 أدخل وقت الخروج الجديد:", records[index].checkout ? new Date(records[index].checkout).toLocaleTimeString() : "");
   if(newTime){
-    const date = new Date(records[index].checkout || records[index].date + " " + newTime);
-    records[index].checkout = date;
+    const dateObj = new Date(records[index].date);
+    const [h,m,s] = newTime.split(":").map(Number);
+    dateObj.setHours(h); dateObj.setMinutes(m); dateObj.setSeconds(s || 0);
+    records[index].checkout = dateObj.toISOString();
     localStorage.setItem("attendance", JSON.stringify(records));
     loadData();
   }
 }
 
+// حذف سجل
 function deleteRecord(index){
   if(!confirm("⚠️ هل أنت متأكد من حذف هذا السجل؟")) return;
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
@@ -134,15 +144,16 @@ function deleteRecord(index){
   loadData();
 }
 
+// تصدير Excel احترافي
 function exportExcel(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const data = records.map(r=>({
     "الاسم": r.name,
-    "التاريخ": XLSX.SSF.format("dd/mm/yyyy", new Date(r.date)),
-    "الدخول": XLSX.SSF.format("hh:mm:ss", new Date(r.checkin)),
-    "الخروج": r.checkout ? XLSX.SSF.format("hh:mm:ss", new Date(r.checkout)) : "-"
+    "التاريخ": new Date(r.date),
+    "الدخول": new Date(r.checkin),
+    "الخروج": r.checkout ? new Date(r.checkout) : null
   }));
-  const ws = XLSX.utils.json_to_sheet(data);
+  const ws = XLSX.utils.json_to_sheet(data, {dateNF:"dd/mm/yyyy hh:mm:ss"});
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "السجلات");
   XLSX.writeFile(wb,"attendance.xlsx");
