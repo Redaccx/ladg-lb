@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>نظام الحضور والغياب</title>
+<title>Attendance System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   body { font-family: "Segoe UI", Tahoma, sans-serif; background: #f4f6f9; margin:0; padding:0; text-align:center;}
@@ -26,42 +26,42 @@
 </style>
 </head>
 <body>
-<header>📋 نظام تسجيل الحضور والغياب</header>
+<header>📋 Attendance System</header>
 
-<!-- صفحة تسجيل الدخول -->
+<!-- Login Page -->
 <div id="loginPage">
-<h2>🔑 تسجيل الدخول</h2>
-<input type="text" id="username" placeholder="اسم المستخدم"><br><br>
-<input type="password" id="password" placeholder="كلمة السر"><br><br>
-<button class="login" onclick="login()">دخول</button>
+<h2>🔑 Login</h2>
+<input type="text" id="username" placeholder="Username"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
+<button class="login" onclick="login()">Login</button>
 </div>
 
-<!-- التطبيق -->
+<!-- App Page -->
 <div id="app">
 <main>
-<button class="logout" onclick="logout()">🚪 تسجيل خروج</button>
+<button class="logout" onclick="logout()">🚪 Logout</button>
 <div class="controls">
-<input type="text" id="name" placeholder="ادخل اسم الموظف"><br>
-<button class="in" onclick="checkIn()">تسجيل دخول</button>
-<button class="out" onclick="checkOut()">تسجيل خروج</button>
-<button class="excel" onclick="exportExcel()">📊 تصدير Excel</button>
+<input type="text" id="name" placeholder="Enter Employee Name"><br>
+<button class="in" onclick="checkIn()">Check In</button>
+<button class="out" onclick="checkOut()">Check Out</button>
+<button class="excel" onclick="exportExcel()">📊 Export Excel</button>
 </div>
 
-<h2>📑 السجلات</h2>
+<h2>📑 Records</h2>
 <table id="attendanceTable">
-<tr><th>الاسم</th><th>التاريخ</th><th>الدخول</th><th>الخروج</th><th>خيارات</th></tr>
+<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Actions</th></tr>
 </table>
 </main>
 </div>
 
-<!-- مكتبة SheetJS لتصدير Excel -->
+<!-- SheetJS Library -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
-// بيانات الدخول
+// Login Data
 const savedUser = { username:"admin", password:"alanmaa@$2025" };
 document.getElementById("loginPage").style.display="block";
 
-// تسجيل الدخول
+// Login Function
 function login(){
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -69,10 +69,10 @@ function login(){
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
     loadData();
-  } else alert("⚠️ اسم المستخدم أو كلمة السر غير صحيحة");
+  } else alert("⚠️ Incorrect username or password");
 }
 
-// تسجيل الخروج
+// Logout Function
 function logout(){
   document.getElementById("app").style.display="none";
   document.getElementById("loginPage").style.display="block";
@@ -80,27 +80,27 @@ function logout(){
   document.getElementById("password").value="";
 }
 
-// تحميل البيانات وعرضها في الجدول
+// Load Records
 function loadData(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const table = document.getElementById("attendanceTable");
-  table.innerHTML=`<tr><th>الاسم</th><th>التاريخ</th><th>الدخول</th><th>الخروج</th><th>خيارات</th></tr>`;
+  table.innerHTML=`<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Actions</th></tr>`;
   records.forEach((r,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = r.name;
-    row.insertCell(1).innerText = new Date(r.date).toLocaleDateString("ar-EG");
-    row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString("ar-EG");
-    row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString("ar-EG") : "-";
+    row.insertCell(1).innerText = new Date(r.date).toLocaleDateString("en-GB");
+    row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString("en-GB");
+    row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-";
     const actions = row.insertCell(4);
-    actions.innerHTML = `<button class="edit" onclick="editCheckout(${i})">تعديل</button>
-                         <button class="delete" onclick="deleteRecord(${i})">حذف</button>`;
+    actions.innerHTML = `<button class="edit" onclick="editCheckout(${i})">Edit</button>
+                         <button class="delete" onclick="deleteRecord(${i})">Delete</button>`;
   });
 }
 
-// تسجيل دخول موظف
+// Check In
 function checkIn(){
   const name = document.getElementById("name").value.trim();
-  if(!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
+  if(!name) return alert("⚠️ Please enter employee name");
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const now = new Date();
   records.push({name, date: now.toISOString(), checkin: now.toISOString(), checkout:null});
@@ -108,23 +108,23 @@ function checkIn(){
   loadData();
 }
 
-// تسجيل خروج موظف
+// Check Out
 function checkOut(){
   const name = document.getElementById("name").value.trim();
-  if(!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
+  if(!name) return alert("⚠️ Please enter employee name");
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const record = [...records].reverse().find(r=>r.name===name && !r.checkout);
   if(record){
     record.checkout = new Date().toISOString();
     localStorage.setItem("attendance", JSON.stringify(records));
-  } else alert("⚠️ الموظف لم يسجّل دخول بعد");
+  } else alert("⚠️ Employee has not checked in yet");
   loadData();
 }
 
-// تعديل وقت الخروج
+// Edit Checkout
 function editCheckout(index){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
-  const newTime = prompt("🕒 أدخل وقت الخروج الجديد (HH:MM:SS):", records[index].checkout ? new Date(records[index].checkout).toLocaleTimeString("ar-EG") : "");
+  const newTime = prompt("🕒 Enter new checkout time (HH:MM:SS):", records[index].checkout ? new Date(records[index].checkout).toLocaleTimeString("en-GB") : "");
   if(newTime){
     const dateObj = new Date(records[index].date);
     const [h,m,s] = newTime.split(":").map(Number);
@@ -135,28 +135,27 @@ function editCheckout(index){
   }
 }
 
-// حذف سجل
+// Delete Record
 function deleteRecord(index){
-  if(!confirm("⚠️ هل أنت متأكد من حذف هذا السجل؟")) return;
+  if(!confirm("⚠️ Are you sure you want to delete this record?")) return;
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   records.splice(index,1);
   localStorage.setItem("attendance", JSON.stringify(records));
   loadData();
 }
 
-// تصدير Excel احترافي بدون ####
+// Export Excel
 function exportExcel(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const data = records.map(r => ({
-    "الاسم": r.name,
-    "التاريخ": new Date(r.date).toLocaleDateString("ar-EG"),
-    "الدخول": new Date(r.checkin).toLocaleTimeString("ar-EG"),
-    "الخروج": r.checkout ? new Date(r.checkout).toLocaleTimeString("ar-EG") : "-"
+    "Name": r.name,
+    "Date": new Date(r.date).toLocaleDateString("en-GB"),
+    "Check In": new Date(r.checkin).toLocaleTimeString("en-GB"),
+    "Check Out": r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-"
   }));
-  
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "السجلات");
+  XLSX.utils.book_append_sheet(wb, ws, "Records");
   XLSX.writeFile(wb, "attendance.xlsx");
 }
 </script>
