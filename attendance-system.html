@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
@@ -122,10 +122,9 @@
   </div>
 
   <script>
-    // 🔒 بيانات الدخول
+    // بيانات الدخول
     const savedUser = { username: "admin", password: "alanmaa@$2025" };
 
-    // عرض صفحة تسجيل الدخول عند البداية
     document.getElementById("loginPage").style.display = "block";
 
     function login() {
@@ -180,7 +179,10 @@
         csv += `${r.name},${r.date},${r.checkin},${r.checkout || "-"}\n`;
       });
 
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      // إضافة BOM لتجنب تشفير العربي
+      const bom = "\uFEFF";
+      const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = "attendance.csv";
@@ -191,7 +193,7 @@
       const name = document.getElementById("name").value.trim();
       if (!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
 
-      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]"); 
       const now = new Date();
       records.push({
         name,
