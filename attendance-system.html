@@ -49,12 +49,11 @@
 
 <h2>📑 Records</h2>
 <table id="attendanceTable">
-<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Actions</th></tr>
+<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration (Hours)</th><th>Actions</th></tr>
 </table>
 </main>
 </div>
 
-<!-- SheetJS Library -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
 // Login Data
@@ -84,15 +83,21 @@ function logout(){
 function loadData(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const table = document.getElementById("attendanceTable");
-  table.innerHTML=`<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Actions</th></tr>`;
+  table.innerHTML=`<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration (Hours)</th><th>Actions</th></tr>`;
   records.forEach((r,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = r.name;
     row.insertCell(1).innerText = new Date(r.date).toLocaleDateString("en-GB");
     row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString("en-GB");
     row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-";
-    const actions = row.insertCell(4);
-    actions.innerHTML = `<button class="edit" onclick="editCheckout(${i})">Edit</button>
+    let duration = "-";
+    if(r.checkout){
+      const diff = new Date(r.checkout) - new Date(r.checkin);
+      duration = (diff / 1000 / 60 / 60).toFixed(2);
+    }
+    row.insertCell(4).innerText = duration;
+    const actions = row.insertCell(5);
+    actions.innerHTML = `<button class="edit" onclick="editRecord(${i})">Edit</button>
                          <button class="delete" onclick="deleteRecord(${i})">Delete</button>`;
   });
 }
@@ -117,22 +122,34 @@ function checkOut(){
   if(record){
     record.checkout = new Date().toISOString();
     localStorage.setItem("attendance", JSON.stringify(records));
+    loadData();
   } else alert("⚠️ Employee has not checked in yet");
-  loadData();
 }
 
-// Edit Checkout
-function editCheckout(index){
+// Edit Check In & Check Out
+function editRecord(index){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
-  const newTime = prompt("🕒 Enter new checkout time (HH:MM:SS):", records[index].checkout ? new Date(records[index].checkout).toLocaleTimeString("en-GB") : "");
-  if(newTime){
-    const dateObj = new Date(records[index].date);
-    const [h,m,s] = newTime.split(":").map(Number);
+  const r = records[index];
+
+  const newCheckIn = prompt("🕒 Enter new Check-In time (HH:MM:SS):", new Date(r.checkin).toLocaleTimeString("en-GB"));
+  if(newCheckIn){
+    const dateObj = new Date(r.date);
+    const [h,m,s] = newCheckIn.split(":").map(Number);
     dateObj.setHours(h); dateObj.setMinutes(m); dateObj.setSeconds(s || 0);
-    records[index].checkout = dateObj.toISOString();
-    localStorage.setItem("attendance", JSON.stringify(records));
-    loadData();
+    r.checkin = dateObj.toISOString();
   }
+
+  let newCheckOut = r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "";
+  newCheckOut = prompt("🕒 Enter new Check-Out time (HH:MM:SS, leave empty if not yet):", newCheckOut);
+  if(newCheckOut){
+    const dateObjOut = new Date(r.date);
+    const [h,m,s] = newCheckOut.split(":").map(Number);
+    dateObjOut.setHours(h); dateObjOut.setMinutes(m); dateObjOut.setSeconds(s || 0);
+    r.checkout = dateObjOut.toISOString();
+  }
+
+  localStorage.setItem("attendance", JSON.stringify(records));
+  loadData();
 }
 
 // Delete Record
@@ -151,7 +168,8 @@ function exportExcel(){
     "Name": r.name,
     "Date": new Date(r.date).toLocaleDateString("en-GB"),
     "Check In": new Date(r.checkin).toLocaleTimeString("en-GB"),
-    "Check Out": r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-"
+    "Check Out": r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-",
+    "Duration (Hours)": r.checkout ? ((new Date(r.checkout) - new Date(r.checkin))/1000/60/60).toFixed(2) : "-"
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
