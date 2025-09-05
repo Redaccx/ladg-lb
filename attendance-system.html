@@ -49,7 +49,7 @@
 
 <h2>📑 Records</h2>
 <table id="attendanceTable">
-<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration (Hours)</th><th>Actions</th></tr>
+<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Actions</th></tr>
 </table>
 </main>
 </div>
@@ -79,23 +79,27 @@ function logout(){
   document.getElementById("password").value="";
 }
 
+// Format Duration (Hours & Minutes)
+function formatDuration(checkin, checkout){
+  const diff = new Date(checkout) - new Date(checkin);
+  const totalMinutes = Math.floor(diff / 1000 / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
 // Load Records
 function loadData(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const table = document.getElementById("attendanceTable");
-  table.innerHTML=`<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration (Hours)</th><th>Actions</th></tr>`;
+  table.innerHTML=`<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Actions</th></tr>`;
   records.forEach((r,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = r.name;
     row.insertCell(1).innerText = new Date(r.date).toLocaleDateString("en-GB");
     row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString("en-GB");
     row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-";
-    let duration = "-";
-    if(r.checkout){
-      const diff = new Date(r.checkout) - new Date(r.checkin);
-      duration = (diff / 1000 / 60 / 60).toFixed(2);
-    }
-    row.insertCell(4).innerText = duration;
+    row.insertCell(4).innerText = r.checkout ? formatDuration(r.checkin, r.checkout) : "-";
     const actions = row.insertCell(5);
     actions.innerHTML = `<button class="edit" onclick="editRecord(${i})">Edit</button>
                          <button class="delete" onclick="deleteRecord(${i})">Delete</button>`;
@@ -169,7 +173,7 @@ function exportExcel(){
     "Date": new Date(r.date).toLocaleDateString("en-GB"),
     "Check In": new Date(r.checkin).toLocaleTimeString("en-GB"),
     "Check Out": r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-",
-    "Duration (Hours)": r.checkout ? ((new Date(r.checkout) - new Date(r.checkin))/1000/60/60).toFixed(2) : "-"
+    "Duration": r.checkout ? formatDuration(r.checkin, r.checkout) : "-"
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
