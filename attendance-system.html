@@ -79,7 +79,16 @@ function logout(){
   document.getElementById("password").value="";
 }
 
-// Format Duration (Hours & Minutes)
+// Format Date DD/MM/YYYY
+function formatDate(dateStr){
+  const d = new Date(dateStr);
+  const day = String(d.getDate()).padStart(2,"0");
+  const month = String(d.getMonth()+1).padStart(2,"0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+// Format Duration Hours & Minutes
 function formatDuration(checkin, checkout){
   const diff = new Date(checkout) - new Date(checkin);
   const totalMinutes = Math.floor(diff / 1000 / 60);
@@ -96,7 +105,7 @@ function loadData(){
   records.forEach((r,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = r.name;
-    row.insertCell(1).innerText = new Date(r.date).toLocaleDateString("en-GB");
+    row.insertCell(1).innerText = formatDate(r.date);
     row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString("en-GB");
     row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-";
     row.insertCell(4).innerText = r.checkout ? formatDuration(r.checkin, r.checkout) : "-";
@@ -170,7 +179,7 @@ function exportExcel(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
   const data = records.map(r => ({
     "Name": r.name,
-    "Date": new Date(r.date).toLocaleDateString("en-GB"),
+    "Date": formatDate(r.date),
     "Check In": new Date(r.checkin).toLocaleTimeString("en-GB"),
     "Check Out": r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-",
     "Duration": r.checkout ? formatDuration(r.checkin, r.checkout) : "-"
