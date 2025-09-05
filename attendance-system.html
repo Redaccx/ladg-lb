@@ -75,7 +75,6 @@
 
     th { background: #34495e; color: white; }
 
-    /* 📱 متجاوب */
     @media (max-width: 768px) {
       input { width: 100%; margin-bottom: 10px; }
       button { width: 100%; margin: 5px 0; }
@@ -174,6 +173,20 @@
       });
     }
 
+    function saveToDisk() {
+      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
+      let csv = "الاسم,التاريخ,الدخول,الخروج\n";
+      records.forEach(r => {
+        csv += `${r.name},${r.date},${r.checkin},${r.checkout || "-"}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "attendance.csv";
+      link.click();
+    }
+
     function checkIn() {
       const name = document.getElementById("name").value.trim();
       if (!name) return alert("⚠️ رجاءً أدخل اسم الموظف");
@@ -188,6 +201,7 @@
       });
       localStorage.setItem("attendance", JSON.stringify(records));
       loadData();
+      saveToDisk();
     }
 
     function checkOut() {
@@ -204,6 +218,7 @@
         alert("⚠️ الموظف لم يسجّل دخول بعد");
       }
       loadData();
+      saveToDisk();
     }
 
     function editCheckout(index) {
@@ -213,6 +228,7 @@
         records[index].checkout = newTime;
         localStorage.setItem("attendance", JSON.stringify(records));
         loadData();
+        saveToDisk();
       }
     }
 
@@ -222,22 +238,11 @@
       records.splice(index, 1);
       localStorage.setItem("attendance", JSON.stringify(records));
       loadData();
+      saveToDisk();
     }
 
     function exportExcel() {
-      const records = JSON.parse(localStorage.getItem("attendance") || "[]");
-      if (records.length === 0) return alert("⚠️ لا توجد بيانات للتصدير");
-
-      let csv = "الاسم,التاريخ,الدخول,الخروج\n";
-      records.forEach(r => {
-        csv += `${r.name},${r.date},${r.checkin},${r.checkout || "-"}\n`;
-      });
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "attendance.csv";
-      link.click();
+      saveToDisk();
     }
   </script>
 </body>
