@@ -88,9 +88,9 @@ function loadData(){
   records.forEach((r,i)=>{
     const row = table.insertRow();
     row.insertCell(0).innerText = r.name;
-    row.insertCell(1).innerText = new Date(r.date).toLocaleDateString();
-    row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString();
-    row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString() : "-";
+    row.insertCell(1).innerText = new Date(r.date).toLocaleDateString("ar-EG");
+    row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString("ar-EG");
+    row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString("ar-EG") : "-";
     const actions = row.insertCell(4);
     actions.innerHTML = `<button class="edit" onclick="editCheckout(${i})">تعديل</button>
                          <button class="delete" onclick="deleteRecord(${i})">حذف</button>`;
@@ -124,7 +124,7 @@ function checkOut(){
 // تعديل وقت الخروج
 function editCheckout(index){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
-  const newTime = prompt("🕒 أدخل وقت الخروج الجديد:", records[index].checkout ? new Date(records[index].checkout).toLocaleTimeString() : "");
+  const newTime = prompt("🕒 أدخل وقت الخروج الجديد (HH:MM:SS):", records[index].checkout ? new Date(records[index].checkout).toLocaleTimeString("ar-EG") : "");
   if(newTime){
     const dateObj = new Date(records[index].date);
     const [h,m,s] = newTime.split(":").map(Number);
@@ -144,19 +144,20 @@ function deleteRecord(index){
   loadData();
 }
 
-// تصدير Excel احترافي
+// تصدير Excel احترافي بدون ####
 function exportExcel(){
   const records = JSON.parse(localStorage.getItem("attendance")||"[]");
-  const data = records.map(r=>({
+  const data = records.map(r => ({
     "الاسم": r.name,
-    "التاريخ": new Date(r.date),
-    "الدخول": new Date(r.checkin),
-    "الخروج": r.checkout ? new Date(r.checkout) : null
+    "التاريخ": new Date(r.date).toLocaleDateString("ar-EG"),
+    "الدخول": new Date(r.checkin).toLocaleTimeString("ar-EG"),
+    "الخروج": r.checkout ? new Date(r.checkout).toLocaleTimeString("ar-EG") : "-"
   }));
-  const ws = XLSX.utils.json_to_sheet(data, {dateNF:"dd/mm/yyyy hh:mm:ss"});
+  
+  const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "السجلات");
-  XLSX.writeFile(wb,"attendance.xlsx");
+  XLSX.writeFile(wb, "attendance.xlsx");
 }
 </script>
 </body>
