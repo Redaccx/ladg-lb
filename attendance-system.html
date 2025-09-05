@@ -31,10 +31,6 @@
       margin-bottom: 20px;
     }
 
-    .controls {
-      margin-bottom: 20px;
-    }
-
     input {
       padding: 10px;
       width: 220px;
@@ -52,15 +48,15 @@
       transition: 0.3s;
     }
 
-    button:hover {
-      opacity: 0.85;
-    }
+    button:hover { opacity: 0.85; }
 
     .in { background: #27ae60; color: white; }
     .out { background: #e74c3c; color: white; }
     .edit { background: #f1c40f; color: black; }
     .delete { background: #7f8c8d; color: white; }
     .excel { background: #2980b9; color: white; }
+    .login { background: #34495e; color: white; }
+    .logout { background: #8e44ad; color: white; }
 
     table {
       width: 100%;
@@ -77,59 +73,82 @@
       font-size: 14px;
     }
 
-    th {
-      background: #34495e;
-      color: white;
-    }
+    th { background: #34495e; color: white; }
 
-    td button {
-      font-size: 12px;
-      padding: 6px 10px;
-      margin: 2px;
-    }
-
-    /* 📱 متجاوب للهاتف */
+    /* 📱 متجاوب */
     @media (max-width: 768px) {
-      input {
-        width: 100%;
-        margin-bottom: 10px;
-      }
-
-      button {
-        width: 100%;
-        margin: 5px 0;
-      }
-
-      table, th, td {
-        font-size: 12px;
-      }
+      input { width: 100%; margin-bottom: 10px; }
+      button { width: 100%; margin: 5px 0; }
+      table, th, td { font-size: 12px; }
     }
+
+    #loginPage { display: none; }
+    #app { display: none; }
   </style>
 </head>
 <body>
   <header>📋 نظام تسجيل الحضور والغياب</header>
-  <main>
-    <div class="controls">
-      <input type="text" id="name" placeholder="ادخل اسم الموظف">
-      <br>
-      <button class="in" onclick="checkIn()">تسجيل دخول</button>
-      <button class="out" onclick="checkOut()">تسجيل خروج</button>
-      <button class="excel" onclick="exportExcel()">📊 تصدير Excel</button>
-    </div>
 
-    <h2>📑 السجلات</h2>
-    <table id="attendanceTable">
-      <tr>
-        <th>الاسم</th>
-        <th>التاريخ</th>
-        <th>الدخول</th>
-        <th>الخروج</th>
-        <th>خيارات</th>
-      </tr>
-    </table>
-  </main>
+  <!-- صفحة تسجيل الدخول -->
+  <div id="loginPage">
+    <h2>🔑 تسجيل الدخول</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم"><br><br>
+    <input type="password" id="password" placeholder="كلمة السر"><br><br>
+    <button class="login" onclick="login()">دخول</button>
+  </div>
+
+  <!-- التطبيق -->
+  <div id="app">
+    <main>
+      <button class="logout" onclick="logout()">🚪 تسجيل خروج</button>
+      <div class="controls">
+        <input type="text" id="name" placeholder="ادخل اسم الموظف">
+        <br>
+        <button class="in" onclick="checkIn()">تسجيل دخول</button>
+        <button class="out" onclick="checkOut()">تسجيل خروج</button>
+        <button class="excel" onclick="exportExcel()">📊 تصدير Excel</button>
+      </div>
+
+      <h2>📑 السجلات</h2>
+      <table id="attendanceTable">
+        <tr>
+          <th>الاسم</th>
+          <th>التاريخ</th>
+          <th>الدخول</th>
+          <th>الخروج</th>
+          <th>خيارات</th>
+        </tr>
+      </table>
+    </main>
+  </div>
 
   <script>
+    // 🔒 بيانات الدخول
+    const savedUser = { username: "admin", password: "alanmaa@$2025" };
+
+    // عرض صفحة تسجيل الدخول عند البداية
+    document.getElementById("loginPage").style.display = "block";
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (username === savedUser.username && password === savedUser.password) {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        loadData();
+      } else {
+        alert("⚠️ اسم المستخدم أو كلمة السر غير صحيحة");
+      }
+    }
+
+    function logout() {
+      document.getElementById("app").style.display = "none";
+      document.getElementById("loginPage").style.display = "block";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+
     function loadData() {
       const records = JSON.parse(localStorage.getItem("attendance") || "[]");
       const table = document.getElementById("attendanceTable");
@@ -220,8 +239,6 @@
       link.download = "attendance.csv";
       link.click();
     }
-
-    loadData();
   </script>
 </body>
 </html>
