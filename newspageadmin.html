@@ -40,9 +40,7 @@
       background: white; padding: 20px; border-radius: 6px;
       max-width: 500px; width: 90%;
     }
-    .modal h3 {
-      margin-top: 0;
-    }
+    .modal h3 { margin-top: 0; }
     .modal label {
       font-weight: bold;
       margin-top: 10px;
@@ -96,15 +94,15 @@
 
 <script>
   const firebaseConfig = {
-  apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
-  authDomain: "alanmaa-lb.firebaseapp.com",
-  databaseURL: "https://alanmaa-lb-default-rtdb.firebaseio.com",
-  projectId: "alanmaa-lb",
-  storageBucket: "alanmaa-lb.firebasestorage.app",
-  messagingSenderId: "503038482881",
-  appId: "1:503038482881:web:101ead344c3274e668f740",
-  measurementId: "G-W0TF54W20B"
-};
+    apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
+    authDomain: "alanmaa-lb.firebaseapp.com",
+    databaseURL: "https://alanmaa-lb-default-rtdb.firebaseio.com",
+    projectId: "alanmaa-lb",
+    storageBucket: "alanmaa-lb.appspot.com", // ✅ تم التصحيح
+    messagingSenderId: "503038482881",
+    appId: "1:503038482881:web:101ead344c3274e668f740",
+    measurementId: "G-W0TF54W20B"
+  };
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
@@ -112,17 +110,14 @@
   const adminUser = "admin";
   const adminPass = "Lebanon2025$";
 
-  // لتخزين بيانات التعديل
   let currentEditId = null;
 
-  // عند تحميل الصفحة نتأكد هل المستخدم مسجل دخول
   window.onload = () => {
     const loggedIn = localStorage.getItem("loggedIn");
     if (loggedIn === "true") {
       document.getElementById("login").style.display = "none";
       document.getElementById("mainContent").style.display = "block";
       loadPosts();
-      alert("أهلاً مجدداً! تم استرجاع جلسة الدخول.");
     }
   };
 
@@ -131,7 +126,6 @@
     const p = document.getElementById("password").value.trim();
     if (u === adminUser && p === adminPass) {
       localStorage.setItem("loggedIn", "true");
-      alert("تم تسجيل الدخول بنجاح!");
       document.getElementById("login").style.display = "none";
       document.getElementById("mainContent").style.display = "block";
       loadPosts();
@@ -142,7 +136,6 @@
 
   function logout() {
     localStorage.removeItem("loggedIn");
-    alert("تم تسجيل الخروج");
     document.getElementById("mainContent").style.display = "none";
     document.getElementById("login").style.display = "block";
   }
@@ -164,7 +157,6 @@
     const reader = new FileReader();
     reader.onload = async function(e) {
       const imageBase64 = e.target.result;
-
       try {
         await db.collection("news").add({
           title,
@@ -174,9 +166,7 @@
           date: new Date().toISOString(),
           likes: 0
         });
-
         loading.style.display = "none";
-        alert("تمت إضافة المنشور بنجاح!");
         document.getElementById("title").value = "";
         document.getElementById("content").value = "";
         document.getElementById("link").value = "";
@@ -188,23 +178,19 @@
         console.error(err);
       }
     };
-
     reader.readAsDataURL(imageInput.files[0]);
   }
 
   async function loadPosts() {
     const container = document.getElementById("posts");
     container.innerHTML = "<p>📦 جاري تحميل المنشورات...</p>";
-
     try {
       const snapshot = await db.collection("news").orderBy("date", "desc").get();
       if (snapshot.empty) {
         container.innerHTML = "<p>لا يوجد منشورات بعد.</p>";
         return;
       }
-
       container.innerHTML = "";
-
       snapshot.forEach(doc => {
         const data = doc.data();
         const div = document.createElement("div");
@@ -231,7 +217,6 @@
     if (confirm("هل أنت متأكد من حذف هذا المنشور؟")) {
       try {
         await db.collection("news").doc(id).delete();
-        alert("تم حذف المنشور بنجاح!");
         loadPosts();
       } catch (err) {
         alert("فشل حذف المنشور!");
@@ -261,15 +246,12 @@
     const title = document.getElementById("editTitle").value.trim();
     const content = document.getElementById("editContent").value.trim();
     const link = document.getElementById("editLink").value.trim();
-
     if (!title || !content) {
       alert("العنوان والمحتوى مطلوبان.");
       return;
     }
-
     try {
       await db.collection("news").doc(currentEditId).update({ title, content, link });
-      alert("تم تحديث المنشور بنجاح!");
       closeEditModal();
       loadPosts();
     } catch (err) {
@@ -278,6 +260,5 @@
     }
   }
 </script>
-
 </body>
 </html>
