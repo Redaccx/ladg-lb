@@ -1,243 +1,211 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Attendance System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام الحضور</title>
 <style>
-* { box-sizing:border-box; margin:0; padding:0; font-family: Arial, sans-serif; direction:rtl; }
-body { background: #f5f6fa; }
-header { background:#2c3e50; color:white; padding:15px; font-size:22px; text-align:center; position:relative; }
-#menuBtn { position:absolute; right:15px; top:15px; font-size:26px; cursor:pointer; }
-#sidebar { position:fixed; right:-260px; top:0; width:260px; height:100%; background:#34495e; padding:20px; transition:0.3s; z-index:1000; border-left:2px solid #2c3e50; }
-#sidebar button { width:100%; padding:12px; margin:10px 0; border:none; border-radius:5px; cursor:pointer; color:white; font-size:15px; }
-#sidebar button:hover { opacity:0.85; }
-#sidebar #closeSidebar { background:#e74c3c; }
-#sidebar #changePass { background:#16a085; }
-#sidebar #contact { background:#2980b9; }
-
-/* Login */
-.login-container { width:320px; margin:80px auto; background:white; padding:25px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.2); text-align:center; }
-.login-container h2 { margin-bottom:20px; }
-.login-container input { width:100%; padding:12px; margin:8px 0; border-radius:5px; border:1px solid #ccc; }
-.login-container button { width:100%; padding:12px; border:none; border-radius:5px; background:#27ae60; color:white; font-size:16px; cursor:pointer; margin-top:10px; transition:0.3s; }
-.login-container button:hover { opacity:0.85; }
-
-/* Change Password */
-#changePassDiv { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:2000; }
-.change-pass-container { background:white; padding:25px; border-radius:10px; width:320px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
-.change-pass-container input { width:100%; padding:12px; margin:8px 0; border-radius:5px; border:1px solid #ccc; }
-.change-pass-container button { width:100%; padding:12px; margin:8px 0; border:none; border-radius:5px; font-size:15px; cursor:pointer; }
-.change-pass-container button.save { background:#16a085; color:white; }
-.change-pass-container button.cancel { background:#e74c3c; color:white; }
-
-/* App */
-#app { display:none; padding:20px; }
-#app button.logout { background:#8e44ad; color:white; border:none; padding:10px 18px; border-radius:5px; cursor:pointer; margin-bottom:15px; }
-#app .controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; }
-#app .controls input { padding:10px; flex:1; min-width:120px; border-radius:5px; border:1px solid #ccc; }
-#app .controls button { padding:10px 18px; border:none; border-radius:5px; cursor:pointer; flex:1; min-width:120px; color:white; font-size:14px; }
-#app .controls button.checkin { background:#27ae60; }
-#app .controls button.checkout { background:#e74c3c; }
-#app .controls button.present { background:#2980b9; }
-#app .controls button.absent { background:#7f8c8d; }
-#app .controls button.export { background:#f39c12; }
-
-/* Table */
-.table-container { overflow-x:auto; }
-table { width:100%; border-collapse:collapse; background:white; }
-th, td { border:1px solid #ddd; padding:10px; text-align:center; font-size:14px; }
-th { background:#34495e; color:white; }
-td button { padding:5px 10px; border:none; border-radius:5px; cursor:pointer; margin:2px; font-size:13px; }
-td button.edit { background:#f1c40f; color:black; }
-td button.delete { background:#e74c3c; color:white; }
-
-@media(max-width:768px){
-  .login-container,.change-pass-container{width:90%;}
-  #app .controls{flex-direction:column;}
-  table,th,td{font-size:12px;}
-}
+  body { font-family: "Segoe UI", Tahoma, sans-serif; background: #f4f6f9; margin:0; padding:0; text-align:center; overflow-x:hidden;}
+  header { background:#2c3e50; color:white; padding:15px; font-size:20px;}
+  main { padding:20px; max-width:1000px; margin:auto;}
+  input { padding:10px; width:220px; border:1px solid #ccc; border-radius:5px; margin-bottom:10px;}
+  button { padding:10px 18px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:14px; transition:0.3s;}
+  button:hover{opacity:0.85;}
+  .in{background:#27ae60;color:white;}
+  .out{background:#e74c3c;color:white;}
+  .edit{background:#f1c40f;color:black;}
+  .delete{background:#7f8c8d;color:white;}
+  .excel{background:#2980b9;color:white;}
+  .login{background:#34495e;color:white;}
+  .logout{background:#8e44ad;color:white;}
+  .settings{background:#16a085;color:white;}
+  table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
+  th, td{border:1px solid #ddd; padding:12px; text-align:center; font-size:14px;}
+  th{background:#34495e;color:white;}
+  .status-hadir{color:#27ae60;font-weight:bold;}
+  .status-ghayeb{color:#e74c3c;font-weight:bold;}
+  #loginPage, #app, #settingsPage, #splash{display:none;}
+  p.rights{margin-top:20px; font-size:12px; color:#555;}
+  p.rights a{color:#2980b9;text-decoration:none;}
+  .login-container{background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:inline-block; margin-top:30px;}
+  .desc{font-size:14px; color:#555; margin-bottom:10px;}
+  .table-container{overflow-x:auto;}
+  @media (max-width:768px){input{width:100%;} button{width:100%;margin:5px 0;} table, th, td{font-size:12px;}}
 </style>
 </head>
 <body>
 
-<header>
-  <span id="menuBtn" onclick="openSidebar()">☰</span>
-  📋 نظام الحضور
-</header>
-
-<!-- Sidebar -->
-<div id="sidebar">
-  <button id="closeSidebar" onclick="closeSidebar()">إغلاق ×</button>
-  <button id="changePass" onclick="openChangePass()">تغيير كلمة المرور</button>
-  <button id="contact" onclick="window.open('https://www.instagram.com/beweble','_blank')">تواصل @beweble</button>
+<!-- Splash Screen -->
+<div id="splash" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#2c3e50; color:white; display:flex; align-items:center; justify-content:center; flex-direction:column; font-size:20px;">
+  <div>Loading Attendance System...</div>
+  <div style="margin-top:10px;">⏳</div>
 </div>
 
-<!-- Login -->
+<header>📋 Attendance System</header>
+
+<!-- Login Page -->
 <div id="loginPage">
   <div class="login-container">
-    <h2>تسجيل الدخول</h2>
-    <input type="text" id="username" placeholder="اسم المستخدم">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="login()">دخول</button>
+    <h2>🔑 Login</h2>
+    <div class="desc">Attendance System for Employees</div>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button class="login" onclick="login()">Login</button>
+    <button class="settings" onclick="openSettings()">⚙️ Settings</button>
   </div>
 </div>
 
-<!-- Change Password Modal -->
-<div id="changePassDiv">
-  <div class="change-pass-container">
-    <h3>تغيير كلمة المرور</h3>
-    <input type="password" id="oldPass" placeholder="كلمة المرور القديمة">
-    <input type="password" id="newPass" placeholder="كلمة المرور الجديدة">
-    <button class="save" onclick="changePassword()">حفظ</button>
-    <button class="cancel" onclick="closeChangePass()">إلغاء</button>
+<!-- Settings Page -->
+<div id="settingsPage">
+  <div class="login-container">
+    <h2>⚙️ Settings</h2>
+    <div class="desc">Change login password</div>
+    <input type="password" id="oldPass" placeholder="Old Password"><br>
+    <input type="password" id="newPass" placeholder="New Password"><br>
+    <button class="settings" onclick="changePassword()">Change Password</button>
+    <button class="logout" onclick="closeSettings()">Back</button>
   </div>
 </div>
 
-<!-- App -->
+<!-- App Page -->
 <div id="app">
-  <button class="logout" onclick="logout()">تسجيل خروج</button>
-  <div class="controls">
-    <input type="text" id="empName" placeholder="اسم الموظف">
-    <button class="checkin" onclick="checkIn()">تسجيل حضور</button>
-    <button class="checkout" onclick="checkOut()">تسجيل خروج</button>
-    <button class="present" onclick="markPresent()">حاضر</button>
-    <button class="absent" onclick="markAbsent()">غائب</button>
-    <button class="export" onclick="exportExcel()">تصدير الأسبوع</button>
-  </div>
-  <div class="table-container">
-    <table id="attendanceTable">
-      <tr><th>الاسم</th><th>التاريخ</th><th>وقت الدخول</th><th>وقت الخروج</th><th>الحالة</th><th>المدة</th><th>إجراءات</th></tr>
-    </table>
-  </div>
+<main>
+<button class="logout" onclick="logout()">🚪 Logout</button>
+<div class="controls">
+<input type="text" id="name" placeholder="Enter Employee Name"><br>
+<button class="in" onclick="checkIn()">Check In</button>
+<button class="out" onclick="checkOut()">Check Out</button>
+<button class="excel" onclick="exportExcel()">📊 Export Excel</button>
+</div>
+
+<h2>📑 Records</h2>
+<div class="table-container">
+<table id="attendanceTable">
+<tr>
+<th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Status</th><th>Actions</th>
+</tr>
+</table>
+</div>
+
+<p class="rights">© 2025 This system is developed by <a href="https://www.instagram.com/beweble" target="_blank">beweble</a></p>
+</main>
 </div>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
-/* ---------- Login ---------- */
-let savedUser = {username:"ladg", password:localStorage.getItem("attendancePass")||"ladg@$2025"};
-if(localStorage.getItem("loggedIn")==="true"){document.getElementById("app").style.display="block"; loadData();}
-else{document.getElementById("loginPage").style.display="block";}
+// Splash Screen
+document.getElementById("splash").style.display="flex";
+setTimeout(()=>{document.getElementById("splash").style.display="none"; document.getElementById("loginPage").style.display="block";},1500);
+
+// Login Data
+let savedUser = { username:"ladg", password:"ladg@$2025" };
+
+// Login Function
 function login(){
-  const u=document.getElementById("username").value.trim();
-  const p=document.getElementById("password").value.trim();
-  if(u===savedUser.username && p===savedUser.password){
-    localStorage.setItem("loggedIn","true");
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if(username===savedUser.username && password===savedUser.password){
     document.getElementById("loginPage").style.display="none";
     document.getElementById("app").style.display="block";
     loadData();
-  }else alert("اسم المستخدم أو كلمة المرور خاطئ");
+  } else alert("⚠️ Incorrect username or password");
 }
-function logout(){ localStorage.setItem("loggedIn","false"); location.reload(); }
 
-/* ---------- Sidebar ---------- */
-function openSidebar(){ document.getElementById("sidebar").style.right="0"; }
-function closeSidebar(){ document.getElementById("sidebar").style.right="-260px"; }
-function openChangePass(){ document.getElementById("changePassDiv").style.display="flex"; }
-function closeChangePass(){ document.getElementById("changePassDiv").style.display="none"; }
+// Logout Function
+function logout(){
+  document.getElementById("app").style.display="none";
+  document.getElementById("loginPage").style.display="block";
+  document.getElementById("username").value="";
+  document.getElementById("password").value="";
+}
+
+// Open & Close Settings
+function openSettings(){ document.getElementById("loginPage").style.display="none"; document.getElementById("settingsPage").style.display="block";}
+function closeSettings(){ document.getElementById("settingsPage").style.display="none"; document.getElementById("loginPage").style.display="block";}
+
+// Change Password
 function changePassword(){
-  const oldP=document.getElementById("oldPass").value.trim();
-  const newP=document.getElementById("newPass").value.trim();
-  if(oldP!==savedUser.password){ alert("كلمة المرور القديمة خاطئة"); return; }
-  if(!newP){ alert("ادخل كلمة المرور الجديدة"); return; }
-  savedUser.password=newP; localStorage.setItem("attendancePass",newP);
-  alert("تم تغيير كلمة المرور بنجاح"); closeChangePass();
+  const oldPass = document.getElementById("oldPass").value.trim();
+  const newPass = document.getElementById("newPass").value.trim();
+  if(oldPass !== savedUser.password) return alert("⚠️ Old password incorrect");
+  if(!newPass) return alert("⚠️ Enter new password");
+  savedUser.password = newPass;
+  alert("✅ Password changed successfully");
+  document.getElementById("oldPass").value="";
+  document.getElementById("newPass").value="";
 }
 
-/* ---------- Attendance ---------- */
+// Format Date DD/MM/YYYY
+function formatDate(dateStr){ const d = new Date(dateStr); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;}
+
+// Format Duration Hours & Minutes
+function formatDuration(checkin, checkout){ const diff = new Date(checkout) - new Date(checkin); const totalMinutes = Math.floor(diff / 1000 / 60); return `${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m`;}
+
+// Load Records
 function loadData(){
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  const table=document.getElementById("attendanceTable");
-  table.innerHTML=`<tr><th>الاسم</th><th>التاريخ</th><th>وقت الدخول</th><th>وقت الخروج</th><th>الحالة</th><th>المدة</th><th>إجراءات</th></tr>`;
-  const now=new Date();
-  const weekAgo=new Date(now.getTime()-7*24*60*60*1000);
+  const records = JSON.parse(localStorage.getItem("attendance")||"[]");
+  const table = document.getElementById("attendanceTable");
+  table.innerHTML=`<tr><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Status</th><th>Actions</th></tr>`;
   records.forEach((r,i)=>{
-    if(new Date(r.date)>=weekAgo){
-      const row=table.insertRow();
-      row.insertCell(0).innerText=r.name;
-      row.insertCell(1).innerText=r.date;
-      row.insertCell(2).innerText=r.checkin?r.checkin:"-";
-      row.insertCell(3).innerText=r.checkout?r.checkout:"-";
-      row.insertCell(4).innerText=r.status?r.status:"-";
-      row.insertCell(5).innerText=r.checkin&&r.checkout?getDuration(r.checkin,r.checkout):"-";
-      const actions=row.insertCell(6);
-      actions.innerHTML=`<button class="edit" onclick="editRecord(${i})">تعديل</button>
-                         <button class="delete" onclick="deleteRecord(${i})">حذف</button>`;
-    }
+    const row = table.insertRow();
+    row.insertCell(0).innerText = r.name;
+    row.insertCell(1).innerText = formatDate(r.date);
+    row.insertCell(2).innerText = new Date(r.checkin).toLocaleTimeString("en-GB");
+    row.insertCell(3).innerText = r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "-";
+    row.insertCell(4).innerText = r.checkout ? formatDuration(r.checkin, r.checkout) : "-";
+    const statusCell = row.insertCell(5);
+    statusCell.innerText = r.status || "-";
+    statusCell.className = r.status === "حاضر" ? "status-hadir" : "status-ghayeb";
+    const actions = row.insertCell(6);
+    actions.innerHTML = `<button class="edit" onclick="editRecord(${i})">Edit</button>
+                         <button class="delete" onclick="deleteRecord(${i})">Delete</button>
+                         <button class="in" onclick="toggleStatus(${i})">Toggle Status</button>`;
   });
 }
-function getDuration(checkin, checkout){
-  const diff=new Date('1970-01-01T'+checkout)-new Date('1970-01-01T'+checkin);
-  const minutes=Math.floor(diff/1000/60);
-  const h=Math.floor(minutes/60); const m=minutes%60;
-  return `${h}س ${m}د`;
-}
+
+// Check In
 function checkIn(){
-  const name=document.getElementById("empName").value.trim();
-  if(!name){ alert("ادخل اسم الموظف"); return; }
-  const now=new Date(); const time=now.toLocaleTimeString("en-GB");
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  records.push({name,date:now.toLocaleDateString("en-GB"),checkin:time,checkout:null,status:"حاضر"});
-  localStorage.setItem("attendance",JSON.stringify(records));
-  loadData();
-}
-function checkOut(){
-  const name=document.getElementById("empName").value.trim();
-  if(!name){ alert("ادخل اسم الموظف"); return; }
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  for(let i=records.length-1;i>=0;i--){
-    if(records[i].name===name && !records[i].checkout){
-      const now=new Date(); records[i].checkout=now.toLocaleTimeString("en-GB");
-      break;
-    }
-  }
-  localStorage.setItem("attendance",JSON.stringify(records));
-  loadData();
-}
-function markPresent(){
-  const name=document.getElementById("empName").value.trim();
-  if(!name){ alert("ادخل اسم الموظف"); return; }
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  records.push({name,date:new Date().toLocaleDateString("en-GB"),checkin:null,checkout:null,status:"حاضر"});
-  localStorage.setItem("attendance",JSON.stringify(records));
-  loadData();
-}
-function markAbsent(){
-  const name=document.getElementById("empName").value.trim();
-  if(!name){ alert("ادخل اسم الموظف"); return; }
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  records.push({name,date:new Date().toLocaleDateString("en-GB"),checkin:null,checkout:null,status:"غائب"});
-  localStorage.setItem("attendance",JSON.stringify(records));
-  loadData();
-}
-function editRecord(index){
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  const r=records[index];
-  const newName=prompt("تعديل الاسم:", r.name); if(newName) r.name=newName;
-  const newCheckIn=prompt("تعديل وقت الدخول (HH:MM:SS):", r.checkin?r.checkin:""); if(newCheckIn) r.checkin=newCheckIn;
-  const newCheckOut=prompt("تعديل وقت الخروج (HH:MM:SS):", r.checkout?r.checkout:""); if(newCheckOut) r.checkout=newCheckOut;
-  const newStatus=prompt("تعديل الحالة (حاضر/غائب):", r.status?r.status:""); if(newStatus) r.status=newStatus;
-  localStorage.setItem("attendance",JSON.stringify(records));
-  loadData();
-}
-function deleteRecord(index){
-  if(!confirm("هل تريد حذف هذا السجل؟")) return;
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  records.splice(index,1);
-  localStorage.setItem("attendance",JSON.stringify(records));
+  const name = document.getElementById("name").value.trim();
+  if(!name) return alert("⚠️ Please enter employee name");
+  const records = JSON.parse(localStorage.getItem("attendance")||"[]");
+  const now = new Date();
+  records.push({name, date: now.toISOString(), checkin: now.toISOString(), checkout:null, status:"حاضر"});
+  localStorage.setItem("attendance", JSON.stringify(records));
   loadData();
 }
 
-/* ---------- Export Excel ---------- */
+// Check Out
+function checkOut(){
+  const name = document.getElementById("name").value.trim();
+  if(!name) return alert("⚠️ Please enter employee name");
+  const records = JSON.parse(localStorage.getItem("attendance")||"[]");
+  const record = [...records].reverse().find(r=>r.name===name && !r.checkout);
+  if(record){ record.checkout = new Date().toISOString(); localStorage.setItem("attendance", JSON.stringify(records)); loadData(); }
+  else alert("⚠️ Employee has not checked in yet");
+}
+
+// Toggle Status
+function toggleStatus(index){ const records = JSON.parse(localStorage.getItem("attendance")||"[]"); const r = records[index]; r.status = r.status === "حاضر" ? "غائب" : "حاضر"; localStorage.setItem("attendance", JSON.stringify(records)); loadData();}
+
+// Edit Record
+function editRecord(index){
+  const records = JSON.parse(localStorage.getItem("attendance")||"[]"); const r = records[index];
+  const newCheckIn = prompt("🕒 Enter new Check-In time (HH:MM:SS):", new Date(r.checkin).toLocaleTimeString("en-GB"));
+  if(newCheckIn){ const d=new Date(r.date); const [h,m,s]=newCheckIn.split(":").map(Number); d.setHours(h); d.setMinutes(m); d.setSeconds(s||0); r.checkin=d.toISOString();}
+  let newCheckOut = r.checkout ? new Date(r.checkout).toLocaleTimeString("en-GB") : "";
+  newCheckOut = prompt("🕒 Enter new Check-Out time (HH:MM:SS, leave empty if not yet):", newCheckOut);
+  if(newCheckOut){ const d=new Date(r.date); const [h,m,s]=newCheckOut.split(":").map(Number); d.setHours(h); d.setMinutes(m); d.setSeconds(s||0); r.checkout=d.toISOString();}
+  localStorage.setItem("attendance", JSON.stringify(records)); loadData();
+}
+
+// Delete Record
+function deleteRecord(index){ if(!confirm("⚠️ Are you sure you want to delete this record?")) return; const records = JSON.parse(localStorage.getItem("attendance")||"[]"); records.splice(index,1); localStorage.setItem("attendance", JSON.stringify(records)); loadData();}
+
+// Export Excel
 function exportExcel(){
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  const now=new Date(); const weekAgo=new Date(now.getTime()-7*24*60*60*1000);
-  const weekRecords=records.filter(r=>new Date(r.date)>=weekAgo);
-  const data=weekRecords.map(r=>({التاريخ:r.date, الاسم:r.name, "وقت الدخول":r.checkin, "وقت الخروج":r.checkout, الحالة:r.status, المدة:r.checkin&&r.checkout?getDuration(r.checkin,r.checkout):"-"}));
-  const ws=XLSX.utils.json_to_sheet(data);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "الأسبوع");
-  XLSX.writeFile(wb, "Attendance_Week.xlsx");
+  const records = JSON.parse(localStorage.getItem("attendance")||"[]");
+  const data = records.map(r=>({Name:r.name, Date:formatDate(r.date), "Check In":new Date(r.checkin).toLocaleTimeString("en-GB"), "Check Out":r.checkout?new Date(r.checkout).toLocaleTimeString("en-GB"):"-", Duration:r.checkout?formatDuration(r.checkin,r.checkout):"-", Status:r.status||"-"}));
+  const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Records"); XLSX.writeFile(wb,"attendance.xlsx");
 }
 </script>
 </body>
