@@ -13,17 +13,14 @@ input, select { padding:10px; width:97%; max-width:200px; border:1px solid #ccc;
 #togglePass{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; width:25px; height:25px; background:url('https://img.icons8.com/ios/50/000000/visible--v1.png') no-repeat center center; background-size:contain;}
 button { padding:10px 18px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:14px; transition:0.3s;}
 button:hover{opacity:0.85;}
-.in{background:#27ae60;color:white;}
-.out{background:#e74c3c;color:white;}
-.excel{background:#2980b9;color:white;}
+.status-hadir{background:#27ae60;color:white;font-weight:bold;border-radius:5px;}
+.status-ghayeb{background:#e74c3c;color:white;font-weight:bold;border-radius:5px;}
 .logout{background:#8e44ad;color:white;}
 .resetPass{background:#f39c12;color:white;}
 .login{background:#34495e;color:white;}
 table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
 th, td{border:1px solid #ddd; padding:12px; text-align:center; font-size:14px;}
 th{background:#34495e;color:white;}
-.status-hadir{color:#27ae60;font-weight:bold;}
-.status-ghayeb{color:#e74c3c;font-weight:bold;}
 #loginPage, #app{display:none;}
 .login-container{background:white; padding:35px; border-radius:5px; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:inline-block; margin-top:50px; width:50%; max-width:400px;}
 #searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
@@ -56,8 +53,11 @@ th{background:#34495e;color:white;}
 
 <div class="controls">
   <select id="employeeSelect"></select><br>
-  <button class="in" onclick="checkIn()">Check In</button>
-  <button class="out" onclick="checkOut()">Check Out</button>
+  <select id="statusSelect">
+    <option value="حاضر">حاضر</option>
+    <option value="غائب">غائب</option>
+  </select><br>
+  <button onclick="markStatus()">✅ سجل الحالة</button>
   <button class="excel" onclick="exportExcel()">📊 Export Excel</button>
 </div>
 
@@ -69,7 +69,7 @@ th{background:#34495e;color:white;}
 <div class="table-container">
 <table id="attendanceTable">
 <tr>
-<th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Status</th>
+<th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Actions</th>
 </tr>
 </table>
 </div>
@@ -96,7 +96,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Employees list
+// Employees
 let employees = [
   { id: "123-456-7907", name: "ميس السلوم" },
   { id: "123-456-7906", name: "علي جعفر" },
@@ -114,7 +114,7 @@ let employees = [
   { id: "123-456-7891", name: "رضا الجمعة" }
 ];
 
-// Toggle password visibility
+// Toggle password
 let passVisible = false;
 document.getElementById("togglePass").addEventListener("click", ()=>{
   const pass = document.getElementById("password");
@@ -125,7 +125,7 @@ document.getElementById("togglePass").addEventListener("click", ()=>{
     : "url('https://img.icons8.com/ios/50/000000/visible--v1.png')";
 });
 
-// Firebase Auth state
+// Auth state
 auth.onAuthStateChanged(user => {
   if(user){
     document.getElementById("loginPage").style.display = "none";
@@ -146,19 +146,17 @@ function login(){
     .catch(err=>alert("⚠️ "+err.message));
 }
 
-// Reset Password
+// Reset password
 function resetPassword(){
   const email = document.getElementById("email").value.trim();
   if(!email){ return alert("⚠️ أدخل البريد الإلكتروني لإرسال رابط إعادة التعيين"); }
   auth.sendPasswordResetEmail(email)
-    .then(()=>{ alert("✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني"); })
+    .then(()=>{ alert("✅ تم إرسال رابط إعادة تعيين كلمة المرور"); })
     .catch(err=>alert("⚠️ "+err.message));
 }
 
 // Logout
-function logout(){
-  auth.signOut();
-}
+function logout(){ auth.signOut(); }
 
 // Load employees
 function loadEmployees(){
@@ -172,68 +170,79 @@ function loadEmployees(){
   });
 }
 
-// Format date & duration
+// Format date
 function formatDate(dateStr){
-  const d=new Date(dateStr);
+  const d = new Date(dateStr);
   return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
-}
-function formatDuration(cIn,cOut){
-  const diff=new Date(cOut)-new Date(cIn);
-  const total=Math.floor(diff/60000);
-  return `${Math.floor(total/60)}h ${total%60}m`;
 }
 
 // Load data
 function loadData(){
   db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
     const table=document.getElementById("attendanceTable");
-    table.innerHTML=`<tr><th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Status</th></tr>`;
+    table.innerHTML=`<tr>
+      <th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Actions</th>
+      </tr>`;
     snapshot.forEach(doc=>{
       const r=doc.data();
       const row=table.insertRow();
       row.insertCell(0).innerText=r.id;
       row.insertCell(1).innerText=r.name;
       row.insertCell(2).innerText=formatDate(r.date);
-      row.insertCell(3).innerText=new Date(r.checkin).toLocaleTimeString("en-GB");
-      row.insertCell(4).innerText=r.checkout?r.checkout:"-";
-      row.insertCell(5).innerText=r.checkout?formatDuration(r.checkin,r.checkout):"-";
-      const st=row.insertCell(6);
+      row.insertCell(3).innerHTML=r.checkin?r.checkin:"-";
+      row.insertCell(4).innerHTML=r.checkout?r.checkout:"-";
+      const st=row.insertCell(5);
       st.innerText=r.status;
       st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
+      const actions=row.insertCell(6);
+      actions.innerHTML=`<button onclick="editRecord('${doc.id}')">✏️ تعديل</button>
+                         <button onclick="deleteRecord('${doc.id}')">🗑️ حذف</button>`;
     });
   });
 }
 
-// Check In
-function checkIn(){
+// Mark status
+function markStatus(){
   const id=document.getElementById("employeeSelect").value;
   const emp=employees.find(e=>e.id===id);
+  const status=document.getElementById("statusSelect").value;
   const now=new Date();
   db.collection("attendance").add({
     id: emp.id,
     name: emp.name,
     date: now.toISOString(),
-    checkin: now.toISOString(),
-    checkout: null,
-    status: "حاضر"
+    checkin: status==="حاضر"?new Date().toLocaleTimeString("en-GB"):"-",
+    checkout: "-",
+    status: status
   }).then(()=>{ loadData(); });
 }
 
-// Check Out
-function checkOut(){
-  const id=document.getElementById("employeeSelect").value;
-  db.collection("attendance")
-    .where("id","==",id)
-    .where("checkout","==",null)
-    .get()
-    .then(querySnapshot=>{
-      if(!querySnapshot.empty){
-        querySnapshot.forEach(doc=>{
-          doc.ref.update({checkout:new Date().toISOString()});
-        });
-        loadData();
-      }else alert("⚠️ الموظف لم يسجل حضور بعد");
-    });
+// Edit record
+function editRecord(docId){
+  db.collection("attendance").doc(docId).get().then(doc=>{
+    const r=doc.data();
+    const newStatus=prompt("حالة الموظف (حاضر/غائب):", r.status);
+    if(newStatus){
+      const newCheckIn=newStatus==="حاضر"?prompt("وقت الحضور HH:MM", r.checkin):"-";
+      const newCheckOut=newStatus==="حاضر"?prompt("وقت الانصراف HH:MM", r.checkout):"-";
+      const newDate=prompt("تاريخ اليوم DD/MM/YYYY:", formatDate(r.date));
+      const parts=newDate.split("/");
+      const isoDate=new Date(parts[2],parts[1]-1,parts[0]).toISOString();
+      db.collection("attendance").doc(docId).update({
+        status:newStatus,
+        checkin:newCheckIn,
+        checkout:newCheckOut,
+        date:isoDate
+      }).then(()=>loadData());
+    }
+  });
+}
+
+// Delete record
+function deleteRecord(docId){
+  if(confirm("هل أنت متأكد من حذف هذا السجل؟")){
+    db.collection("attendance").doc(docId).delete().then(()=>loadData());
+  }
 }
 
 // Export Excel
@@ -246,9 +255,8 @@ function exportExcel(){
         ID:r.id,
         Name:r.name,
         Date:formatDate(r.date),
-        "Check In":new Date(r.checkin).toLocaleTimeString("en-GB"),
-        "Check Out":r.checkout?r.checkout:"-",
-        Duration:r.checkout?formatDuration(r.checkin,r.checkout):"-",
+        "Check In":r.checkin,
+        "Check Out":r.checkout,
         Status:r.status
       });
     });
