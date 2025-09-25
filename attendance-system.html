@@ -5,21 +5,12 @@
 <title>Attendance System - Firebase</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-/* === Reset + Body === */
 * { box-sizing:border-box; }
 body { font-family:"Segoe UI", Tahoma, sans-serif; background:#f4f6f9; margin:0; padding:0; text-align:center; }
-
-/* === Header === */
 header { background:#2c3e50; color:white; padding:15px; font-size:20px; font-weight:bold; }
-
-/* === Main === */
 main { padding:20px; max-width:1000px; margin:auto; }
-
-/* === Inputs & Select === */
 input, select { padding:10px; width:97%; max-width:200px; border:1px solid #ccc; border-radius:5px; margin-bottom:10px; font-size:14px; }
 input:focus, select:focus { border-color:#2980b9; outline:none; }
-
-/* === Buttons === */
 button { padding:8px 16px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:13px; transition:0.3s; }
 button:hover { opacity:0.85; }
 .in{background:#27ae60;color:white;} 
@@ -31,7 +22,6 @@ button:hover { opacity:0.85; }
 .logout{background:#8e44ad;color:white;}
 .resetPass{background:#f39c12;color:white;}
 .login{background:#34495e;color:white;}
-
 /* === Table === */
 table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
 th, td{border:1px solid #ddd; padding:7px; text-align:center; font-size:12px; max-width:250px; word-break:break-word;}
@@ -39,50 +29,36 @@ th{background:#34495e;color:white;}
 .status-hadir{color:#27ae60;font-weight:bold;}
 .status-ghayeb{color:#e74c3c;font-weight:bold;}
 .table-container{overflow-x:auto; white-space:nowrap;}
-
-/* === Login Page === */
 #loginPage, #app{display:none;}
 .login-container{background:white; padding:30px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.2); display:inline-block; margin-top:50px; width:90%; max-width:400px; text-align:center; }
 .login-container h2{margin-bottom:20px;}
-
-/* === Password Toggle === */
 .password-wrapper{position:relative; width:100%; max-width:200px; margin:auto;}
-.password-wrapper input{width:100%; padding-right:40px;}
-.toggle-pass{position:absolute; right:-10px; top:30%; transform:translateY(-50%); cursor:pointer; font-size:16px; background:none; border:none;}
-
-/* === Search Box === */
+.password-wrapper input{width:100%; padding-right:50px;}
+.toggle-pass{position:absolute; right:-10px; top:-20%; height:100%; cursor:pointer; font-size:14px; background:none; border:none;}
 #searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
-
-/* === Responsive === */
-@media (max-width:30px){ input, select{width:95%;} button{width:95%; margin:5px 0;} table, th, td{font-size:12px;} }
+@media (max-width:50px){ input, select{width:95%;} button{width:95%; margin:5px 0;} table, th, td{font-size:12px;} }
 </style>
 </head>
 <body>
 
-<header>📋 Attendance System</header>
+<header>Attendance System</header>
 
-<!-- Login Page -->
 <div id="loginPage">
   <div class="login-container">
     <h2>Login</h2>
     <input type="email" id="email" placeholder="Email"><br>
-    
-    <!-- Password field with toggle -->
     <div class="password-wrapper">
       <input type="password" id="password" placeholder="Password">
       <button class="toggle-pass" id="togglePass">Show</button>
     </div>
-
     <button class="login" onclick="login()">Login</button><br>
     <button class="resetPass" onclick="resetPassword()">Reset Password</button>
   </div>
 </div>
 
-<!-- App Page -->
 <div id="app">
 <main>
 <button class="logout" onclick="logout()">Logout</button>
-
 <div class="controls">
   <select id="employeeSelect"></select><br>
   <button class="in" onclick="manualCheckIn()">Check In</button>
@@ -98,21 +74,19 @@ th{background:#34495e;color:white;}
 <div class="table-container">
 <table id="attendanceTable">
 <tr>
-<th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Actions</th>
+<th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Status</th><th>Actions</th>
 </tr>
 </table>
 </div>
 </main>
 </div>
 
-<!-- Firebase & SheetJS -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDN5lTsnyfIombF5mYhNOeppcPgLMBRX1c",
   authDomain: "my-lebanons-app.firebaseapp.com",
@@ -125,15 +99,12 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Employees list
 let employees = [
   { id: "123-456-7907", name: "ميس السلوم" },
   { id: "123-456-7906", name: "علي جعفر" },
   { id: "123-456-7905", name: "وعد الأحمد" }
-  // Add more...
 ];
 
-// Auth state
 auth.onAuthStateChanged(user => {
   if(user){
     document.getElementById("loginPage").style.display = "none";
@@ -173,12 +144,23 @@ function formatDate(dateStr){
   return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; 
 }
 
-// Load Data
+function calculateWorkHours(checkin, checkout, date){
+  if(!checkin || !checkout || checkout==='-') return '-';
+  const inParts = checkin.split(':').map(Number);
+  const outParts = checkout.split(':').map(Number);
+  const inDate = new Date(date); inDate.setHours(inParts[0], inParts[1], 0,0);
+  const outDate = new Date(date); outDate.setHours(outParts[0], outParts[1],0,0);
+  const diffMs = outDate - inDate;
+  const diffH = Math.floor(diffMs/3600000);
+  const diffM = Math.floor((diffMs%3600000)/60000);
+  return `${diffH}h ${diffM}m`;
+}
+
 function loadData(){
   db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
     const table=document.getElementById("attendanceTable");
     table.innerHTML=`<tr>
-      <th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Actions</th>
+      <th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Status</th><th>Actions</th>
       </tr>`;
     snapshot.forEach(doc=>{
       const r=doc.data();
@@ -188,18 +170,18 @@ function loadData(){
       row.insertCell(2).innerText=formatDate(r.date);
       row.insertCell(3).innerText=r.checkin?r.checkin:"-";
       row.insertCell(4).innerText=r.checkout?r.checkout:"-";
-      const st=row.insertCell(5);
+      row.insertCell(5).innerText=calculateWorkHours(r.checkin, r.checkout, r.date);
+      const st=row.insertCell(6);
       st.innerText=r.status;
       st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
-      const actions=row.insertCell(6);
-      actions.innerHTML=`<button class="present" onclick="toggleStatus('${doc.id}','${r.status}')">status</button>
+      const actions=row.insertCell(7);
+      actions.innerHTML=`<button class="present" onclick="toggleStatus('${doc.id}','${r.status}')">Status</button>
                          <button class="edit" onclick="editRecord('${doc.id}')">Edit</button>
                          <button class="delete" onclick="deleteRecord('${doc.id}')">Delete</button>`;
     });
   });
 }
 
-// Manual Check In/Out
 function manualCheckIn(){
   const id=document.getElementById("employeeSelect").value;
   const emp=employees.find(e=>e.id===id);
@@ -207,7 +189,7 @@ function manualCheckIn(){
   db.collection("attendance").add({
     id: emp.id, name: emp.name,
     date: now.toISOString(),
-    checkin: now.toLocaleTimeString("en-GB"),
+    checkin: now.toLocaleTimeString("en-GB",{hour12:false}),
     checkout: "-",
     status: "حاضر"
   }).then(()=>loadData());
@@ -217,23 +199,32 @@ function manualCheckOut(){
   const id=document.getElementById("employeeSelect").value;
   db.collection("attendance").where("id","==",id).where("checkout","==","-").get().then(snap=>{
     if(!snap.empty){
-      snap.forEach(doc=>{ doc.ref.update({checkout:new Date().toLocaleTimeString("en-GB")}); });
-      loadData();
+      snap.forEach(doc=>{
+        const now=new Date();
+        const checkout=now.toLocaleTimeString("en-GB",{hour12:false});
+        doc.ref.update({checkout:checkout}).then(()=>loadData());
+      });
     } else alert("No check-in found");
   });
 }
 
-// Toggle Status
 function toggleStatus(docId,current){
   const newStatus = current==="حاضر"?"غائب":"حاضر";
   db.collection("attendance").doc(docId).update({status:newStatus}).then(()=>loadData());
 }
 
-// Edit/Delete
 function editRecord(docId){ 
-  const newCheckIn = prompt("Enter Check In HH:MM"); 
-  const newCheckOut = prompt("Enter Check Out HH:MM"); 
-  db.collection("attendance").doc(docId).update({checkin:newCheckIn, checkout:newCheckOut}).then(()=>loadData());
+  db.collection("attendance").doc(docId).get().then(doc=>{
+    const r=doc.data();
+    const newDate=prompt("Enter Date YYYY-MM-DD", r.date.substring(0,10));
+    const newCheckIn=prompt("Enter Check In HH:MM", r.checkin);
+    const newCheckOut=prompt("Enter Check Out HH:MM", r.checkout);
+    db.collection("attendance").doc(docId).update({
+      date: newDate+"T00:00:00.000Z",
+      checkin: newCheckIn,
+      checkout: newCheckOut
+    }).then(()=>loadData());
+  });
 }
 
 function deleteRecord(docId){ 
@@ -242,7 +233,6 @@ function deleteRecord(docId){
   } 
 }
 
-// Export Excel
 function exportExcel(){
   db.collection("attendance").get().then(snapshot=>{
     const data=[];
@@ -250,7 +240,9 @@ function exportExcel(){
       const r=doc.data();
       data.push({
         ID:r.id, Name:r.name, Date:formatDate(r.date),
-        "Check In":r.checkin, "Check Out":r.checkout, Status:r.status
+        "Check In":r.checkin, "Check Out":r.checkout,
+        "Work Hours":calculateWorkHours(r.checkin,r.checkout,r.date),
+        Status:r.status
       });
     });
     const ws=XLSX.utils.json_to_sheet(data);
@@ -260,7 +252,6 @@ function exportExcel(){
   });
 }
 
-// Search
 function searchRecords(){
   const q=document.getElementById("searchBox").value.toLowerCase();
   const table=document.getElementById("attendanceTable");const tr=table.getElementsByTagName("tr");
