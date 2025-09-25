@@ -8,9 +8,9 @@
 body { font-family:"Segoe UI", Tahoma, sans-serif; background:#f4f6f9; margin:0; padding:0; text-align:center; overflow-x:hidden;}
 header { background:#2c3e50; color:white; padding:15px; font-size:20px;}
 main { padding:20px; max-width:1000px; margin:auto;}
-input, select { padding:10px; width:220px; border:1px solid #ccc; border-radius:5px; margin-bottom:10px;}
-#passwordContainer{position:relative;}
-#togglePass{position:absolute; right:10px; top:12px; cursor:pointer;}
+input, select { padding:10px; width:97%; max-width:200px; border:1px solid #ccc; border-radius:5px; margin-bottom:10px; font-size:14px;}
+#passwordContainer{position:relative; width:100%; max-width:200px; margin:auto;}
+#togglePass{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; width:25px; height:25px; background:url('https://img.icons8.com/ios/50/000000/visible--v1.png') no-repeat center center; background-size:contain;}
 button { padding:10px 18px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:14px; transition:0.3s;}
 button:hover{opacity:0.85;}
 .in{background:#27ae60;color:white;}
@@ -18,16 +18,17 @@ button:hover{opacity:0.85;}
 .excel{background:#2980b9;color:white;}
 .logout{background:#8e44ad;color:white;}
 .resetPass{background:#f39c12;color:white;}
+.login{background:#34495e;color:white;}
 table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
 th, td{border:1px solid #ddd; padding:12px; text-align:center; font-size:14px;}
 th{background:#34495e;color:white;}
 .status-hadir{color:#27ae60;font-weight:bold;}
 .status-ghayeb{color:#e74c3c;font-weight:bold;}
 #loginPage, #app{display:none;}
-.login-container{background:white; padding:35px; border-radius:5px; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:inline-block; margin-top:150px;}
-#searchBox{width:250px; padding:8px 12px; font-size:14px; margin-top:10px;}
+.login-container{background:white; padding:35px; border-radius:5px; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:inline-block; margin-top:50px; width:50%; max-width:400px;}
+#searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
 .table-container{overflow-x:auto;}
-@media (max-width:768px){input,select{width:100%;} button{width:100%;margin:5px 0;} table, th, td{font-size:12px;}}
+@media (max-width:768px){input,select{width:95%;} button{width:95%; margin:5px 0;} table, th, td{font-size:12px;}}
 </style>
 </head>
 <body>
@@ -40,8 +41,8 @@ th{background:#34495e;color:white;}
     <h2>🔑 Login</h2>
     <input type="email" id="email" placeholder="Email"><br>
     <div id="passwordContainer">
-      <input type="password" id="password" placeholder="Password" style="width:100%; padding-right:35px;"><br>
-      <span id="togglePass">👁️</span>
+      <input type="password" id="password" placeholder="Password"><br>
+      <div id="togglePass"></div>
     </div>
     <button class="login" onclick="login()">Login</button><br>
     <button class="resetPass" onclick="resetPassword()">Reset Password</button>
@@ -114,9 +115,27 @@ let employees = [
 ];
 
 // Toggle password visibility
-document.getElementById("togglePass").addEventListener("click", function(){
+let passVisible = false;
+document.getElementById("togglePass").addEventListener("click", ()=>{
   const pass = document.getElementById("password");
-  pass.type = pass.type === "password" ? "text" : "password";
+  passVisible = !passVisible;
+  pass.type = passVisible ? "text" : "password";
+  document.getElementById("togglePass").style.backgroundImage = passVisible 
+    ? "url('https://img.icons8.com/ios/50/000000/closed-eye.png')" 
+    : "url('https://img.icons8.com/ios/50/000000/visible--v1.png')";
+});
+
+// Firebase Auth state
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadEmployees();
+    loadData();
+  } else {
+    document.getElementById("loginPage").style.display = "block";
+    document.getElementById("app").style.display = "none";
+  }
 });
 
 // Login
@@ -124,12 +143,6 @@ function login(){
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   auth.signInWithEmailAndPassword(email,password)
-    .then(()=>{ 
-      document.getElementById("loginPage").style.display="none";
-      document.getElementById("app").style.display="block";
-      loadEmployees();
-      loadData();
-    })
     .catch(err=>alert("⚠️ "+err.message));
 }
 
@@ -144,10 +157,7 @@ function resetPassword(){
 
 // Logout
 function logout(){
-  auth.signOut().then(()=>{
-    document.getElementById("app").style.display="none";
-    document.getElementById("loginPage").style.display="block";
-  });
+  auth.signOut();
 }
 
 // Load employees
@@ -173,7 +183,7 @@ function formatDuration(cIn,cOut){
   return `${Math.floor(total/60)}h ${total%60}m`;
 }
 
-// Load data from Firebase
+// Load data
 function loadData(){
   db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
     const table=document.getElementById("attendanceTable");
@@ -218,7 +228,9 @@ function checkOut(){
     .get()
     .then(querySnapshot=>{
       if(!querySnapshot.empty){
-        querySnapshot.forEach(doc=>{ doc.ref.update({checkout:new Date().toISOString()}); });
+        querySnapshot.forEach(doc=>{
+          doc.ref.update({checkout:new Date().toISOString()});
+        });
         loadData();
       }else alert("⚠️ الموظف لم يسجل حضور بعد");
     });
