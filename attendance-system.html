@@ -13,14 +13,19 @@ input, select { padding:10px; width:97%; max-width:200px; border:1px solid #ccc;
 #togglePass{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; width:25px; height:25px; background:url('https://img.icons8.com/ios/50/000000/visible--v1.png') no-repeat center center; background-size:contain;}
 button { padding:10px 18px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:14px; transition:0.3s;}
 button:hover{opacity:0.85;}
-.status-hadir{background:#27ae60;color:white;font-weight:bold;border-radius:5px;}
-.status-ghayeb{background:#e74c3c;color:white;font-weight:bold;border-radius:5px;}
+.in{background:#27ae60;color:white;} /* حاضر */
+.out{background:#e74c3c;color:white;} /* غائب */
+.edit{background:#f39c12;color:white;} /* تعديل */
+.delete{background:#c0392b;color:white;} /* حذف */
+.excel{background:#2980b9;color:white;}
 .logout{background:#8e44ad;color:white;}
 .resetPass{background:#f39c12;color:white;}
 .login{background:#34495e;color:white;}
 table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
 th, td{border:1px solid #ddd; padding:12px; text-align:center; font-size:14px;}
 th{background:#34495e;color:white;}
+.status-hadir{color:#27ae60;font-weight:bold;}
+.status-ghayeb{color:#e74c3c;font-weight:bold;}
 #loginPage, #app{display:none;}
 .login-container{background:white; padding:35px; border-radius:5px; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:inline-block; margin-top:50px; width:50%; max-width:400px;}
 #searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
@@ -53,11 +58,8 @@ th{background:#34495e;color:white;}
 
 <div class="controls">
   <select id="employeeSelect"></select><br>
-  <select id="statusSelect">
-    <option value="حاضر">حاضر</option>
-    <option value="غائب">غائب</option>
-  </select><br>
-  <button onclick="markStatus()">✅ سجل الحالة</button>
+  <button class="in" onclick="markPresent()">✅ حاضر</button>
+  <button class="out" onclick="markAbsent()">❌ غائب</button>
   <button class="excel" onclick="exportExcel()">📊 Export Excel</button>
 </div>
 
@@ -96,7 +98,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Employees
+// Employees list
 let employees = [
   { id: "123-456-7907", name: "ميس السلوم" },
   { id: "123-456-7906", name: "علي جعفر" },
@@ -114,7 +116,7 @@ let employees = [
   { id: "123-456-7891", name: "رضا الجمعة" }
 ];
 
-// Toggle password
+// Toggle password visibility
 let passVisible = false;
 document.getElementById("togglePass").addEventListener("click", ()=>{
   const pass = document.getElementById("password");
@@ -146,7 +148,7 @@ function login(){
     .catch(err=>alert("⚠️ "+err.message));
 }
 
-// Reset password
+// Reset Password
 function resetPassword(){
   const email = document.getElementById("email").value.trim();
   if(!email){ return alert("⚠️ أدخل البريد الإلكتروني لإرسال رابط إعادة التعيين"); }
@@ -172,7 +174,7 @@ function loadEmployees(){
 
 // Format date
 function formatDate(dateStr){
-  const d = new Date(dateStr);
+  const d=new Date(dateStr);
   return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
 }
 
@@ -189,32 +191,44 @@ function loadData(){
       row.insertCell(0).innerText=r.id;
       row.insertCell(1).innerText=r.name;
       row.insertCell(2).innerText=formatDate(r.date);
-      row.insertCell(3).innerHTML=r.checkin?r.checkin:"-";
-      row.insertCell(4).innerHTML=r.checkout?r.checkout:"-";
+      row.insertCell(3).innerText=r.checkin?r.checkin:"-";
+      row.insertCell(4).innerText=r.checkout?r.checkout:"-";
       const st=row.insertCell(5);
       st.innerText=r.status;
       st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
       const actions=row.insertCell(6);
-      actions.innerHTML=`<button onclick="editRecord('${doc.id}')">✏️ تعديل</button>
-                         <button onclick="deleteRecord('${doc.id}')">🗑️ حذف</button>`;
+      actions.innerHTML=`<button class="edit" onclick="editRecord('${doc.id}')">✏️ تعديل</button>
+                         <button class="delete" onclick="deleteRecord('${doc.id}')">🗑️ حذف</button>`;
     });
   });
 }
 
-// Mark status
-function markStatus(){
+// Mark Present / Absent
+function markPresent(){
   const id=document.getElementById("employeeSelect").value;
   const emp=employees.find(e=>e.id===id);
-  const status=document.getElementById("statusSelect").value;
   const now=new Date();
   db.collection("attendance").add({
     id: emp.id,
     name: emp.name,
     date: now.toISOString(),
-    checkin: status==="حاضر"?new Date().toLocaleTimeString("en-GB"):"-",
+    checkin: new Date().toLocaleTimeString("en-GB"),
     checkout: "-",
-    status: status
-  }).then(()=>{ loadData(); });
+    status: "حاضر"
+  }).then(()=>loadData());
+}
+function markAbsent(){
+  const id=document.getElementById("employeeSelect").value;
+  const emp=employees.find(e=>e.id===id);
+  const now=new Date();
+  db.collection("attendance").add({
+    id: emp.id,
+    name: emp.name,
+    date: now.toISOString(),
+    checkin: "-",
+    checkout: "-",
+    status: "غائب"
+  }).then(()=>loadData());
 }
 
 // Edit record
