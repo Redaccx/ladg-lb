@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Attendance System</title>
+<title>Attendance System - Firebase</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body { font-family: "Segoe UI", Tahoma, sans-serif; background:#f4f6f9; margin:0; padding:0; text-align:center; overflow-x:hidden;}
@@ -77,9 +77,27 @@ p.rights a{color:#2980b9;text-decoration:none;}
 </main>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
 <script>
-// Login credentials
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDN5lTsnyfIombF5mYhNOeppcPgLMBRX1c",
+  authDomain: "my-lebanons-app.firebaseapp.com",
+  projectId: "my-lebanons-app",
+  storageBucket: "my-lebanons-app.firebasestorage.app",
+  messagingSenderId: "1025400869383",
+  appId: "1:1025400869383:web:9f58b59ce4e018849650a2"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Login credentials (for simplicity, can later use Firebase Auth)
 let savedUser = { username:"ladg", password:"ladg@$2025" };
 
 // Employees list
@@ -130,7 +148,7 @@ function logout(){
   document.getElementById("loginPage").style.display="block";
 }
 
-// Load employees in dropdown
+// Load employees
 function loadEmployees(){
   const sel = document.getElementById("employeeSelect");
   sel.innerHTML="";
@@ -142,39 +160,36 @@ function loadEmployees(){
   });
 }
 
-// Format date
+// Format date & duration
 function formatDate(dateStr){
   const d=new Date(dateStr);
   return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
 }
-
-// Format duration
 function formatDuration(cIn,cOut){
   const diff=new Date(cOut)-new Date(cIn);
   const total=Math.floor(diff/60000);
   return `${Math.floor(total/60)}h ${total%60}m`;
 }
 
-// Load attendance data
+// Load data from Firebase
 function loadData(){
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  const table=document.getElementById("attendanceTable");
-  table.innerHTML=`<tr><th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Status</th><th>Actions</th></tr>`;
-  records.forEach((r,i)=>{
-    const row=table.insertRow();
-    row.insertCell(0).innerText=r.id;
-    row.insertCell(1).innerText=r.name;
-    row.insertCell(2).innerText=formatDate(r.date);
-    row.insertCell(3).innerText=new Date(r.checkin).toLocaleTimeString("en-GB");
-    row.insertCell(4).innerText=r.checkout?new Date(r.checkout).toLocaleTimeString("en-GB"):"-";
-    row.insertCell(5).innerText=r.checkout?formatDuration(r.checkin,r.checkout):"-";
-    const st=row.insertCell(6);
-    st.innerText=r.status||"-";
-    st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
-    const act=row.insertCell(7);
-    act.innerHTML=`<button class="edit" onclick="editRecord(${i})">Edit</button>
-                   <button class="delete" onclick="deleteRecord(${i})">Delete</button>
-                   <button class="in" onclick="toggleStatus(${i})">Toggle</button>`;
+  db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
+    const table=document.getElementById("attendanceTable");
+    table.innerHTML=`<tr><th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Duration</th><th>Status</th><th>Actions</th></tr>`;
+    snapshot.forEach(doc=>{
+      const r=doc.data();
+      const row=table.insertRow();
+      row.insertCell(0).innerText=r.id;
+      row.insertCell(1).innerText=r.name;
+      row.insertCell(2).innerText=formatDate(r.date);
+      row.insertCell(3).innerText=new Date(r.checkin).toLocaleTimeString("en-GB");
+      row.insertCell(4).innerText=r.checkout?r.checkout:"-";
+      row.insertCell(5).innerText=r.checkout?formatDuration(r.checkin,r.checkout):"-";
+      const st=row.insertCell(6);
+      st.innerText=r.status;
+      st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
+      row.insertCell(7).innerHTML="-";
+    });
   });
 }
 
@@ -183,48 +198,62 @@ function checkIn(){
   const id=document.getElementById("employeeSelect").value;
   const emp=employees.find(e=>e.id===id);
   const now=new Date();
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  records.push({id:emp.id,name:emp.name,date:now.toISOString(),checkin:now.toISOString(),checkout:null,status:"حاضر"});
-  localStorage.setItem("attendance",JSON.stringify(records));
-  loadData();
+  db.collection("attendance").add({
+    id: emp.id,
+    name: emp.name,
+    date: now.toISOString(),
+    checkin: now.toISOString(),
+    checkout: null,
+    status: "حاضر"
+  }).then(()=>{ loadData(); });
 }
 
 // Check Out
 function checkOut(){
   const id=document.getElementById("employeeSelect").value;
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  const rec=[...records].reverse().find(r=>r.id===id && !r.checkout);
-  if(rec){ rec.checkout=new Date().toISOString(); localStorage.setItem("attendance",JSON.stringify(records)); loadData();}
-  else alert("⚠️ الموظف لم يسجل حضور بعد");
+  db.collection("attendance")
+    .where("id","==",id)
+    .where("checkout","==",null)
+    .get()
+    .then(querySnapshot=>{
+      if(!querySnapshot.empty){
+        querySnapshot.forEach(doc=>{
+          doc.ref.update({checkout:new Date().toISOString()});
+        });
+        loadData();
+      }else alert("⚠️ الموظف لم يسجل حضور بعد");
+    });
 }
-
-// Toggle Status
-function toggleStatus(i){const records=JSON.parse(localStorage.getItem("attendance")||"[]");records[i].status=records[i].status==="حاضر"?"غائب":"حاضر";localStorage.setItem("attendance",JSON.stringify(records));loadData();}
-
-// Edit Record
-function editRecord(i){
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");const r=records[i];
-  let newDate=prompt("📅 Enter Date (YYYY-MM-DD):",r.date.split("T")[0]);if(newDate){r.date=newDate+"T00:00:00";}
-  let newIn=prompt("🕒 Enter Check-In (HH:MM:SS):",new Date(r.checkin).toLocaleTimeString("en-GB"));if(newIn){const d=new Date(r.date);const[h,m,s]=newIn.split(":");d.setHours(h);d.setMinutes(m);d.setSeconds(s||0);r.checkin=d.toISOString();}
-  let newOut=r.checkout?new Date(r.checkout).toLocaleTimeString("en-GB"):"";newOut=prompt("🕒 Enter Check-Out (HH:MM:SS):",newOut);if(newOut){const d=new Date(r.date);const[h,m,s]=newOut.split(":");d.setHours(h);d.setMinutes(m);d.setSeconds(s||0);r.checkout=d.toISOString();}
-  localStorage.setItem("attendance",JSON.stringify(records));loadData();
-}
-
-// Delete
-function deleteRecord(i){if(!confirm("⚠️ Delete record?"))return;const records=JSON.parse(localStorage.getItem("attendance")||"[]");records.splice(i,1);localStorage.setItem("attendance",JSON.stringify(records));loadData();}
 
 // Export Excel
 function exportExcel(){
-  const records=JSON.parse(localStorage.getItem("attendance")||"[]");
-  const data=records.map(r=>({ID:r.id,Name:r.name,Date:formatDate(r.date),"Check In":new Date(r.checkin).toLocaleTimeString("en-GB"),"Check Out":r.checkout?new Date(r.checkout).toLocaleTimeString("en-GB"):"-",Duration:r.checkout?formatDuration(r.checkin,r.checkout):"-",Status:r.status}));
-  const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Records");XLSX.writeFile(wb,"attendance.xlsx");
+  db.collection("attendance").get().then(snapshot=>{
+    const data=[];
+    snapshot.forEach(doc=>{
+      const r=doc.data();
+      data.push({
+        ID:r.id,
+        Name:r.name,
+        Date:formatDate(r.date),
+        "Check In":new Date(r.checkin).toLocaleTimeString("en-GB"),
+        "Check Out":r.checkout?r.checkout:"-",
+        Duration:r.checkout?formatDuration(r.checkin,r.checkout):"-",
+        Status:r.status
+      });
+    });
+    const ws=XLSX.utils.json_to_sheet(data);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Records");
+    XLSX.writeFile(wb,"attendance.xlsx");
+  });
 }
 
 // Search
 function searchRecords(){
   const q=document.getElementById("searchBox").value.toLowerCase();
   const table=document.getElementById("attendanceTable");const tr=table.getElementsByTagName("tr");
-  for(let i=1;i<tr.length;i++){let td0=tr[i].getElementsByTagName("td")[0];let td1=tr[i].getElementsByTagName("td")[1];
+  for(let i=1;i<tr.length;i++){
+    let td0=tr[i].getElementsByTagName("td")[0];let td1=tr[i].getElementsByTagName("td")[1];
     if(td0&&td1){let txt=(td0.textContent+td1.textContent).toLowerCase();tr[i].style.display=txt.includes(q)?"":"none";}
   }
 }
