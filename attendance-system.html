@@ -9,12 +9,11 @@ body { font-family:"Segoe UI", Tahoma, sans-serif; background:#f4f6f9; margin:0;
 header { background:#2c3e50; color:white; padding:15px; font-size:20px;}
 main { padding:20px; max-width:1000px; margin:auto;}
 input, select { padding:10px; width:97%; max-width:200px; border:1px solid #ccc; border-radius:5px; margin-bottom:10px; font-size:14px;}
-#passwordContainer{position:relative; width:100%; max-width:200px; margin:auto;}
-#togglePass{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; width:25px; height:25px; background:url('https://img.icons8.com/ios/50/000000/visible--v1.png') no-repeat center center; background-size:contain;}
-button { padding:10px 18px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:14px; transition:0.3s;}
+button { padding:10px 18px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:12px; transition:0.3s;}
 button:hover{opacity:0.85;}
-.in{background:#27ae60;color:white;} /* حاضر */
-.out{background:#e74c3c;color:white;} /* غائب */
+.in{background:#27ae60;color:white;} /* Check In */
+.out{background:#e74c3c;color:white;} /* Check Out */
+.present{background:#2ecc71;color:white;} /* حاضر/غائب */
 .edit{background:#f39c12;color:white;} /* تعديل */
 .delete{background:#c0392b;color:white;} /* حذف */
 .excel{background:#2980b9;color:white;}
@@ -42,10 +41,7 @@ th{background:#34495e;color:white;}
   <div class="login-container">
     <h2>🔑 Login</h2>
     <input type="email" id="email" placeholder="Email"><br>
-    <div id="passwordContainer">
-      <input type="password" id="password" placeholder="Password"><br>
-      <div id="togglePass"></div>
-    </div>
+    <input type="password" id="password" placeholder="Password"><br>
     <button class="login" onclick="login()">Login</button><br>
     <button class="resetPass" onclick="resetPassword()">Reset Password</button>
   </div>
@@ -58,8 +54,8 @@ th{background:#34495e;color:white;}
 
 <div class="controls">
   <select id="employeeSelect"></select><br>
-  <button class="in" onclick="markPresent()">✅ حاضر</button>
-  <button class="out" onclick="markAbsent()">❌ غائب</button>
+  <button class="in" onclick="manualCheckIn()">⏰ Check In</button>
+  <button class="out" onclick="manualCheckOut()">⏰ Check Out</button>
   <button class="excel" onclick="exportExcel()">📊 Export Excel</button>
 </div>
 
@@ -78,7 +74,6 @@ th{background:#34495e;color:white;}
 </main>
 </div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -116,17 +111,6 @@ let employees = [
   { id: "123-456-7891", name: "رضا الجمعة" }
 ];
 
-// Toggle password visibility
-let passVisible = false;
-document.getElementById("togglePass").addEventListener("click", ()=>{
-  const pass = document.getElementById("password");
-  passVisible = !passVisible;
-  pass.type = passVisible ? "text" : "password";
-  document.getElementById("togglePass").style.backgroundImage = passVisible 
-    ? "url('https://img.icons8.com/ios/50/000000/closed-eye.png')" 
-    : "url('https://img.icons8.com/ios/50/000000/visible--v1.png')";
-});
-
 // Auth state
 auth.onAuthStateChanged(user => {
   if(user){
@@ -140,43 +124,15 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// Login
 function login(){
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  auth.signInWithEmailAndPassword(email,password)
-    .catch(err=>alert("⚠️ "+err.message));
+  auth.signInWithEmailAndPassword(email,password).catch(err=>alert(err.message));
 }
-
-// Reset Password
-function resetPassword(){
-  const email = document.getElementById("email").value.trim();
-  if(!email){ return alert("⚠️ أدخل البريد الإلكتروني لإرسال رابط إعادة التعيين"); }
-  auth.sendPasswordResetEmail(email)
-    .then(()=>{ alert("✅ تم إرسال رابط إعادة تعيين كلمة المرور"); })
-    .catch(err=>alert("⚠️ "+err.message));
-}
-
-// Logout
+function resetPassword(){ const email=document.getElementById("email").value.trim(); if(!email){alert("أدخل البريد"); return;} auth.sendPasswordResetEmail(email).then(()=>alert("تم إرسال الرابط")).catch(err=>alert(err.message)); }
 function logout(){ auth.signOut(); }
-
-// Load employees
-function loadEmployees(){
-  const sel = document.getElementById("employeeSelect");
-  sel.innerHTML="";
-  employees.forEach(emp=>{
-    const opt=document.createElement("option");
-    opt.value=emp.id;
-    opt.textContent=`${emp.id} - ${emp.name}`;
-    sel.appendChild(opt);
-  });
-}
-
-// Format date
-function formatDate(dateStr){
-  const d=new Date(dateStr);
-  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
-}
+function loadEmployees(){ const sel=document.getElementById("employeeSelect"); sel.innerHTML=""; employees.forEach(e=>{ const opt=document.createElement("option"); opt.value=e.id; opt.textContent=`${e.id} - ${e.name}`; sel.appendChild(opt); }); }
+function formatDate(dateStr){ const d=new Date(dateStr); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; }
 
 // Load data
 function loadData(){
@@ -197,67 +153,51 @@ function loadData(){
       st.innerText=r.status;
       st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
       const actions=row.insertCell(6);
-      actions.innerHTML=`<button class="edit" onclick="editRecord('${doc.id}')">✏️ تعديل</button>
+      actions.innerHTML=`<button class="present" onclick="toggleStatus('${doc.id}','${r.status}')">حاضر/غائب</button>
+                         <button class="edit" onclick="editRecord('${doc.id}')">✏️ تعديل</button>
                          <button class="delete" onclick="deleteRecord('${doc.id}')">🗑️ حذف</button>`;
     });
   });
 }
 
-// Mark Present / Absent
-function markPresent(){
+// Manual Check In/Out
+function manualCheckIn(){
   const id=document.getElementById("employeeSelect").value;
   const emp=employees.find(e=>e.id===id);
   const now=new Date();
   db.collection("attendance").add({
-    id: emp.id,
-    name: emp.name,
+    id: emp.id, name: emp.name,
     date: now.toISOString(),
-    checkin: new Date().toLocaleTimeString("en-GB"),
+    checkin: now.toLocaleTimeString("en-GB"),
     checkout: "-",
     status: "حاضر"
   }).then(()=>loadData());
 }
-function markAbsent(){
+function manualCheckOut(){
   const id=document.getElementById("employeeSelect").value;
-  const emp=employees.find(e=>e.id===id);
-  const now=new Date();
-  db.collection("attendance").add({
-    id: emp.id,
-    name: emp.name,
-    date: now.toISOString(),
-    checkin: "-",
-    checkout: "-",
-    status: "غائب"
-  }).then(()=>loadData());
-}
-
-// Edit record
-function editRecord(docId){
-  db.collection("attendance").doc(docId).get().then(doc=>{
-    const r=doc.data();
-    const newStatus=prompt("حالة الموظف (حاضر/غائب):", r.status);
-    if(newStatus){
-      const newCheckIn=newStatus==="حاضر"?prompt("وقت الحضور HH:MM", r.checkin):"-";
-      const newCheckOut=newStatus==="حاضر"?prompt("وقت الانصراف HH:MM", r.checkout):"-";
-      const newDate=prompt("تاريخ اليوم DD/MM/YYYY:", formatDate(r.date));
-      const parts=newDate.split("/");
-      const isoDate=new Date(parts[2],parts[1]-1,parts[0]).toISOString();
-      db.collection("attendance").doc(docId).update({
-        status:newStatus,
-        checkin:newCheckIn,
-        checkout:newCheckOut,
-        date:isoDate
-      }).then(()=>loadData());
-    }
+  db.collection("attendance").where("id","==",id).where("checkout","==","-").get().then(snap=>{
+    if(!snap.empty){
+      snap.forEach(doc=>{
+        doc.ref.update({checkout:new Date().toLocaleTimeString("en-GB")});
+      });
+      loadData();
+    } else alert("لم يتم تسجيل الحضور بعد");
   });
 }
 
-// Delete record
-function deleteRecord(docId){
-  if(confirm("هل أنت متأكد من حذف هذا السجل؟")){
-    db.collection("attendance").doc(docId).delete().then(()=>loadData());
-  }
+// Toggle Present/Absent
+function toggleStatus(docId,current){
+  const newStatus = current==="حاضر"?"غائب":"حاضر";
+  db.collection("attendance").doc(docId).update({status:newStatus}).then(()=>loadData());
 }
+
+// Edit/Delete
+function editRecord(docId){ 
+  const newCheckIn = prompt("وقت الحضور HH:MM"); 
+  const newCheckOut = prompt("وقت الانصراف HH:MM"); 
+  db.collection("attendance").doc(docId).update({checkin:newCheckIn, checkout:newCheckOut}).then(()=>loadData());
+}
+function deleteRecord(docId){ if(confirm("هل تريد حذف هذا السجل؟")){ db.collection("attendance").doc(docId).delete().then(()=>loadData()); } }
 
 // Export Excel
 function exportExcel(){
@@ -266,12 +206,8 @@ function exportExcel(){
     snapshot.forEach(doc=>{
       const r=doc.data();
       data.push({
-        ID:r.id,
-        Name:r.name,
-        Date:formatDate(r.date),
-        "Check In":r.checkin,
-        "Check Out":r.checkout,
-        Status:r.status
+        ID:r.id, Name:r.name, Date:formatDate(r.date),
+        "Check In":r.checkin, "Check Out":r.checkout, Status:r.status
       });
     });
     const ws=XLSX.utils.json_to_sheet(data);
