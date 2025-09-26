@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>نظام حساب الرواتب </title>
+<style>
+body{font-family:"Cairo","Segoe UI",Tahoma,sans-serif;background:#f6f7fb;margin:0;padding:10px;color:#222}
+.container{max-width:1000px;margin:0 auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);display:none;}
+h1{text-align:center;color:#C1272D;margin:0 0 12px;font-size:1.4rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
+label{display:block;margin-bottom:5px;font-weight:600;font-size:14px}
+input,select{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{background:#C1272D;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;flex:1}
+button.ghost{background:#fff;color:#C1272D;border:2px solid #C1272D}
+.result{margin-top:16px;padding:12px;border-radius:8px;background:#fafafa;border:1px solid #eee}
+.row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #eee;font-size:14px}
+.row:last-child{border-bottom:none}
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+th,td{padding:8px;border:1px solid #eee;text-align:center}
+.delete-btn{background:red;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer}
+.edit-btn{background:orange;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer}
+.table-wrapper{overflow-x:auto}
+#loginBox{max-width:400px;margin:20px auto;text-align:center;}
+#loginBox input{width:100%;padding:8px;margin:6px 0;}
+#loginBox button{width:48%;margin:4px 1%;padding:10px;}
+.password-toggle{margin-top:4px;background:#eee;color:#222;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px;width:100%;}
+@media (max-width:600px){
+  .row{flex-direction:column;align-items:flex-start;font-size:13px}
+  .actions{flex-direction:column}
+  button{flex:unset;width:100%}
+  h1{font-size:1.2rem}
+  .container{padding:10px}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- تسجيل الدخول -->
+<div id="loginBox">
+  <h2>تسجيل الدخول</h2>
+  <input id="email" type="email" placeholder="البريد الإلكتروني">
+  <input id="password" type="password" placeholder="كلمة المرور">
+  <button id="togglePassword" class="password-toggle">عرض / إخفاء كلمة المرور</button>
+  <div>
+    <button id="loginBtn">دخول</button>
+    <button id="resetPassBtn" class="ghost">إعادة تعيين كلمة المرور</button>
+  </div>
+  <p id="loginMsg" style="color:red;font-size:13px"></p>
+</div>
+
+<!-- النظام -->
+<div class="container">
+<h1>نظام حساب الرواتب</h1>
+<div style="text-align:right;margin-bottom:10px;">
+  <button id="logoutBtn">تسجيل الخروج</button>
+</div>
+
+<div class="grid">
+  <div>
+    <label>الموظف</label>
+    <select id="empSelect"></select>
+    <label class="small">الوظيفة</label>
+    <input id="empJob" type="text" placeholder="مثال: إدخال بيانات">
+  </div>
+  <div>
+    <label>الراتب الشهري الأساسي</label>
+    <input id="baseSalary" type="number" min="0" step="0.01">
+    <label class="small">أيام الشهر</label>
+    <input id="daysInPeriod" type="number" value="30" min="1">
+  </div>
+  <div>
+    <label>أيام الحضور</label>
+    <input id="daysWorked" type="number" value="30" min="0">
+    <label class="small">ساعات إضافية</label>
+    <input id="overtimeHours" type="number" value="0" min="0">
+  </div>
+  <div>
+    <label>أجر الساعة الإضافية</label>
+    <input id="overtimeRate" type="number" value="0" min="0" step="0.01">
+    <label class="small">مكافآت</label>
+    <input id="bonuses" type="number" value="0" min="0" step="0.01">
+  </div>
+  <div>
+    <label>سلفة</label>
+    <input id="advance" type="number" value="0" min="0" step="0.01">
+    <label class="small">خصومات أخرى</label>
+    <input id="otherDeductions" type="number" value="0" min="0" step="0.01">
+  </div>
+</div>
+
+<div class="actions">
+  <button id="calcBtn">حساب الآن</button>
+  <button id="recordBtn" class="ghost">تسجيل</button>
+  <button id="clearForm" class="ghost">تفريغ</button>
+  <button id="exportExcel" class="ghost">تصدير Excel</button>
+</div>
+
+<div class="result" id="resultBox" style="display:none">
+  <div class="row"><div>الراتب النسبي</div><div id="proratedSalary">0</div></div>
+  <div class="row"><div>الساعات الإضافية</div><div id="overtimeAmount">0</div></div>
+  <div class="row"><div>الإجمالي</div><div id="grossBeforeDeductions">0</div></div>
+  <div class="row"><div>خصومات</div><div id="advAndOthers">0</div></div>
+  <div class="row"><div><strong>الصافي</strong></div><div id="netPay"><strong>0</strong></div></div>
+</div>
+
+<h3 style="margin-top:18px">السجلات</h3>
+<div class="table-wrapper">
+<table id="recordsTable">
+  <thead>
+    <tr>
+      <th>#</th><th>ID</th><th>الموظف</th><th>الوظيفة</th><th>الراتب</th>
+      <th>الأيام</th><th>الصافي</th><th>تاريخ</th><th>خيارات</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+</div>
+
+<script>
+const firebaseConfig = {
+ apiKey: "AIzaSyA6fS9KVSX_XVUyXVuG1Zr3xbJCWrakBaU",
+ authDomain: "ladg-employee.firebaseapp.com",
+ databaseURL: "https://ladg-employee-default-rtdb.firebaseio.com",
+ projectId: "ladg-employee",
+ storageBucket: "ladg-employee.firebasestorage.app",
+ messagingSenderId: "406237266317",
+ appId: "1:406237266317:web:73054658c737aa3906bdc4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+const loginBox=document.getElementById('loginBox');
+const loginBtn=document.getElementById('loginBtn');
+const logoutBtn=document.getElementById('logoutBtn');
+const loginMsg=document.getElementById('loginMsg');
+const togglePassword=document.getElementById('togglePassword');
+const resetPassBtn=document.getElementById('resetPassBtn');
+const appContainer=document.querySelector('.container');
+const tbody=document.querySelector("#recordsTable tbody");
+
+// الموظفين
+const employees = [
+  {{ id: "123-456-7907", name: "ميس السلوم" },
+  { id: "123-456-7906", name: "علي جعفر" },
+  { id: "123-456-7905", name: "وعد الأحمد" },
+  { id: "123-456-7904", name: "أنور نمر" },
+  { id: "123-456-7903", name: "محسن يوسف" },
+  { id: "123-456-7902", name: "جمعة المحمد" },
+  { id: "123-456-7901", name: "هادي جعفر" },
+  { id: "123-456-7899", name: "محمد جعفر" },
+  { id: "123-456-7898", name: "غدير مصطفى" },
+  { id: "123-456-7897", name: "إلسي عبد الساتر" },
+  { id: "123-456-7895", name: "نور نبها" },
+  { id: "123-456-7894", name: "جاد نبها" },
+  { id: "123-456-7892", name: "هادي عبد الساتر" },
+  { id: "123-456-7891", name: "رضا الجمعة" }
+  
+];
+
+const empSelect=document.getElementById("empSelect");
+employees.forEach(e=>{
+  let opt=document.createElement("option");
+  opt.value=e.id;
+  opt.textContent=`${e.name} (${e.id})`;
+  empSelect.appendChild(opt);
+});
+
+// حساب الرواتب
+function numberFmt(n){return parseFloat(n).toFixed(2);}
+function calcPayroll(d){
+  let base=parseFloat(d.baseSalary)||0;
+  let daysIn=parseInt(d.daysInPeriod)||30;
+  let days=parseInt(d.daysWorked)||0;
+  let otH=parseFloat(d.overtimeHours)||0;
+  let otR=parseFloat(d.overtimeRate)||0;
+  let bonus=parseFloat(d.bonuses)||0;
+  let adv=parseFloat(d.advance)||0;
+  let other=parseFloat(d.otherDeductions)||0;
+  let dailyRate = daysIn ? base/daysIn : 0;
+  let prorated = dailyRate*days;
+  let overtime = otH*otR;
+  let gross = prorated+overtime+bonus;
+  let deductions = adv+other;
+  let net = gross-deductions;
+  return {proratedSalary:prorated,overtimeAmount:overtime,gross:gross,advAndOthers:deductions,net:net};
+}
+function readForm(){return{
+  empId: empSelect.value,
+  empName: empSelect.selectedOptions[0].text.split("(")[0].trim(),
+  empJob: document.getElementById('empJob').value,
+  baseSalary: document.getElementById('baseSalary').value,
+  daysInPeriod: document.getElementById('daysInPeriod').value,
+  daysWorked: document.getElementById('daysWorked').value,
+  overtimeHours: document.getElementById('overtimeHours').value,
+  overtimeRate: document.getElementById('overtimeRate').value,
+  bonuses: document.getElementById('bonuses').value,
+  advance: document.getElementById('advance').value,
+  otherDeductions: document.getElementById('otherDeductions').value
+};}
+function showResult(r){
+  document.getElementById('resultBox').style.display='block';
+  document.getElementById('proratedSalary').innerText=numberFmt(r.proratedSalary);
+  document.getElementById('overtimeAmount').innerText=numberFmt(r.overtimeAmount);
+  document.getElementById('grossBeforeDeductions').innerText=numberFmt(r.gross);
+  document.getElementById('advAndOthers').innerText=numberFmt(r.advAndOthers);
+  document.getElementById('netPay').innerText=numberFmt(r.net);
+}
+
+// تسجيل الدخول المحفوظ
+auth.onAuthStateChanged(user=>{
+  if(user){
+    loginBox.style.display='none';
+    appContainer.style.display='block';
+    logoutBtn.style.display='inline-block';
+    loadRecords();
+  } else {
+    loginBox.style.display='block';
+    appContainer.style.display='none';
+    logoutBtn.style.display='none';
+  }
+});
+
+// أحداث تسجيل الدخول
+loginBtn.onclick=()=>{
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  auth.signInWithEmailAndPassword(email,password)
+    .then(()=>loginMsg.innerText='')
+    .catch(err=>loginMsg.innerText=err.message);
+};
+logoutBtn.onclick=()=>auth.signOut();
+
+// إعادة تعيين كلمة المرور
+resetPassBtn.onclick=()=>{
+  const email=document.getElementById('email').value;
+  if(!email){loginMsg.innerText='يرجى إدخال البريد الإلكتروني أولاً'; return;}
+  auth.sendPasswordResetEmail(email)
+    .then(()=>loginMsg.style.color='green', loginMsg.innerText='تم إرسال رابط إعادة التعيين إلى بريدك')
+    .catch(err=>loginMsg.style.color='red', loginMsg.innerText=err.message);
+};
+
+// عرض/إخفاء كلمة المرور
+togglePassword.onclick=()=>{
+  const passField=document.getElementById('password');
+  if(passField.type==='password'){passField.type='text';}
+  else{passField.type='password';}
+};
+
+// السجلات
+let editRow=null;
+function addRecord(data){
+  const result=calcPayroll(data);
+  const record={...data,net:result.net,date:new Date().toLocaleString()};
+  const newKey=db.ref('payrolls').push().key;
+  db.ref('payrolls/'+newKey).set(record);
+  loadRecords();
+}
+function loadRecords(){
+  tbody.innerHTML='';
+  db.ref('payrolls').once('value',snapshot=>{
+    let i=1;
+    snapshot.forEach(child=>{
+      const r=child.val();
+      const row=document.createElement("tr");
+      row.dataset.key=child.key;
+      row.innerHTML=`<td>${i++}</td>
+        <td>${r.empId}</td>
+        <td>${r.empName}</td>
+        <td>${r.empJob}</td>
+        <td>${numberFmt(r.baseSalary)}</td>
+        <td>${r.daysWorked}/${r.daysInPeriod}</td>
+        <td>${numberFmt(r.net)}</td>
+        <td>${r.date}</td>
+        <td>
+          <button class="edit-btn">تعديل</button>
+          <button class="delete-btn">حذف</button>
+        </td>`;
+      tbody.appendChild(row);
+    });
+  });
+}
+tbody.addEventListener("click",e=>{
+  const row=e.target.closest("tr");
+  if(!row) return;
+  const key=row.dataset.key;
+  if(e.target.classList.contains("delete-btn")){
+    if(key) db.ref('payrolls/'+key).remove();
+    row.remove();
+  }
+  if(e.target.classList.contains("edit-btn")){
+    const c=row.children;
+    empSelect.value=c[1].innerText;
+    document.getElementById('empJob').value=c[3].innerText;
+    document.getElementById('baseSalary').value=c[4].innerText;
+    let days=c[5].innerText.split("/");
+    document.getElementById('daysWorked').value=days[0];
+    document.getElementById('daysInPeriod').value=days[1];
+    editRow=row;
+    document.getElementById('recordBtn').textContent="حفظ التعديل";
+  }
+});
+document.getElementById('recordBtn').onclick=()=>{
+  const data=readForm();
+  const result=calcPayroll(data);
+  if(editRow){
+    const key=editRow.dataset.key;
+    const updatedRecord={...data,net:result.net,date:new Date().toLocaleString()};
+    db.ref('payrolls/'+key).set(updatedRecord);
+    editRow=null;
+    document.getElementById('recordBtn').textContent="تسجيل";
+    loadRecords();
+  } else addRecord(data);
+};
+document.getElementById('calcBtn').onclick=()=>showResult(calcPayroll(readForm()));
+document.getElementById('clearForm').onclick=()=>{
+  document.querySelectorAll("input").forEach(i=>{if(i.type!=="button") i.value="";});
+  editRow=null;
+  document.getElementById('recordBtn').textContent="تسجيل";
+};
+document.getElementById('exportExcel').onclick=()=>{
+  let table=document.getElementById("recordsTable").outerHTML;
+  let a=document.createElement("a");
+  a.href='data:application/vnd.ms-excel,'+encodeURIComponent(table);
+  a.download='رواتب.xls';
+  a.click();
+};
+</script>
+</body>
+</html>
