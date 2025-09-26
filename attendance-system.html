@@ -36,12 +36,61 @@ th{background:#34495e;color:white;}
 .password-wrapper input{width:100%; padding-right:50px;}
 .toggle-pass{position:absolute; right:-10px; top:-20%; height:100%; cursor:pointer; font-size:14px; background:none; border:none;}
 #searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
-@media (max-width:50px){ input, select{width:95%;} button{width:95%; margin:5px 0;} table, th, td{font-size:12px;} }
+/* === Notification === */
+#welcomeNotification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  text-align: center;
+  z-index: 9999;
+  width: 90%;
+  max-width: 350px;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+}
+#welcomeNotification.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+#welcomeNotification button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#welcomeNotification #closeNotify {
+  position: absolute;
+  margin-top: -40px;
+  left: 300px;
+  font-size: 20px;
+  background: none;
+  color: red;
+}
+#welcomeNotification #contactWhatsapp {
+  background-color: #25D366;
+  color: white;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
 
 <header>Attendance System</header>
+
+<!-- إشعار الترحيب -->
+<div id="welcomeNotification">
+  <div class="notifyContent">
+    <button id="closeNotify">×</button>
+    <p>مرحبًا بك في نظام الحضور! لأي خلل أو مشكلة اتصل على الرقم 81112046.</p>
+    <button id="contactWhatsapp">تواصل عبر واتساب</button>
+  </div>
+</div>
 
 <div id="loginPage">
   <div class="login-container">
@@ -114,7 +163,6 @@ let employees = [
   { id: "123-456-7894", name: "جاد نبها" },
   { id: "123-456-7892", name: "هادي عبد الساتر" },
   { id: "123-456-7891", name: "رضا الجمعة" }
-  
 ];
 
 auth.onAuthStateChanged(user => {
@@ -123,6 +171,11 @@ auth.onAuthStateChanged(user => {
     document.getElementById("app").style.display = "block";
     loadEmployees();
     loadData();
+    // عرض الإشعار بعد تسجيل الدخول
+    setTimeout(()=>{
+      const notify = document.getElementById("welcomeNotification");
+      notify.classList.add("show");
+    }, 500);
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
@@ -281,6 +334,15 @@ document.getElementById("togglePass").addEventListener("click", ()=>{
   pass.type = passVisible ? "text" : "password";
   document.getElementById("togglePass").textContent = passVisible ? "Hide" : "Show";
 });
+
+// Notification buttons
+document.getElementById("closeNotify").onclick = () => {
+  document.getElementById("welcomeNotification").classList.remove("show");
+};
+document.getElementById("contactWhatsapp").onclick = () => {
+  const phone = "81112046";
+  window.open(`https://wa.me/${phone}`,"_blank");
+};
 </script>
 </body>
 </html>
