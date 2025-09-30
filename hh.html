@@ -24,6 +24,8 @@ button:hover { opacity:0.85; }
 .login{background:#34495e;color:white;}
 .add { background:#16a085; color:white; }
 .add:hover { opacity:0.85; }
+.remove { background:#c0392b; color:white; }
+.remove:hover { opacity:0.85; }
 /* === Table === */
 table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
 th, td{border:1px solid #ddd; padding:7px; text-align:center; font-size:12px; max-width:250px; word-break:break-word;}
@@ -117,6 +119,7 @@ th{background:#34495e;color:white;}
   <button class="out" onclick="manualCheckOut()">Check Out</button>
   <button class="excel" onclick="exportExcel()">Export Excel</button>
   <button class="add" onclick="addEmployee()">＋ Add Employee</button>
+  <button class="remove" onclick="removeEmployee()">－ Remove Employee</button>
 </div>
 
 <div>
@@ -177,7 +180,6 @@ auth.onAuthStateChanged(user => {
     loadEmployees();
     loadData();
 
-    // إشعار الترحيب يظهر مرة واحدة فقط عند تسجيل الدخول
     if(!sessionStorage.getItem("welcomeShown")){
       setTimeout(()=>{
         const notify = document.getElementById("welcomeNotification");
@@ -188,7 +190,7 @@ auth.onAuthStateChanged(user => {
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
-    sessionStorage.removeItem("welcomeShown"); // يسمح بالإظهار عند تسجيل دخول جديد
+    sessionStorage.removeItem("welcomeShown");
   }
 });
 
@@ -350,6 +352,19 @@ function addEmployee(){
   employees.push(newEmp);
   loadEmployees();
   alert("Employee added successfully!");
+}
+
+// حذف موظف
+function removeEmployee(){
+  const sel = document.getElementById("employeeSelect");
+  const id = sel.value;
+  const emp = employees.find(e=>e.id===id);
+  if(!emp) return;
+  if(confirm(`Delete employee ${emp.name} (${emp.id})?`)){
+    employees = employees.filter(e=>e.id!==id);
+    loadEmployees();
+    alert("Employee deleted successfully!");
+  }
 }
 
 // Password toggle
