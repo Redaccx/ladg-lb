@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الفواتير المتكامل</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#C1272D;
+  --bg:#f6f7fb;
+  --card:#fff;
+  --muted:#6b7280;
+  --success:#28a745;
+  --warning:#ffc107;
+  --danger:#dc3545;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Cairo',sans-serif;background:var(--bg);}
+header{background:var(--primary);color:#fff;padding:16px;text-align:center;}
+header h1{margin:0;font-size:24px;}
+main{padding:20px;max-width:1200px;margin:20px auto;text-align:center;}
+.card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:20px;display:inline-block;min-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+input, select, textarea{width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;text-align:center;}
+button{padding:10px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;margin:4px;transition:0.2s;}
+button:hover{opacity:0.8;}
+table{width:100%;border-collapse:collapse;margin-top:20px;text-align:center;}
+th,td{border:1px solid #ddd;padding:10px;}
+th{background:var(--primary);color:#fff;}
+.invoice-item{display:flex;gap:10px;align-items:center;margin-bottom:8px;justify-content:center;}
+.invoice-item input{flex:1;text-align:center;}
+.highlight-add{animation:addFlash 0.5s;}
+@keyframes addFlash{
+  0%{background-color:#c3f7d6;}
+  100%{background-color:transparent;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>نظام الفواتير المتكامل</h1>
+</header>
+
+<main>
+<div id="auth-section" class="card">
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <button onclick="resetPassword()">Reset Password</button>
+  <p id="auth-msg" style="color:red;"></p>
+</div>
+
+<div id="invoice-section" style="display:none;">
+  <div class="card">
+    <h2>Add / Edit Invoice</h2>
+    <select id="invoice-section-select"></select>
+    <button onclick="addSection()">Add Section</button>
+    <input type="text" id="invoice-store" placeholder="Store / Vendor">
+    <input type="text" id="invoice-address" placeholder="Address">
+    <input type="date" id="invoice-date">
+    <input type="text" id="search-invoice" placeholder="Search by store/vendor" oninput="loadInvoices()">
+    <div id="items-container"></div>
+    <button onclick="addItem()">Add Item</button>
+    <input type="number" id="discount" placeholder="Discount" value="0">
+    <input type="number" id="vat" placeholder="VAT (%)" value="11">
+    <p>Total: <span id="total-display">0</span></p>
+    <button onclick="saveInvoice()">Save Invoice</button>
+    <button onclick="logout()">Logout</button>
+    <button onclick="exportExcel()">Export to Excel</button>
+  </div>
+
+  <div class="card">
+    <h2>Invoices List</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Store</th><th>Total</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="invoice-list"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+    apiKey: "AIzaSyB4NzOcosALN-8oLzMM1ONXdi2R-SvZ_co",
+    authDomain: "invoice-app-6345a.firebaseapp.com",
+    projectId: "invoice-app-6345a",
+    storageBucket: "invoice-app-6345a.firebasestorage.app",
+    messagingSenderId: "289913191209",
+    appId: "1:289913191209:web:2e64b56a2d549f7fa15538"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentInvoiceId = null;
+
+// Authentication
+function login(){
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  auth.signInWithEmailAndPassword(email,password)
+    .then(()=> document.getElementById('auth-msg').textContent="")
+    .catch(e=> document.getElementById('auth-msg').textContent=e.message);
+}
+
+function resetPassword(){
+  const email = document.getElementById('email').value;
+  auth.sendPasswordResetEmail(email)
+    .then(()=> alert("Reset email sent"))
+    .catch(e=> alert(e.message));
+}
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById('auth-section').style.display="none";
+    document.getElementById('invoice-section').style.display="block";
+    loadSections();
+    loadInvoices();
+  } else {
+    document.getElementById('auth-section').style.display="block";
+    document.getElementById('invoice-section').style.display="none";
+  }
+});
+
+function logout(){ auth.signOut(); }
+
+// Sections
+function addSection(){
+  const name = prompt("Enter new section name:");
+  if(!name) return;
+  const userId = auth.currentUser.uid;
+  db.collection('users').doc(userId).collection('sections').add({name})
+    .then(()=> loadSections());
+}
+
+function loadSections(){
+  const select = document.getElementById('invoice-section-select');
+  const userId = auth.currentUser.uid;
+  db.collection('users').doc(userId).collection('sections').get()
+    .then(snapshot=>{
+      select.innerHTML="";
+      snapshot.forEach(doc=>{
+        const option = document.createElement('option');
+        option.value = doc.id;
+        option.textContent = doc.data().name;
+        select.appendChild(option);
+      });
+    });
+}
+
+// Invoice functions
+function addItem(){
+  const container = document.getElementById('items-container');
+  const div = document.createElement('div');
+  div.className="invoice-item";
+  div.innerHTML = `<input placeholder="Item Name"><input type="number" placeholder="Quantity" value="1"><input type="number" placeholder="Price" value="0"><button onclick="this.parentNode.remove();calculateTotal();">Remove</button>`;
+  container.appendChild(div);
+  calculateTotal();
+}
+
+function calculateTotal(){
+  const items = document.querySelectorAll('#items-container .invoice-item');
+  let total=0;
+  items.forEach(item=>{
+    const qty = parseFloat(item.children[1].value)||0;
+    const price = parseFloat(item.children[2].value)||0;
+    total += qty*price;
+  });
+  const discount = parseFloat(document.getElementById('discount').value)||0;
+  const vat = parseFloat(document.getElementById('vat').value)||0;
+  total = total - discount + (total*vat/100);
+  document.getElementById('total-display').textContent = total.toFixed(2);
+}
+
+document.getElementById('items-container').addEventListener('input',calculateTotal);
+document.getElementById('discount').addEventListener('input',calculateTotal);
+document.getElementById('vat').addEventListener('input',calculateTotal);
+
+function saveInvoice(){
+  const userId = auth.currentUser.uid;
+  const sectionId = document.getElementById('invoice-section-select').value;
+  const itemsEl = document.querySelectorAll('#items-container .invoice-item');
+  const items=[];
+  itemsEl.forEach(item=>{
+    items.push({
+      name:item.children[0].value,
+      quantity:parseFloat(item.children[1].value)||0,
+      price:parseFloat(item.children[2].value)||0
+    });
+  });
+  const invoiceData = {
+    section:sectionId,
+    store:document.getElementById('invoice-store').value,
+    address:document.getElementById('invoice-address').value,
+    date:document.getElementById('invoice-date').value,
+    items,
+    discount:parseFloat(document.getElementById('discount').value)||0,
+    vat:parseFloat(document.getElementById('vat').value)||0,
+    total:parseFloat(document.getElementById('total-display').textContent)||0
+  };
+  if(currentInvoiceId){
+    db.collection('users').doc(userId).collection('invoices').doc(currentInvoiceId).update(invoiceData)
+      .then(()=>{ alert("Invoice updated"); clearForm(); });
+  } else {
+    db.collection('users').doc(userId).collection('invoices').add(invoiceData)
+      .then(()=>{ alert("Invoice added"); clearForm(); });
+  }
+}
+
+function clearForm(){
+  document.getElementById('invoice-store').value="";
+  document.getElementById('invoice-address').value="";
+  document.getElementById('invoice-date').value="";
+  document.getElementById('items-container').innerHTML="";
+  document.getElementById('discount').value="0";
+  document.getElementById('vat').value="11";
+  document.getElementById('total-display').textContent="0";
+  currentInvoiceId=null;
+}
+
+// Load invoices
+function loadInvoices(){
+  const userId = auth.currentUser.uid;
+  const search = document.getElementById('search-invoice').value.toLowerCase();
+  db.collection('users').doc(userId).collection('invoices')
+    .onSnapshot(snapshot=>{
+      const list=document.getElementById('invoice-list');
+      list.innerHTML="";
+      snapshot.forEach(doc=>{
+        const data = doc.data();
+        if(search && !data.store.toLowerCase().includes(search) && !data.address.toLowerCase().includes(search)) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML=`<td>${data.date}</td><td>${data.store}</td><td>${data.total.toFixed(2)}</td>
+          <td>
+            <button onclick='editInvoice("${doc.id}")'>Edit</button>
+            <button onclick='deleteInvoice("${doc.id}")'>Delete</button>
+          </td>`;
+        // Highlight row color
+        if(data.total==0) tr.style.backgroundColor="var(--danger)";
+        else if(data.total<100) tr.style.backgroundColor="var(--warning)";
+        else tr.style.backgroundColor="var(--success)";
+        tr.classList.add('highlight-add');
+        list.appendChild(tr);
+      });
+    });
+}
+
+function editInvoice(id){
+  const userId = auth.currentUser.uid;
+  db.collection('users').doc(userId).collection('invoices').doc(id).get()
+    .then(doc=>{
+      if(doc.exists){
+        const data=doc.data();
+        document.getElementById('invoice-section-select').value=data.section;
+        document.getElementById('invoice-store').value=data.store;
+        document.getElementById('invoice-address').value=data.address;
+        document.getElementById('invoice-date').value=data.date;
+        document.getElementById('discount').value=data.discount;
+        document.getElementById('vat').value=data.vat;
+        document.getElementById('items-container').innerHTML="";
+        data.items.forEach(item=>{
+          const container = document.getElementById('items-container');
+          const div = document.createElement('div');
+          div.className="invoice-item";
+          div.innerHTML = `<input value="${item.name}"><input type="number" value="${item.quantity}"><input type="number" value="${item.price}"><button onclick="this.parentNode.remove();calculateTotal();">Remove</button>`;
+          container.appendChild(div);
+        });
+        calculateTotal();
+        currentInvoiceId=id;
+      }
+    });
+}
+
+function deleteInvoice(id){
+  if(confirm("Are you sure to delete this invoice?")){
+    const userId = auth.currentUser.uid;
+    db.collection('users').doc(userId).collection('invoices').doc(id).delete();
+  }
+}
+
+// Excel Export
+function exportExcel(){
+  const table = document.querySelector('#invoice-list').parentNode;
+  const wb = XLSX.utils.table_to_book(table, {sheet:"Invoices"});
+  XLSX.writeFile(wb, "Invoices.xlsx");
+}
+</script>
+</body>
+</html>
