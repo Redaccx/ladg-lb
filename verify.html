@@ -6,170 +6,146 @@
 <title>Employee ID Verification</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body {
-    font-family: 'Cairo', sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #C1272D, #650000);
-    overflow: hidden;
-    color: #fff;
-  }
+body {
+  font-family: 'Cairo', sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #C1272D;
+  overflow: hidden;
+  color: #fff;
+}
 
-  /* Background moving circles */
-  .bg-circle {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.1;
-    animation: moveCircle 25s linear infinite;
-  }
-  @keyframes moveCircle {
-    0% { transform: translate(0,0) scale(1); }
-    50% { transform: translate(60px,60px) scale(1.5); }
-    100% { transform: translate(0,0) scale(1); }
-  }
+/* Background subtle animation */
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+  background: #fff;
+  animation: moveCircle 30s linear infinite;
+}
+@keyframes moveCircle {
+  0% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(50px,50px) scale(1.5); }
+  100% { transform: translate(0,0) scale(1); }
+}
 
-  /* Card container */
-  .card-container {
-    position: relative;
-    width: 480px;
-    max-width: 90%;
-    perspective: 1000px;
-  }
+/* Card */
+.card-container { position: relative; width: 480px; max-width: 90%; perspective: 1000px; }
+.card {
+  position: relative;
+  background: rgba(255,255,255,0.05);
+  border-radius: 25px;
+  padding: 50px 35px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,0,0,0.4);
+  backdrop-filter: blur(15px);
+  transition: transform 0.5s ease;
+}
+.card:hover { transform: translateY(-5px) scale(1.02); }
+.card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.5s ease;
+  background: rgba(255,255,255,0.2);
+}
+.card-glow.active { opacity: 0.6; transform: scale(1.2); }
 
-  /* Glassmorphism card */
-  .card {
-    position: relative;
-    background: rgba(255,255,255,0.05);
-    border-radius: 25px;
-    padding: 50px 35px;
-    text-align: center;
-    box-shadow: 0 0 40px rgba(0,0,0,0.6);
-    backdrop-filter: blur(15px);
-    transition: transform 0.5s ease;
-  }
+h1 {
+  font-size: 28px;
+  margin-bottom: 25px;
+  color: #fff;
+  letter-spacing: 1px;
+}
 
-  .card:hover {
-    transform: translateY(-5px) scale(1.02);
-  }
+#check-msg {
+  font-size: 20px;
+  margin: 15px 0;
+  min-height: 30px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
 
-  .card-glow {
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0;
-    transition: all 0.5s ease;
-    background: linear-gradient(135deg, #FFD700, #FF6A00);
-  }
-  .card-glow.success {
-    opacity: 0.6;
-    transform: scale(1.2);
-  }
-  .card-glow.fail {
-    background: rgba(255,0,0,0.3);
-    opacity: 0.6;
-    transform: scale(1.2);
-  }
+#status {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 20px;
+  min-height: 60px;
+}
 
-  h1 {
-    font-size: 28px;
-    margin-bottom: 25px;
-    background: linear-gradient(90deg, #FFD700, #FF6A00);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
+#id-display {
+  margin-top: 15px;
+  font-size: 16px;
+  opacity: 0.8;
+  direction: ltr;
+  unicode-bidi: embed;
+}
 
-  #check-msg {
-    font-size: 20px;
-    margin: 15px 0;
-    min-height: 30px;
-    font-weight: 500;
-  }
+#name-display {
+  margin-top: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  opacity: 0;
+  transition: all 1s ease;
+}
 
-  #status {
-    font-size: 20px;
-    font-weight: bold;
-    margin-top: 20px;
-    min-height: 60px;
-  }
+/* Progress bar */
+.progress-bar {
+  position: relative;
+  height: 12px;
+  width: 100%;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  margin: 15px 0;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  border-radius: 12px;
+  transition: width 0.4s ease;
+}
 
-  #id-display {
-    margin-top: 15px;
-    font-size: 16px;
-    opacity: 0.8;
-    direction: ltr;
-    unicode-bidi: embed;
-  }
+/* Sparkles */
+.sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sparkleAnim 1.5s linear infinite;
+}
+@keyframes sparkleAnim {
+  0% { transform: translate(0,0) scale(0.5); opacity: 1; }
+  50% { transform: translate(15px,-15px) scale(1); opacity: 0.7; }
+  100% { transform: translate(-10px,10px) scale(0.5); opacity: 0; }
+}
 
-  #name-display {
-    margin-top: 12px;
-    font-size: 18px;
-    font-weight: 700;
-    color: #00ffe7;
-    opacity: 0;
-    transition: all 1s ease;
-  }
+.fade-in { opacity: 0; animation: fadeIn 1s forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
 
-  /* Progress bar */
-  .progress-bar {
-    position: relative;
-    height: 12px;
-    width: 100%;
-    background: rgba(255,255,255,0.2);
-    border-radius: 12px;
-    margin: 15px 0;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #FFD700, #FF6A00);
-    border-radius: 12px;
-    transition: width 0.4s ease;
-  }
-
-  /* Sparkles */
-  .sparkle {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    background: gold;
-    border-radius: 50%;
-    pointer-events: none;
-    animation: sparkleAnim 1.5s linear infinite;
-  }
-  @keyframes sparkleAnim {
-    0% { transform: translate(0,0) scale(0.5); opacity: 1; }
-    50% { transform: translate(15px,-15px) scale(1); opacity: 0.7; }
-    100% { transform: translate(-10px,10px) scale(0.5); opacity: 0; }
-  }
-
-  .fade-in {
-    opacity: 0;
-    animation: fadeIn 1s forwards;
-  }
-  @keyframes fadeIn { to { opacity: 1; } }
-
-  /* Shake for fail */
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-10px); }
-    40%, 80% { transform: translateX(10px); }
-  }
-
+/* Shake animation for fail */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
+}
 </style>
 </head>
 <body>
 
-<!-- Background circles -->
 <div class="bg-circle" style="width:200px;height:200px;top:10%;left:5%;"></div>
 <div class="bg-circle" style="width:150px;height:150px;top:70%;left:80%;"></div>
 <div class="bg-circle" style="width:100px;height:100px;top:40%;left:50%;"></div>
@@ -186,23 +162,19 @@
   </div>
 </div>
 
-<!-- Sounds -->
-<audio id="success-sound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="fail-sound" src="https://actions.google.com/sounds/v1/cartoon/metal_twang.ogg"></audio>
-
 <script>
 const employees = {
   "123-456-7907": "Mais Salloum",
-  "123-456-7906": "Ali Jaafr",
+  "123-456-7906": "Ali Jaafar",
   "123-456-7905": "Waad Al-Ahmad",
-  "123-456-7902": "Jomaa Al-Mohamad",
+  "123-456-7902": "Jomaa Al-Mohammad",
   "123-456-7901": "Hadi Jaafar",
   "123-456-7899": "Mohammad Jaafar",
   "123-456-7904": "Anwar Nemer",
   "123-456-7903": "Mohsen Youssef",
   "123-456-7897": "Elsy Abdul Sater",
   "123-456-7898": "Ghadir Mostafa",
-  "123-456-7895": "Noor Nabha",
+  "123-456-7895": "Nour Nabha",
   "123-456-7894": "Jad Nabha",
   "123-456-7892": "Hadi Abdul Sater",
   "123-456-7891": "Rida Al-Jomaa",
@@ -219,28 +191,20 @@ const checkMsg = document.getElementById("check-msg");
 const progressFill = document.getElementById("progress-fill");
 const cardGlow = document.getElementById("card-glow");
 const card = document.getElementById("card");
-const successSound = document.getElementById("success-sound");
-const failSound = document.getElementById("fail-sound");
 
-function showResult(message, color, success=true){
+function showResult(message, success=true){
   status.textContent = message;
-  status.style.color = color;
   checkMsg.style.display = "none";
   progressFill.style.width = '100%';
   if(success){
-    cardGlow.classList.add('success');
-    cardGlow.classList.remove('fail');
-    card.style.transform = 'translateY(-5px) scale(1.02)';
+    cardGlow.classList.add('active');
     nameDisplay.style.opacity = 1;
-    successSound.play();
-    createSparkles(25);
+    createSparkles(20);
   } else {
-    cardGlow.classList.add('fail');
-    cardGlow.classList.remove('success');
+    cardGlow.classList.remove('active');
     card.style.animation = 'shake 0.5s';
     setTimeout(()=> card.style.animation='', 500);
     nameDisplay.style.opacity = 0;
-    failSound.play();
   }
 }
 
@@ -250,7 +214,7 @@ function createSparkles(count){
     sp.className = 'sparkle';
     sp.style.top = Math.random()*100 + '%';
     sp.style.left = Math.random()*100 + '%';
-    sp.style.width = 5+Math.random()*10 + 'px';
+    sp.style.width = 5+Math.random()*5 + 'px';
     sp.style.height = sp.style.width;
     document.body.appendChild(sp);
     setTimeout(()=> sp.remove(), 2000);
@@ -259,21 +223,14 @@ function createSparkles(count){
 
 function checkCard(id){
   if(!id){
-    showResult("No ID provided in URL", "yellow", false);
+    showResult("No ID provided in URL", false);
     return;
   }
-
   idDisplay.innerHTML = `ID: <strong>${id}</strong>`;
-  let steps = [
-    "Verifying ID...",
-    "Connecting to database...",
-    "Processing information..."
-  ];
-
-  let i = 0;
-  let progress = 0;
+  let steps = ["Verifying ID...", "Processing...", "Checking system..."];
+  let i=0, progress=0;
   let interval = setInterval(()=>{
-    if(i < steps.length){
+    if(i<steps.length){
       checkMsg.textContent = steps[i];
       progress += 33;
       progressFill.style.width = progress + '%';
@@ -282,15 +239,15 @@ function checkCard(id){
       clearInterval(interval);
       setTimeout(()=>{
         if(employees.hasOwnProperty(id)){
-          showResult("ID Verified - Employee Registered", "#66ff88", true);
+          showResult("ID Verified - Employee Registered", true);
           nameDisplay.textContent = `Name: ${employees[id]}`;
         } else {
-          showResult("This ID is NOT registered", "#ff5555", false);
+          showResult("This ID is NOT registered", false);
           nameDisplay.textContent = "";
         }
-      }, 1000);
+      }, 800);
     }
-  }, 1200);
+  }, 1000);
 }
 
 checkCard(id);
