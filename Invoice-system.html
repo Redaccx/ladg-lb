@@ -21,7 +21,7 @@ header{background:var(--primary);color:#fff;padding:16px;text-align:center;}
 header h1{margin:0;font-size:18px;}
 main{padding:20px;max-width:1200px;margin:20px auto;text-align:center;}
 .card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:20px;display:inline-block;min-width:300px;box-shadow:0 4px 12px rgba(0,0,0,0.1);width:100%;}
-input, select, textarea{width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;text-align:center;}
+input, select{width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;border:1px solid #ddd;font-size:14px;text-align:center;}
 button{padding:10px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;margin:4px;transition:0.2s;}
 button:hover{opacity:0.8;}
 table{width:100%;border-collapse:collapse;margin-top:20px;text-align:center;}
@@ -30,11 +30,12 @@ th{background:var(--primary);color:#fff;}
 .invoice-item{display:flex;gap:10px;align-items:center;margin-bottom:8px;justify-content:center;}
 .invoice-item input{flex:1;text-align:center;}
 .highlight-add{animation:addFlash 0.5s;}
-@keyframes addFlash{
-  0%{background-color:#c3f7d6;}
-  100%{background-color:transparent;}
-}
+@keyframes addFlash{0%{background-color:#c3f7d6;}100%{background-color:transparent;}}
 .filter-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
+/* ألوان للصفوف */
+tr.success td{background:var(--success);color:#fff;}
+tr.warning td{background:var(--warning);color:#000;}
+tr.danger td{background:var(--danger);color:#fff;}
 </style>
 </head>
 <body>
@@ -93,7 +94,7 @@ th{background:var(--primary);color:#fff;}
       <label>من: <input type="date" id="filter-from" onchange="loadInvoices()"></label>
       <label>إلى: <input type="date" id="filter-to" onchange="loadInvoices()"></label>
     </div>
-    <table>
+    <table id="invoice-table">
       <thead>
         <tr>
           <th>التاريخ</th><th>المتجر</th><th>المجموع</th><th>العملة</th><th>الإجراءات</th>
@@ -116,7 +117,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyB4NzOcosALN-8oLzMM1ONXdi2R-SvZ_co",
     authDomain: "invoice-app-6345a.firebaseapp.com",
     projectId: "invoice-app-6345a",
-    storageBucket: "invoice-app-6345a.firebasestorage.app",
+    storageBucket: "invoice-app-6345a.appspot.com",
     messagingSenderId: "289913191209",
     appId: "1:289913191209:web:2e64b56a2d549f7fa15538"
 };
@@ -128,14 +129,14 @@ let currentInvoiceId = null;
 
 // --- Authentication ---
 function login(){
-  const email = document.getElementById('email').value;
+  const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   auth.signInWithEmailAndPassword(email,password)
     .then(()=> document.getElementById('auth-msg').textContent="")
     .catch(e=> document.getElementById('auth-msg').textContent=e.message);
 }
 function resetPassword(){
-  const email = document.getElementById('email').value;
+  const email = document.getElementById('email').value.trim();
   auth.sendPasswordResetEmail(email).then(()=> alert("تم إرسال رابط إعادة التعيين")).catch(e=> alert(e.message));
 }
 auth.onAuthStateChanged(user=>{
@@ -225,15 +226,16 @@ function addItem(){
 }
 function calculateTotal(){
   const items = document.querySelectorAll('#items-container .invoice-item');
-  let total=0;
+  let subtotal=0;
   items.forEach(item=>{
     const qty = parseFloat(item.children[1].value)||0;
     const price = parseFloat(item.children[2].value)||0;
-    total += qty*price;
+    subtotal += qty*price;
   });
   const discount = parseFloat(document.getElementById('discount').value)||0;
   const vat = parseFloat(document.getElementById('vat').value)||0;
-  total = total - discount + (total*vat/100);
+  let total = subtotal - discount;
+  total += (total*vat/100);
   document.getElementById('total-display').textContent = total.toFixed(2);
 }
 document.getElementById('items-container').addEventListener('input',calculateTotal);
@@ -251,15 +253,15 @@ function saveInvoice(){
   const items=[];
   itemsEl.forEach(item=>{
     items.push({
-      name:item.children[0].value,
+      name:item.children[0].value.trim(),
       quantity:parseFloat(item.children[1].value)||0,
       price:parseFloat(item.children[2].value)||0
     });
   });
   const invoiceData = {
     section:sectionId,
-    store:document.getElementById('invoice-store').value,
-    address:document.getElementById('invoice-address').value,
+    store:document.getElementById('invoice-store').value.trim(),
+    address:document.getElementById('invoice-address').value.trim(),
     date:document.getElementById('invoice-date').value,
     items,
     discount:parseFloat(document.getElementById('discount').value)||0,
@@ -306,9 +308,9 @@ function loadInvoices(){
         const tr = document.createElement('tr');
         tr.innerHTML=`<td>${data.date}</td><td>${data.store}</td><td>${data.total.toFixed(2)}</td><td>${data.currency}</td>
           <td><button onclick='editInvoice("${doc.id}")'>✏️ تعديل</button><button onclick='deleteInvoice("${doc.id}")'>🗑️ حذف</button></td>`;
-        if(data.total==0) tr.style.backgroundColor="var(--danger)";
-        else if(data.total<100) tr.style.backgroundColor="var(--warning)";
-        else tr.style.backgroundColor="var(--success)";
+        if(data.total==0) tr.className="danger";
+        else if(data.total<100) tr.className="warning";
+        else tr.className="success";
         tr.classList.add('highlight-add');
         list.appendChild(tr);
       });
@@ -349,7 +351,7 @@ function deleteInvoice(id){
 
 // --- Excel Export ---
 function exportExcel(){
-  const table = document.querySelector('#invoice-list').parentNode.querySelector('table');
+  const table = document.getElementById("invoice-table");
   const wb = XLSX.utils.table_to_book(table, {sheet:"Invoices"});
   XLSX.writeFile(wb, "Invoices.xlsx");
 }
