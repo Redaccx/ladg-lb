@@ -60,92 +60,37 @@ body {
 }
 .card-glow.active { opacity: 0.6; transform: scale(1.2); }
 
-h1 {
-  font-size: 20px;
-  margin-bottom: 25px;
-  color: #fff;
-  letter-spacing: 1px;
-}
+/* Titles */
+h1 { font-size: 20px; margin-bottom: 25px; color: #fff; letter-spacing: 1px; }
 
-#check-msg {
-  font-size: 20px;
-  margin: 15px 0;
-  min-height: 30px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
+/* Messages */
+#check-msg { font-size: 20px; margin: 15px 0; min-height: 30px; font-weight: 500; letter-spacing: 0.5px; }
+#status { font-size: 22px; font-weight: bold; margin-top: 20px; min-height: 60px; }
+#status.success { color: #00ff55; text-shadow: 0 0 15px #00ff55; }
+#status.fail { color: #ff5555; text-shadow: 0 0 15px #ff5555; }
 
-#status {
-  font-size: 22px;
-  font-weight: bold;
-  margin-top: 20px;
-  min-height: 60px;
-}
-
-#id-display {
-  margin-top: 15px;
-  font-size: 16px;
-  opacity: 0.8;
-  direction: ltr;
-  unicode-bidi: embed;
-}
-
-#name-display {
-  margin-top: 12px;
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  opacity: 0;
-  transition: all 1s ease;
-}
+#id-display { margin-top: 15px; font-size: 16px; opacity: 0.8; direction: ltr; unicode-bidi: embed; }
+#name-display { margin-top: 12px; font-size: 20px; font-weight: 700; color: #fff; opacity: 0; transition: all 1s ease; }
 
 /* Progress bar */
-.progress-bar {
-  position: relative;
-  height: 12px;
-  width: 100%;
-  background: rgba(255,255,255,0.2);
-  border-radius: 12px;
-  margin: 15px 0;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  width: 0%;
-  background: #fff;
-  border-radius: 12px;
-  transition: width 0.4s ease;
-}
+.progress-bar { position: relative; height: 12px; width: 100%; background: rgba(255,255,255,0.2); border-radius: 12px; margin: 15px 0; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; background: #fff; border-radius: 12px; transition: width 0.4s ease; }
 
 /* Sparkles */
-.sparkle {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: #fff;
-  border-radius: 50%;
-  pointer-events: none;
-  animation: sparkleAnim 1.5s linear infinite;
-}
-@keyframes sparkleAnim {
-  0% { transform: translate(0,0) scale(0.5); opacity: 1; }
-  50% { transform: translate(15px,-15px) scale(1); opacity: 0.7; }
-  100% { transform: translate(-10px,10px) scale(0.5); opacity: 0; }
-}
+.sparkle { position: absolute; width: 8px; height: 8px; background: #fff; border-radius: 50%; pointer-events: none; animation: sparkleAnim 1.5s linear infinite; }
+@keyframes sparkleAnim { 0% { transform: translate(0,0) scale(0.5); opacity: 1; } 50% { transform: translate(15px,-15px) scale(1); opacity: 0.7; } 100% { transform: translate(-10px,10px) scale(0.5); opacity: 0; } }
 
 .fade-in { opacity: 0; animation: fadeIn 1s forwards; }
 @keyframes fadeIn { to { opacity: 1; } }
 
-/* Shake animation for fail */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-10px); }
-  40%, 80% { transform: translateX(10px); }
-}
+/* Shake for fail */
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+
 </style>
 </head>
 <body>
 
+<!-- Background circles -->
 <div class="bg-circle" style="width:200px;height:200px;top:10%;left:5%;"></div>
 <div class="bg-circle" style="width:150px;height:150px;top:70%;left:80%;"></div>
 <div class="bg-circle" style="width:100px;height:100px;top:40%;left:50%;"></div>
@@ -161,6 +106,10 @@ h1 {
     <div id="name-display" class="fade-in"></div>
   </div>
 </div>
+
+<!-- Sounds -->
+<audio id="success-sound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+<audio id="fail-sound" src="https://actions.google.com/sounds/v1/cartoon/metal_twang.ogg"></audio>
 
 <script>
 const employees = {
@@ -178,7 +127,7 @@ const employees = {
   "123-456-7894": "Jad Nabha",
   "123-456-7892": "Hadi Abdul Sater",
   "123-456-7891": "Rida Al-Jomaa",
-  "123-456-7890": "jackleen Jaafar",
+  "123-456-7890": "Jackleen Jaafar",
   "123-456-7908": "Zahraa Zaiter"
 };
 
@@ -191,6 +140,8 @@ const checkMsg = document.getElementById("check-msg");
 const progressFill = document.getElementById("progress-fill");
 const cardGlow = document.getElementById("card-glow");
 const card = document.getElementById("card");
+const successSound = document.getElementById("success-sound");
+const failSound = document.getElementById("fail-sound");
 
 function showResult(message, success=true){
   status.textContent = message;
@@ -198,13 +149,19 @@ function showResult(message, success=true){
   progressFill.style.width = '100%';
   if(success){
     cardGlow.classList.add('active');
+    cardGlow.classList.remove('fail');
+    status.className = 'success';
     nameDisplay.style.opacity = 1;
+    successSound.play();
     createSparkles(20);
   } else {
     cardGlow.classList.remove('active');
+    cardGlow.classList.add('fail');
     card.style.animation = 'shake 0.5s';
     setTimeout(()=> card.style.animation='', 500);
+    status.className = 'fail';
     nameDisplay.style.opacity = 0;
+    failSound.play();
   }
 }
 
@@ -239,10 +196,10 @@ function checkCard(id){
       clearInterval(interval);
       setTimeout(()=>{
         if(employees.hasOwnProperty(id)){
-          showResult("ID Verified - Employee Registered", true);
+          showResult("ID Verified", true);
           nameDisplay.textContent = `Name: ${employees[id]}`;
         } else {
-          showResult("This ID is NOT registered", false);
+          showResult("Not Registered", false);
           nameDisplay.textContent = "";
         }
       }, 800);
