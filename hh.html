@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Attendance System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing:border-box; }
+body { font-family:"Segoe UI", Tahoma, sans-serif; background:#f4f6f9; margin:0; padding:0; text-align:center; }
+header { background:#2c3e50; color:white; padding:15px; font-size:20px; font-weight:bold; }
+main { padding:20px; max-width:1000px; margin:auto; }
+input, select { padding:10px; width:97%; max-width:200px; border:1px solid #ccc; border-radius:5px; margin-bottom:10px; font-size:14px; }
+input:focus, select:focus { border-color:#2980b9; outline:none; }
+button { padding:8px 16px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-size:13px; transition:0.3s; }
+button:hover { opacity:0.85; }
+.in{background:#27ae60;color:white;} 
+.out{background:#e74c3c;color:white;} 
+.present{background:#2ecc71;color:white;} 
+.edit{background:#f39c12;color:white;} 
+.delete{background:#c0392b;color:white;} 
+.excel{background:#2980b9;color:white;}
+.logout{background:#8e44ad;color:white;}
+.resetPass{background:#f39c12;color:white;}
+.login{background:#34495e;color:white;}
+.add { background:#16a085; color:white; }
+.add:hover { opacity:0.85; }
+/* === Table === */
+table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
+th, td{border:1px solid #ddd; padding:7px; text-align:center; font-size:12px; max-width:250px; word-break:break-word;}
+th{background:#34495e;color:white;}
+.status-hadir{color:#27ae60;font-weight:bold;}
+.status-ghayeb{color:#e74c3c;font-weight:bold;}
+.table-container{overflow-x:auto; white-space:nowrap;}
+#loginPage, #app{display:none;}
+.login-container{background:white; padding:30px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.2); display:inline-block; margin-top:50px; width:90%; max-width:400px; text-align:center; }
+.login-container h2{margin-bottom:20px;}
+.password-wrapper{position:relative; width:100%; max-width:200px; margin:auto;}
+.password-wrapper input{width:100%; padding-right:50px;}
+.toggle-pass{position:absolute; right:-10px; top:-20%; height:100%; cursor:pointer; font-size:14px; background:none; border:none;}
+#searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
+/* === Notification === */
+#welcomeNotification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  text-align: center;
+  z-index: 9999;
+  width: 90%;
+  max-width: 350px;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+}
+#welcomeNotification.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+#welcomeNotification button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#welcomeNotification #closeNotify {
+  position: absolute;
+  margin-top: -40px;
+  left: 300px;
+  font-size: 20px;
+  background: none;
+  color: red;
+}
+#welcomeNotification #contactWhatsapp {
+  background-color: #25D366;
+  color: white;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<header>Attendance System</header>
+
+<!-- إشعار الترحيب -->
+<div id="welcomeNotification">
+  <div class="notifyContent">
+    <button id="closeNotify">×</button>
+    <h3>مرحباً بك 👋</h3>
+    <p>مرحبًا بك في نظام الحضور! لأي خلل أو مشكلة اتصل على الرقم 81112046.</p>
+    <button id="contactWhatsapp">تواصل عبر واتساب</button>
+  </div>
+</div>
+
+<div id="loginPage">
+  <div class="login-container">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email"><br>
+    <div class="password-wrapper">
+      <input type="password" id="password" placeholder="Password">
+      <button class="toggle-pass" id="togglePass">Show</button>
+    </div>
+    <button class="login" onclick="login()">Login</button><br>
+    <button class="resetPass" onclick="resetPassword()">Reset Password</button>
+  </div>
+</div>
+
+<div id="app">
+<main>
+<button class="logout" onclick="logout()">Logout</button>
+<div class="controls">
+  <select id="employeeSelect"></select>
+  <button class="in" onclick="manualCheckIn()">Check In</button>
+  <button class="out" onclick="manualCheckOut()">Check Out</button>
+  <button class="excel" onclick="exportExcel()">Export Excel</button>
+  <button class="add" onclick="addEmployee()">＋ Add Employee</button>
+</div>
+
+<div>
+  <input type="text" id="searchBox" placeholder="Search by Name or ID" onkeyup="searchRecords()">
+</div>
+
+<h2>Records</h2>
+<div class="table-container">
+<table id="attendanceTable">
+<tr>
+<th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Status</th><th>Actions</th>
+</tr>
+</table>
+</div>
+</main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
+  authDomain: "ladg-attendance.firebaseapp.com",
+  projectId: "ladg-attendance",
+  storageBucket: "ladg-attendance.firebasestorage.app",
+  messagingSenderId: "499991014945",
+  appId: "1:499991014945:web:e4cd793de709191a157d60"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let employees = [
+  { id: "123-456-7907", name: "ميس السلوم" },
+  { id: "123-456-7906", name: "علي جعفر" },
+  { id: "123-456-7905", name: "وعد الأحمد" },
+  { id: "123-456-7904", name: "أنور نمر" },
+  { id: "123-456-7903", name: "محسن يوسف" },
+  { id: "123-456-7902", name: "جمعة المحمد" },
+  { id: "123-456-7901", name: "هادي جعفر" },
+  { id: "123-456-7899", name: "محمد جعفر" },
+  { id: "123-456-7898", name: "غدير مصطفى" },
+  { id: "123-456-7897", name: "إلسي عبد الساتر" },
+  { id: "123-456-7895", name: "نور نبها" },
+  { id: "123-456-7894", name: "جاد نبها" },
+  { id: "123-456-7892", name: "هادي عبد الساتر" },
+  { id: "123-456-7891", name: "رضا الجمعة" },
+  { id: "123-456-7908", name: "زهراء زعيتر " }
+];
+
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadEmployees();
+    loadData();
+
+    // إشعار الترحيب يظهر مرة واحدة فقط عند تسجيل الدخول
+    if(!sessionStorage.getItem("welcomeShown")){
+      setTimeout(()=>{
+        const notify = document.getElementById("welcomeNotification");
+        notify.classList.add("show");
+        sessionStorage.setItem("welcomeShown", "true");
+      }, 500);
+    }
+  } else {
+    document.getElementById("loginPage").style.display = "block";
+    document.getElementById("app").style.display = "none";
+    sessionStorage.removeItem("welcomeShown"); // يسمح بالإظهار عند تسجيل دخول جديد
+  }
+});
+
+function login(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  auth.signInWithEmailAndPassword(email,password).catch(err=>alert(err.message));
+}
+
+function resetPassword(){ 
+  const email=document.getElementById("email").value.trim(); 
+  if(!email){alert("Enter your email"); return;} 
+  auth.sendPasswordResetEmail(email).then(()=>alert("Reset link sent")).catch(err=>alert(err.message)); 
+}
+
+function logout(){ auth.signOut(); }
+
+function loadEmployees(){ 
+  const sel=document.getElementById("employeeSelect"); sel.innerHTML=""; 
+  employees.forEach(e=>{ 
+    const opt=document.createElement("option"); 
+    opt.value=e.id; opt.textContent=`${e.id} - ${e.name}`; sel.appendChild(opt); 
+  }); 
+}
+
+function formatDate(dateStr){ 
+  const d=new Date(dateStr); 
+  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; 
+}
+
+function calculateWorkHours(checkin, checkout, date){
+  if(!checkin || !checkout || checkout==='-') return '-';
+  const inParts = checkin.split(':').map(Number);
+  const outParts = checkout.split(':').map(Number);
+  const inDate = new Date(date); inDate.setHours(inParts[0], inParts[1], 0,0);
+  const outDate = new Date(date); outDate.setHours(outParts[0], outParts[1],0,0);
+  const diffMs = outDate - inDate;
+  const diffH = Math.floor(diffMs/3600000);
+  const diffM = Math.floor((diffMs%3600000)/60000);
+  return `${diffH}h ${diffM}m`;
+}
+
+function loadData(){
+  db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
+    const table=document.getElementById("attendanceTable");
+    table.innerHTML=`<tr>
+      <th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Status</th><th>Actions</th>
+      </tr>`;
+    snapshot.forEach(doc=>{
+      const r=doc.data();
+      const row=table.insertRow();
+      row.insertCell(0).innerText=r.id;
+      row.insertCell(1).innerText=r.name;
+      row.insertCell(2).innerText=formatDate(r.date);
+      row.insertCell(3).innerText=r.checkin?r.checkin:"-";
+      row.insertCell(4).innerText=r.checkout?r.checkout:"-";
+      row.insertCell(5).innerText=calculateWorkHours(r.checkin, r.checkout, r.date);
+      const st=row.insertCell(6);
+      st.innerText=r.status;
+      st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
+      const actions=row.insertCell(7);
+      actions.innerHTML=`<button class="present" onclick="toggleStatus('${doc.id}','${r.status}')">Status</button>
+                         <button class="edit" onclick="editRecord('${doc.id}')">Edit</button>
+                         <button class="delete" onclick="deleteRecord('${doc.id}')">Delete</button>`;
+    });
+  });
+}
+
+function manualCheckIn(){
+  const id=document.getElementById("employeeSelect").value;
+  const emp=employees.find(e=>e.id===id);
+  const now=new Date();
+  db.collection("attendance").add({
+    id: emp.id, name: emp.name,
+    date: now.toISOString(),
+    checkin: now.toLocaleTimeString("en-GB",{hour12:false}),
+    checkout: "-",
+    status: "حاضر"
+  }).then(()=>loadData());
+}
+
+function manualCheckOut(){
+  const id=document.getElementById("employeeSelect").value;
+  db.collection("attendance").where("id","==",id).where("checkout","==","-").get().then(snap=>{
+    if(!snap.empty){
+      snap.forEach(doc=>{
+        const now=new Date();
+        const checkout=now.toLocaleTimeString("en-GB",{hour12:false});
+        doc.ref.update({checkout:checkout}).then(()=>loadData());
+      });
+    } else alert("No check-in found");
+  });
+}
+
+function toggleStatus(docId,current){
+  const newStatus = current==="حاضر"?"غائب":"حاضر";
+  db.collection("attendance").doc(docId).update({status:newStatus}).then(()=>loadData());
+}
+
+function editRecord(docId){ 
+  db.collection("attendance").doc(docId).get().then(doc=>{
+    const r=doc.data();
+    const newDate=prompt("Enter Date YYYY-MM-DD", r.date.substring(0,10));
+    const newCheckIn=prompt("Enter Check In HH:MM", r.checkin);
+    const newCheckOut=prompt("Enter Check Out HH:MM", r.checkout);
+    db.collection("attendance").doc(docId).update({
+      date: newDate+"T00:00:00.000Z",
+      checkin: newCheckIn,
+      checkout: newCheckOut
+    }).then(()=>loadData());
+  });
+}
+
+function deleteRecord(docId){ 
+  if(confirm("Delete this record?")){ 
+    db.collection("attendance").doc(docId).delete().then(()=>loadData()); 
+  } 
+}
+
+function exportExcel(){
+  db.collection("attendance").get().then(snapshot=>{
+    const data=[];
+    snapshot.forEach(doc=>{
+      const r=doc.data();
+      data.push({
+        ID:r.id, Name:r.name, Date:formatDate(r.date),
+        "Check In":r.checkin, "Check Out":r.checkout,
+        "Work Hours":calculateWorkHours(r.checkin,r.checkout,r.date),
+        Status:r.status
+      });
+    });
+    const ws=XLSX.utils.json_to_sheet(data);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Records");
+    XLSX.writeFile(wb,"attendance.xlsx");
+  });
+}
+
+function searchRecords(){
+  const q=document.getElementById("searchBox").value.toLowerCase();
+  const table=document.getElementById("attendanceTable");const tr=table.getElementsByTagName("tr");
+  for(let i=1;i<tr.length;i++){
+    let td0=tr[i].getElementsByTagName("td")[0];let td1=tr[i].getElementsByTagName("td")[1];
+    if(td0&&td1){let txt=(td0.textContent+td1.textContent).toLowerCase();tr[i].style.display=txt.includes(q)?"":"none";}
+  }
+}
+
+// إضافة موظف جديد
+function addEmployee(){
+  const empName = prompt("Enter Employee Name:");
+  if(!empName) return;
+  const empID = prompt("Enter Employee ID:");
+  if(!empID) return;
+  if(employees.some(e=>e.id===empID)){
+    alert("Employee ID already exists!");
+    return;
+  }
+  const newEmp = {id: empID, name: empName};
+  employees.push(newEmp);
+  loadEmployees();
+  alert("Employee added successfully!");
+}
+
+// Password toggle
+let passVisible = false;
+document.getElementById("togglePass").addEventListener("click", ()=>{
+  const pass = document.getElementById("password");
+  passVisible = !passVisible;
+  pass.type = passVisible ? "text" : "password";
+  document.getElementById("togglePass").textContent = passVisible ? "Hide" : "Show";
+});
+
+// Notification buttons
+document.getElementById("closeNotify").onclick = () => {
+  document.getElementById("welcomeNotification").classList.remove("show");
+};
+document.getElementById("contactWhatsapp").onclick = () => {
+  const phone = "81112046";
+  window.open(`https://wa.me/${phone}`,"_blank");
+};
+</script>
+</body>
+</html>
