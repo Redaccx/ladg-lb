@@ -59,20 +59,32 @@ body {
   background: rgba(255,255,255,0.2);
 }
 .card-glow.active { opacity: 0.6; transform: scale(1.2); }
-.card-glow.fail { opacity: 0.4; background: rgba(255,0,0,0.2); transform: scale(1.2); }
 
 /* Titles */
 h1 { font-size: 20px; margin-bottom: 25px; color: #fff; letter-spacing: 1px; }
 
 /* Messages */
 #check-msg { font-size: 20px; margin: 15px 0; min-height: 30px; font-weight: 500; letter-spacing: 0.5px; }
-#status { font-size: 22px; font-weight: bold; margin-top: 20px; min-height: 60px; padding: 8px 12px; border-radius: 12px; display: inline-block; }
-#status.success { color: #000; background: rgba(255,255,255,0.7); text-shadow: none; }
-#status.fail { color: #000; background: rgba(255,255,255,0.7); text-shadow: none; border: 2px solid red; }
+#status { font-size: 22px; font-weight: bold; margin-top: 20px; min-height: 60px; }
+#status.success { 
+    color: #00cc44; /* أخضر */
+    text-shadow: 2px 2px 4px #000; /* ظل أسود قوي */
+    background: rgba(0,0,0,0.2); 
+    padding: 8px 12px; 
+    border-radius: 12px; 
+    display: inline-block;
+}
+#status.fail { 
+    color: #cc0000; /* أحمر داكن */
+    text-shadow: 2px 2px 4px #000; /* ظل أسود قوي */
+    background: rgba(0,0,0,0.2); 
+    padding: 8px 12px; 
+    border-radius: 12px; 
+    display: inline-block;
+}
 
-/* ID and Name */
 #id-display { margin-top: 15px; font-size: 16px; opacity: 0.8; direction: ltr; unicode-bidi: embed; }
-#name-display { margin-top: 12px; font-size: 20px; font-weight: 700; color: #000; opacity: 0; transition: all 1s ease; }
+#name-display { margin-top: 12px; font-size: 20px; font-weight: 700; color: #fff; opacity: 0; transition: all 1s ease; }
 
 /* Progress bar */
 .progress-bar { position: relative; height: 12px; width: 100%; background: rgba(255,255,255,0.2); border-radius: 12px; margin: 15px 0; overflow: hidden; }
@@ -145,11 +157,9 @@ const card = document.getElementById("card");
 const successSound = document.getElementById("success-sound");
 const failSound = document.getElementById("fail-sound");
 
-function showResult(message, success=true){
-  status.textContent = message;
-  checkMsg.style.display = "none";
-  progressFill.style.width = '100%';
+function showResult(success=true){
   if(success){
+    status.textContent = "✅ Verified";
     cardGlow.classList.add('active');
     cardGlow.classList.remove('fail');
     status.className = 'success';
@@ -157,6 +167,7 @@ function showResult(message, success=true){
     successSound.play();
     createSparkles(20);
   } else {
+    status.textContent = "❌ Not Verified";
     cardGlow.classList.remove('active');
     cardGlow.classList.add('fail');
     card.style.animation = 'shake 0.5s';
@@ -182,7 +193,8 @@ function createSparkles(count){
 
 function checkCard(id){
   if(!id){
-    showResult("No ID provided in URL", false);
+    showResult(false);
+    idDisplay.innerHTML = `No ID provided`;
     return;
   }
   idDisplay.innerHTML = `ID: <strong>${id}</strong>`;
@@ -198,12 +210,14 @@ function checkCard(id){
       clearInterval(interval);
       setTimeout(()=>{
         if(employees.hasOwnProperty(id)){
-          showResult("Verified", true);
+          showResult(true);
           nameDisplay.textContent = `Name: ${employees[id]}`;
         } else {
-          showResult("Not Verified", false);
+          showResult(false);
           nameDisplay.textContent = "";
         }
+        progressFill.style.width = '100%';
+        checkMsg.style.display = 'none';
       }, 800);
     }
   }, 1000);
