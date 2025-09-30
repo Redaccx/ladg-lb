@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>نظام التحقق من بطاقة الموظف</title>
+<title>Employee ID Verification</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>
   body {
@@ -17,42 +17,43 @@
     background: linear-gradient(135deg, #C1272D, #650000);
     overflow: hidden;
     color: #fff;
-    perspective: 1000px;
   }
 
-  /* ======= دوائر خلفية ديناميكية ======= */
-  .background-circle {
+  /* Background moving circles */
+  .bg-circle {
     position: absolute;
     border-radius: 50%;
     opacity: 0.1;
-    animation: moveCircle 20s linear infinite;
+    animation: moveCircle 25s linear infinite;
   }
   @keyframes moveCircle {
     0% { transform: translate(0,0) scale(1); }
-    50% { transform: translate(50px,50px) scale(1.5); }
+    50% { transform: translate(60px,60px) scale(1.5); }
     100% { transform: translate(0,0) scale(1); }
   }
 
-  /* ======= البطاقة ======= */
+  /* Card container */
   .card-container {
     position: relative;
     width: 480px;
-    max-width: 95%;
-    transform-style: preserve-3d;
-    animation: cardPop 1s ease-out;
+    max-width: 90%;
+    perspective: 1000px;
   }
 
+  /* Glassmorphism card */
   .card {
+    position: relative;
     background: rgba(255,255,255,0.05);
     border-radius: 25px;
-    padding: 50px 30px;
+    padding: 50px 35px;
     text-align: center;
     box-shadow: 0 0 40px rgba(0,0,0,0.6);
-    backdrop-filter: blur(12px);
-    transform: translateY(100px);
-    animation: cardSlideIn 1s forwards;
-    position: relative;
-    overflow: hidden;
+    backdrop-filter: blur(15px);
+    transition: transform 0.5s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px) scale(1.02);
   }
 
   .card-glow {
@@ -61,32 +62,24 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: rgba(255,255,0,0.15);
     border-radius: 50%;
     pointer-events: none;
     opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.6s ease;
+    transition: all 0.5s ease;
+    background: linear-gradient(135deg, #FFD700, #FF6A00);
   }
-
+  .card-glow.success {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
   .card-glow.fail {
-    background: rgba(255,0,0,0.2);
-    opacity: 1;
+    background: rgba(255,0,0,0.3);
+    opacity: 0.6;
     transform: scale(1.2);
-  }
-
-  .card-glow.active {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-
-  @keyframes cardSlideIn {
-    0% { transform: translateY(100px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
   }
 
   h1 {
-    font-size: 20px;
+    font-size: 28px;
     margin-bottom: 25px;
     background: linear-gradient(90deg, #FFD700, #FF6A00);
     -webkit-background-clip: text;
@@ -97,7 +90,7 @@
     font-size: 20px;
     margin: 15px 0;
     min-height: 30px;
-    animation: pulse 1s infinite alternate;
+    font-weight: 500;
   }
 
   #status {
@@ -105,7 +98,6 @@
     font-weight: bold;
     margin-top: 20px;
     min-height: 60px;
-    transition: all 0.5s ease-in-out;
   }
 
   #id-display {
@@ -117,7 +109,7 @@
   }
 
   #name-display {
-    margin-top: 10px;
+    margin-top: 12px;
     font-size: 18px;
     font-weight: 700;
     color: #00ffe7;
@@ -125,12 +117,13 @@
     transition: all 1s ease;
   }
 
+  /* Progress bar */
   .progress-bar {
     position: relative;
-    height: 10px;
+    height: 12px;
     width: 100%;
     background: rgba(255,255,255,0.2);
-    border-radius: 10px;
+    border-radius: 12px;
     margin: 15px 0;
     overflow: hidden;
   }
@@ -138,44 +131,24 @@
   .progress-fill {
     height: 100%;
     width: 0%;
-    background: #FFD700;
-    border-radius: 10px;
+    background: linear-gradient(90deg, #FFD700, #FF6A00);
+    border-radius: 12px;
     transition: width 0.4s ease;
   }
 
+  /* Sparkles */
   .sparkle {
     position: absolute;
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     background: gold;
     border-radius: 50%;
     pointer-events: none;
     animation: sparkleAnim 1.5s linear infinite;
   }
-
-  footer {
-    position: absolute;
-    bottom: 10px;
-    font-size: 12px;
-    opacity: 0.6;
-    text-align: center;
-    width: 100%;
-  }
-
-  @keyframes pulse {
-    0% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.05); }
-    100% { opacity: 0.5; transform: scale(1); }
-  }
-
-  @keyframes cardPop {
-    0% { transform: translateY(50px) scale(0.8); opacity: 0; }
-    100% { transform: translateY(0) scale(1); opacity: 1; }
-  }
-
   @keyframes sparkleAnim {
     0% { transform: translate(0,0) scale(0.5); opacity: 1; }
-    50% { transform: translate(20px,-20px) scale(1); opacity: 0.7; }
+    50% { transform: translate(15px,-15px) scale(1); opacity: 0.7; }
     100% { transform: translate(-10px,10px) scale(0.5); opacity: 0; }
   }
 
@@ -183,24 +156,29 @@
     opacity: 0;
     animation: fadeIn 1s forwards;
   }
+  @keyframes fadeIn { to { opacity: 1; } }
 
-  @keyframes fadeIn {
-    to { opacity: 1; }
+  /* Shake for fail */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-10px); }
+    40%, 80% { transform: translateX(10px); }
   }
+
 </style>
 </head>
 <body>
 
-<!-- دوائر متحركة في الخلفية -->
-<div class="background-circle" style="width:200px;height:200px;top:10%;left:5%;"></div>
-<div class="background-circle" style="width:150px;height:150px;top:70%;left:80%;"></div>
-<div class="background-circle" style="width:100px;height:100px;top:40%;left:50%;"></div>
+<!-- Background circles -->
+<div class="bg-circle" style="width:200px;height:200px;top:10%;left:5%;"></div>
+<div class="bg-circle" style="width:150px;height:150px;top:70%;left:80%;"></div>
+<div class="bg-circle" style="width:100px;height:100px;top:40%;left:50%;"></div>
 
 <div class="card-container">
-  <div class="card">
+  <div class="card" id="card">
     <div class="card-glow" id="card-glow"></div>
-    <h1>نظام التحقق من بطاقة موظف</h1>
-    <div id="check-msg">جاري التحقق من البطاقة...</div>
+    <h1>Employee ID Verification</h1>
+    <div id="check-msg">Verifying your ID...</div>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
     <div id="status"></div>
     <div id="id-display"></div>
@@ -208,112 +186,114 @@
   </div>
 </div>
 
-<!-- أصوات النجاح والفشل -->
+<!-- Sounds -->
 <audio id="success-sound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 <audio id="fail-sound" src="https://actions.google.com/sounds/v1/cartoon/metal_twang.ogg"></audio>
 
-<footer>
-  © 2025 الجمعية اللبنانية للتنمية والعطاء
-</footer>
-
 <script>
-  const employees = {
-    "123-456-7907": "ميس السلوم",
-    "123-456-7906": "علي جعفر",
-    "123-456-7905": "وعد الأحمد",
-    "123-456-7902": "جمعة المحمد",
-    "123-456-7901": "هادي جعفر",
-    "123-456-7899": "محمد جعفر",
-    "123-456-7904": "أنور نمر",
-    "123-456-7903": "محسن يوسف",
-    "123-456-7897": "إلسي عبد الساتر",
-    "123-456-7898": "غدير مصطفى",
-    "123-456-7895": "نور نبها",
-    "123-456-7894": "جاد نبها",
-    "123-456-7892": "هادي عبد الساتر",
-    "123-456-7891": "رضا الجمعة",
-    "123-456-7890": "جاكلين جعفر",
-    "123-456-7908": "زهراء زعيتر"
-  };
+const employees = {
+  "123-456-7907": "Mais Salloum",
+  "123-456-7906": "Ali Jaafr",
+  "123-456-7905": "Waad Al-Ahmad",
+  "123-456-7902": "Jomaa Al-Mohamad",
+  "123-456-7901": "Hadi Jaafar",
+  "123-456-7899": "Mohammad Jaafar",
+  "123-456-7904": "Anwar Nemer",
+  "123-456-7903": "Mohsen Youssef",
+  "123-456-7897": "Elsy Abdul Sater",
+  "123-456-7898": "Ghadir Mostafa",
+  "123-456-7895": "Noor Nabha",
+  "123-456-7894": "Jad Nabha",
+  "123-456-7892": "Hadi Abdul Sater",
+  "123-456-7891": "Rida Al-Jomaa",
+  "123-456-7890": "jackleen Jaafar",
+  "123-456-7908": "Zahraa Zaiter"
+};
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const id = urlParams.get("id");
-  const status = document.getElementById("status");
-  const idDisplay = document.getElementById("id-display");
-  const nameDisplay = document.getElementById("name-display");
-  const checkMsg = document.getElementById("check-msg");
-  const progressFill = document.getElementById("progress-fill");
-  const cardGlow = document.getElementById("card-glow");
-  const successSound = document.getElementById("success-sound");
-  const failSound = document.getElementById("fail-sound");
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get("id");
+const status = document.getElementById("status");
+const idDisplay = document.getElementById("id-display");
+const nameDisplay = document.getElementById("name-display");
+const checkMsg = document.getElementById("check-msg");
+const progressFill = document.getElementById("progress-fill");
+const cardGlow = document.getElementById("card-glow");
+const card = document.getElementById("card");
+const successSound = document.getElementById("success-sound");
+const failSound = document.getElementById("fail-sound");
 
-  function showResult(message, color, success=true){
-    status.textContent = message;
-    status.style.color = color;
-    checkMsg.style.display = "none";
-    progressFill.style.width = '100%';
-    if(success){
-      cardGlow.classList.add('active');
-      successSound.play();
-      nameDisplay.style.opacity = 1;
+function showResult(message, color, success=true){
+  status.textContent = message;
+  status.style.color = color;
+  checkMsg.style.display = "none";
+  progressFill.style.width = '100%';
+  if(success){
+    cardGlow.classList.add('success');
+    cardGlow.classList.remove('fail');
+    card.style.transform = 'translateY(-5px) scale(1.02)';
+    nameDisplay.style.opacity = 1;
+    successSound.play();
+    createSparkles(25);
+  } else {
+    cardGlow.classList.add('fail');
+    cardGlow.classList.remove('success');
+    card.style.animation = 'shake 0.5s';
+    setTimeout(()=> card.style.animation='', 500);
+    nameDisplay.style.opacity = 0;
+    failSound.play();
+  }
+}
+
+function createSparkles(count){
+  for(let i=0;i<count;i++){
+    const sp = document.createElement('div');
+    sp.className = 'sparkle';
+    sp.style.top = Math.random()*100 + '%';
+    sp.style.left = Math.random()*100 + '%';
+    sp.style.width = 5+Math.random()*10 + 'px';
+    sp.style.height = sp.style.width;
+    document.body.appendChild(sp);
+    setTimeout(()=> sp.remove(), 2000);
+  }
+}
+
+function checkCard(id){
+  if(!id){
+    showResult("No ID provided in URL", "yellow", false);
+    return;
+  }
+
+  idDisplay.innerHTML = `ID: <strong>${id}</strong>`;
+  let steps = [
+    "Verifying ID...",
+    "Connecting to database...",
+    "Processing information..."
+  ];
+
+  let i = 0;
+  let progress = 0;
+  let interval = setInterval(()=>{
+    if(i < steps.length){
+      checkMsg.textContent = steps[i];
+      progress += 33;
+      progressFill.style.width = progress + '%';
+      i++;
     } else {
-      cardGlow.classList.add('fail');
-      failSound.play();
-      nameDisplay.style.opacity = 0;
+      clearInterval(interval);
+      setTimeout(()=>{
+        if(employees.hasOwnProperty(id)){
+          showResult("ID Verified - Employee Registered", "#66ff88", true);
+          nameDisplay.textContent = `Name: ${employees[id]}`;
+        } else {
+          showResult("This ID is NOT registered", "#ff5555", false);
+          nameDisplay.textContent = "";
+        }
+      }, 1000);
     }
-  }
+  }, 1200);
+}
 
-  function createSparkles(count){
-    for(let i=0;i<count;i++){
-      const sp = document.createElement('div');
-      sp.className = 'sparkle';
-      sp.style.top = Math.random()*100 + '%';
-      sp.style.left = Math.random()*100 + '%';
-      sp.style.width = 5+Math.random()*10 + 'px';
-      sp.style.height = sp.style.width;
-      document.body.appendChild(sp);
-      setTimeout(()=> sp.remove(), 2000);
-    }
-  }
-
-  function checkCard(id){
-    if(!id){
-      showResult("لم يتم إدخال رقم بطاقة في الرابط.", "yellow", false);
-      return;
-    }
-
-    idDisplay.innerHTML = `رقم البطاقة: <strong>${id}</strong>`;
-    let steps = [
-      "جاري التحقق من البطاقة...",
-      "الاتصال بقاعدة البيانات...",
-      "معالجة المعلومات..."
-    ];
-
-    let i = 0;
-    let progress = 0;
-    let interval = setInterval(()=>{
-      if(i < steps.length){
-        checkMsg.textContent = steps[i];
-        progress += 33;
-        progressFill.style.width = progress + '%';
-        i++;
-      } else {
-        clearInterval(interval);
-        setTimeout(()=>{
-          if(employees.hasOwnProperty(id)){
-            showResult("البطاقة موثقة - الموظف مسجل رسميًا", "#66ff88", true);
-            nameDisplay.textContent = `الاسم: ${employees[id]}`;
-            createSparkles(25);
-          } else {
-            showResult("هذه البطاقة غير مسجلة في النظام", "#ff5555", false);
-            nameDisplay.textContent = "";
-          }
-        }, 1000);
-      }
-    }, 1200);
-  }
-
-  checkCard(id);
+checkCard(id);
 </script>
 
 </body>
