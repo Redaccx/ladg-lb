@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>نظام الموظفين والرواتب</title>
+<title>نظام حساب الرواتب</title>
 <style>
 body{font-family:"Cairo","Segoe UI",Tahoma,sans-serif;background:#f6f7fb;margin:0;padding:10px;color:#222}
 .container{max-width:1000px;margin:0 auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);display:none;}
@@ -28,18 +28,57 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 .password-toggle{margin-top:4px;background:#eee;color:#222;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px;width:100%;}
 .search-box{margin:15px 0;text-align:right}
 #welcomeNotice{
-  display:none; position:fixed; top:50%; left:50%;
+  display:none; 
+  position:fixed; 
+  top:50%; 
+  left:50%;
   transform:translate(-50%, -50%) scale(0.5);
-  width:320px;background:#fff;box-shadow:0 2px 15px rgba(0,0,0,0.3);
-  border-radius:10px;padding:20px;z-index:9999;text-align:center;color:#333;
-  opacity:0; transition: all 0.4s ease;
+  width:320px;
+  background:#fff;
+  box-shadow:0 2px 15px rgba(0,0,0,0.3);
+  border-radius:10px;
+  padding:20px;
+  z-index:9999;
+  text-align:center;
+  font-family:'Cairo',sans-serif;
+  color:#333;
+  opacity:0;
+  transition: all 0.4s ease;
 }
-#welcomeNotice.show{opacity:1; transform:translate(-50%, -50%) scale(1);}
+#welcomeNotice.show{
+  opacity:1;
+  transform:translate(-50%, -50%) scale(1);
+}
 #welcomeNotice h3{margin:0 0 10px 0;color:#C1272D;font-size:18px;}
 #welcomeNotice p{margin:0;font-size:14px;line-height:1.5;}
-#welcomeNotice button#contactBtn{margin-top:10px;padding:8px 14px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;}
-#welcomeNotice button#closeNotice{position:absolute;top:1px;left:170px;background:transparent;border:none;font-size:20px;cursor:pointer;color:red;}
-@media (max-width:600px){.row{flex-direction:column;align-items:flex-start;font-size:13px}.actions{flex-direction:column}button{flex:unset;width:100%}h1{font-size:1.2rem}.container{padding:10px}#welcomeNotice{width:90%;}}
+#welcomeNotice button#contactBtn{
+  margin-top:10px;
+  padding:8px 14px;
+  background:#25D366;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+#welcomeNotice button#closeNotice{
+  position:absolute;
+  top:1px;
+  left:170px;
+  background:transparent;
+  border:none;
+  font-size:20px;
+  cursor:pointer;
+  color:red;
+}
+@media (max-width:600px){
+  .row{flex-direction:column;align-items:flex-start;font-size:13px}
+  .actions{flex-direction:column}
+  button{flex:unset;width:100%}
+  h1{font-size:1.2rem}
+  .container{padding:10px}
+  #welcomeNotice{width:90%;}
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -62,7 +101,7 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 
 <!-- النظام -->
 <div class="container">
-<h1>نظام الموظفين والرواتب</h1>
+<h1>نظام حساب الرواتب</h1>
 <div style="text-align:right;margin-bottom:10px;">
   <button id="logoutBtn">تسجيل الخروج</button>
 </div>
@@ -71,8 +110,8 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
   <div>
     <label>الموظف</label>
     <select id="empSelect"></select>
-    <button id="addEmpBtn" class="ghost">➕ إضافة موظف</button>
-    <button id="deleteEmpBtn" class="ghost">🗑 حذف الموظف</button>
+    <label>ID الموظف</label>
+    <input id="empIdInput" type="text" placeholder="مثال: 123-456-7890">
     <label class="small">الوظيفة</label>
     <input id="empJob" type="text" placeholder="مثال: إدخال بيانات">
   </div>
@@ -114,6 +153,8 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
   <button id="recordBtn" class="ghost">تسجيل</button>
   <button id="clearForm" class="ghost">تفريغ</button>
   <button id="exportExcel" class="ghost">تصدير Excel</button>
+  <button id="addEmpBtn" class="ghost">إضافة موظف</button>
+  <button id="deleteEmpBtn" class="ghost">حذف موظف</button>
 </div>
 
 <div class="result" id="resultBox" style="display:none">
@@ -140,12 +181,11 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 </table>
 </div>
 
-<!-- إشعار الترحيب -->
 <div id="welcomeNotice">
   <button id="closeNotice">&times;</button>
   <h3>مرحباً بك 👋</h3>
   <p>
-    تم برمجة هذا النظام بواسطة <strong>beweble</strong><br>
+    تمت برمجة هذا النظام بواسطة <strong>beweble</strong><br>
     Instagram: <a href="https://instagram.com/beweble" target="_blank" style="color:#C1272D;text-decoration:none;">@beweble</a><br>
     📞 للاستفسار: 
     <button id="contactBtn">اتصل واتساب</button>
@@ -180,11 +220,26 @@ const contactBtn=document.getElementById("contactBtn");
 const closeNotice=document.getElementById("closeNotice");
 
 const empSelect=document.getElementById("empSelect");
+const empIdInput=document.getElementById("empIdInput");
 const addEmpBtn=document.getElementById("addEmpBtn");
 const deleteEmpBtn=document.getElementById("deleteEmpBtn");
-let editRow=null;
 
-// 🔔 وظائف الحساب
+const employees = [
+  { id: "123-456-7907", name: "ميس السلوم" },
+  { id: "123-456-7906", name: "علي جعفر" },
+  { id: "123-456-7905", name: "وعد الأحمد" }
+];
+function loadEmployees(){
+  empSelect.innerHTML='';
+  employees.forEach(e=>{
+    let opt=document.createElement("option");
+    opt.value=e.id;
+    opt.textContent=`${e.name} (${e.id})`;
+    empSelect.appendChild(opt);
+  });
+}
+loadEmployees();
+
 function numberFmt(n){return parseFloat(n).toFixed(2);}
 function calcPayroll(d){
   let base=parseFloat(d.baseSalary)||0;
@@ -204,8 +259,8 @@ function calcPayroll(d){
   return {proratedSalary:prorated,overtimeAmount:overtime,gross:gross,advAndOthers:deductions,net:net};
 }
 function readForm(){return{
-  empId: empSelect.value,
-  empName: empSelect.selectedOptions[0]?.text.split("(")[0].trim()||'',
+  empId: empIdInput.value || empSelect.value,
+  empName: empSelect.selectedOptions[0].text.split("(")[0].trim(),
   empJob: document.getElementById('empJob').value,
   baseSalary: document.getElementById('baseSalary').value,
   daysInPeriod: document.getElementById('daysInPeriod').value,
@@ -226,7 +281,6 @@ function showResult(r){
   document.getElementById('netPay').innerText=numberFmt(r.net);
 }
 
-// 🔔 إشعار ترحيب
 function showWelcomeNotice(){
   welcomeNotice.style.display="block";
   setTimeout(()=>welcomeNotice.classList.add("show"),10);
@@ -234,13 +288,11 @@ function showWelcomeNotice(){
 contactBtn.onclick=()=>window.open("https://wa.me/81112046","_blank");
 closeNotice.onclick=()=>welcomeNotice.style.display="none";
 
-// 🔐 تسجيل الدخول والخروج
 auth.onAuthStateChanged(user=>{
   if(user){
     loginBox.style.display='none';
     appContainer.style.display='block';
     logoutBtn.style.display='inline-block';
-    loadEmployees();
     loadRecords();
     showWelcomeNotice();
   } else {
@@ -272,27 +324,7 @@ togglePassword.onclick=()=>{
   passField.type=(passField.type==='password'?'text':'password');
 };
 
-// 🔹 إدارة الموظفين
-addEmpBtn.onclick=()=>{
-  const name = prompt("ادخل اسم الموظف الجديد:");
-  if(name){
-    const newKey = db.ref('employees').push().key;
-    db.ref('employees/'+newKey).set({name});
-    loadEmployees();
-  }
-};
-deleteEmpBtn.onclick=()=>{
-  const key = empSelect.value;
-  if(key && confirm("هل أنت متأكد من حذف هذا الموظف؟")){
-    db.ref('employees/'+key).remove();
-    db.ref('payrolls').orderByChild('empId').equalTo(key).once('value',snap=>{
-      snap.forEach(child=>db.ref('payrolls/'+child.key).remove());
-    });
-    loadEmployees();
-  }
-};
-
-// 🔹 سجلات الرواتب
+let editRow=null;
 function addRecord(data){
   const result=calcPayroll(data);
   const record={...data,net:result.net,date:new Date().toLocaleString()};
@@ -313,93 +345,104 @@ function loadRecords(){
         <td>${r.empName}</td>
         <td>${r.empJob}</td>
         <td>${numberFmt(r.baseSalary)}</td>
-        <td>${r.daysWorked}</td>
+        <td>${r.daysWorked}/${r.daysInPeriod}</td>
         <td>${numberFmt(r.net)}</td>
-        <td>${r.status}</td>
+        <td>${r.status||"لا"}</td>
         <td>${r.date}</td>
         <td>
           <button class="edit-btn">تعديل</button>
           <button class="delete-btn">حذف</button>
         </td>`;
       tbody.appendChild(row);
-
-      row.querySelector('.delete-btn').onclick=()=>{db.ref('payrolls/'+child.key).remove();loadRecords();}
-      row.querySelector('.edit-btn').onclick=()=>{
-        editRow=child.key;
-        document.getElementById('empJob').value=r.empJob;
-        document.getElementById('baseSalary').value=r.baseSalary;
-        document.getElementById('daysInPeriod').value=r.daysInPeriod;
-        document.getElementById('daysWorked').value=r.daysWorked;
-        document.getElementById('overtimeHours').value=r.overtimeHours;
-        document.getElementById('overtimeRate').value=r.overtimeRate;
-        document.getElementById('bonuses').value=r.bonuses;
-        document.getElementById('advance').value=r.advance;
-        document.getElementById('otherDeductions').value=r.otherDeductions;
-        document.getElementById('status').value=r.status;
-        empSelect.value=r.empId;
-      }
     });
   });
 }
 
-// 🔹 حساب + تسجيل
-document.getElementById('calcBtn').onclick=()=>{
-  const data=readForm();
-  showResult(calcPayroll(data));
-};
+tbody.addEventListener("click",e=>{
+  const row=e.target.closest("tr");
+  if(!row) return;
+  const key=row.dataset.key;
+  if(e.target.classList.contains("delete-btn")){
+    if(key) db.ref('payrolls/'+key).remove();
+    row.remove();
+  }
+  if(e.target.classList.contains("edit-btn")){
+    const c=row.children;
+    empSelect.value=c[1].innerText;
+    empIdInput.value=c[1].innerText;
+    document.getElementById('empJob').value=c[3].innerText;
+    document.getElementById('baseSalary').value=c[4].innerText;
+    let days=c[5].innerText.split("/");
+    document.getElementById('daysWorked').value=days[0];
+    document.getElementById('daysInPeriod').value=days[1];
+    document.getElementById('status').value=c[7].innerText;
+    editRow=row;
+    document.getElementById('recordBtn').textContent="حفظ التعديل";
+  }
+});
+
 document.getElementById('recordBtn').onclick=()=>{
   const data=readForm();
+  const result=calcPayroll(data);
   if(editRow){
-    const result=calcPayroll(data);
-    db.ref('payrolls/'+editRow).update({...data,net:result.net,date:new Date().toLocaleString()});
+    const key=editRow.dataset.key;
+    const updatedRecord={...data,net:result.net,date:new Date().toLocaleString()};
+    db.ref('payrolls/'+key).set(updatedRecord);
     editRow=null;
+    document.getElementById('recordBtn').textContent="تسجيل";
+    loadRecords();
   } else addRecord(data);
-  document.getElementById('clearForm').click();
 };
+
+document.getElementById('calcBtn').onclick=()=>showResult(calcPayroll(readForm()));
 document.getElementById('clearForm').onclick=()=>{
-  document.querySelectorAll('input').forEach(i=>i.value='');
-  document.getElementById('status').value='لا';
-  document.getElementById('resultBox').style.display='none';
+  document.querySelectorAll("input").forEach(i=>{if(i.type!=="button") i.value="";});
+  document.getElementById('status').value="لا";
+  editRow=null;
+  document.getElementById('recordBtn').textContent="تسجيل";
 };
-
-// 🔹 تصدير Excel (CSV)
 document.getElementById('exportExcel').onclick=()=>{
-  let csv='ID,الموظف,الوظيفة,الراتب,الأيام,الصافي,الحالة,تاريخ\n';
-  tbody.querySelectorAll('tr').forEach(r=>{
-    const cells=r.querySelectorAll('td');
-    let row=[];
-    for(let i=1;i<cells.length-1;i++) row.push(cells[i].innerText);
-    csv+=row.join(',')+'\n';
-  });
-  const blob=new Blob([csv],{type:'text/csv'});
-  const link=document.createElement('a');
-  link.href=URL.createObjectURL(blob);
-  link.download='payroll_records.csv';
-  link.click();
+  let table=document.getElementById("recordsTable").outerHTML;
+  let a=document.createElement("a");
+  a.href='data:application/vnd.ms-excel,'+encodeURIComponent(table);
+  a.download='رواتب.xls';
+  a.click();
 };
 
-// 🔹 البحث في السجلات
-document.getElementById('searchInput').addEventListener('input',e=>{
-  const q=e.target.value.toLowerCase();
-  tbody.querySelectorAll('tr').forEach(row=>{
-    const text=row.innerText.toLowerCase();
-    row.style.display=text.includes(q)?'':'none';
+document.getElementById('searchInput').addEventListener("input",function(){
+  const term=this.value.toLowerCase();
+  Array.from(tbody.querySelectorAll("tr")).forEach(row=>{
+    const id=row.children[1].innerText.toLowerCase();
+    const name=row.children[2].innerText.toLowerCase();
+    row.style.display=(id.includes(term)||name.includes(term))?"":"none";
   });
 });
 
-// 🔹 تحميل الموظفين
-function loadEmployees(){
-  empSelect.innerHTML='';
-  db.ref('employees').once('value',snapshot=>{
-    snapshot.forEach(child=>{
-      const e=child.val();
-      let opt=document.createElement("option");
-      opt.value=child.key;
-      opt.textContent=`${e.name} (${child.key})`;
-      empSelect.appendChild(opt);
+// إضافة وحذف الموظفين
+addEmpBtn.onclick=()=>{
+  const name = prompt("ادخل اسم الموظف الجديد:");
+  const id = empIdInput.value.trim();
+  if(name && id){
+    employees.push({id,name});
+    loadEmployees();
+    empIdInput.value='';
+  } else alert("يجب إدخال الاسم وID الموظف!");
+};
+
+deleteEmpBtn.onclick=()=>{
+  const id = empIdInput.value.trim();
+  if(id && confirm("هل أنت متأكد من حذف هذا الموظف؟")){
+    const index = employees.findIndex(e=>e.id===id);
+    if(index>-1) employees.splice(index,1);
+    db.ref('payrolls').orderByChild('empId').equalTo(id).once('value',snap=>{
+      snap.forEach(child=>db.ref('payrolls/'+child.key).remove());
     });
-  });
-}
+    loadEmployees();
+    empIdInput.value='';
+  } else alert("ادخل ID الموظف لحذفه!");
+};
+
+empSelect.onchange=()=>{ empIdInput.value=empSelect.value; };
 </script>
 </body>
 </html>
