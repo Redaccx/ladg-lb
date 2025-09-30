@@ -59,18 +59,20 @@ body {
   background: rgba(255,255,255,0.2);
 }
 .card-glow.active { opacity: 0.6; transform: scale(1.2); }
+.card-glow.fail { opacity: 0.4; background: rgba(255,0,0,0.2); transform: scale(1.2); }
 
 /* Titles */
 h1 { font-size: 20px; margin-bottom: 25px; color: #fff; letter-spacing: 1px; }
 
 /* Messages */
 #check-msg { font-size: 20px; margin: 15px 0; min-height: 30px; font-weight: 500; letter-spacing: 0.5px; }
-#status { font-size: 22px; font-weight: bold; margin-top: 20px; min-height: 60px; }
-#status.success { color: #00ff55; text-shadow: 0 0 15px #00ff55; }
-#status.fail { color: #ff5555; text-shadow: 0 0 15px #ff5555; }
+#status { font-size: 22px; font-weight: bold; margin-top: 20px; min-height: 60px; padding: 8px 12px; border-radius: 12px; display: inline-block; }
+#status.success { color: #000; background: rgba(255,255,255,0.7); text-shadow: none; }
+#status.fail { color: #000; background: rgba(255,255,255,0.7); text-shadow: none; border: 2px solid red; }
 
+/* ID and Name */
 #id-display { margin-top: 15px; font-size: 16px; opacity: 0.8; direction: ltr; unicode-bidi: embed; }
-#name-display { margin-top: 12px; font-size: 20px; font-weight: 700; color: #fff; opacity: 0; transition: all 1s ease; }
+#name-display { margin-top: 12px; font-size: 20px; font-weight: 700; color: #000; opacity: 0; transition: all 1s ease; }
 
 /* Progress bar */
 .progress-bar { position: relative; height: 12px; width: 100%; background: rgba(255,255,255,0.2); border-radius: 12px; margin: 15px 0; overflow: hidden; }
@@ -196,10 +198,10 @@ function checkCard(id){
       clearInterval(interval);
       setTimeout(()=>{
         if(employees.hasOwnProperty(id)){
-          showResult("ID Verified", true);
+          showResult("Verified", true);
           nameDisplay.textContent = `Name: ${employees[id]}`;
         } else {
-          showResult("Not Registered", false);
+          showResult("Not Verified", false);
           nameDisplay.textContent = "";
         }
       }, 800);
