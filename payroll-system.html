@@ -226,8 +226,8 @@ function showResult(r){
   document.getElementById('netPay').innerText=numberFmt(r.net);
 }
 
-// 🔔 إشعار الترحيب يظهر مرة واحدة فقط عند تسجيل الدخول
-function showWelcomeNoticeOnce(){
+// 🔔 إشعار ترحيب (تظهر مرة واحدة فقط عند تسجيل الدخول)
+function showWelcomeNotice(){
   if(!sessionStorage.getItem('welcomeShown')){
     welcomeNotice.style.display="block";
     setTimeout(()=>welcomeNotice.classList.add("show"),10);
@@ -245,7 +245,7 @@ auth.onAuthStateChanged(user=>{
     logoutBtn.style.display='inline-block';
     loadEmployees();
     loadRecords();
-    showWelcomeNoticeOnce();
+    showWelcomeNotice();
   } else {
     loginBox.style.display='block';
     appContainer.style.display='none';
@@ -275,17 +275,23 @@ togglePassword.onclick=()=>{
   passField.type=(passField.type==='password'?'text':'password');
 };
 
-// 🔹 إدارة الموظفين مع توليد ID تلقائي
-addEmpBtn.onclick=()=>{
+// 🔹 إدارة الموظفين (ID يدوي)
+addEmpBtn.onclick = () => {
   const name = prompt("ادخل اسم الموظف الجديد:");
-  if(name){
-    const newKey = db.ref('employees').push().key;
-    const empId = Math.floor(1000 + Math.random()*9000);
-    db.ref('employees/'+newKey).set({name, empId});
-    loadEmployees();
-    alert(`تمت إضافة الموظف: ${name} برقم ID: ${empId}`);
+  if (!name) return;
+
+  const empId = prompt("ادخل رقم ID للموظف:");
+  if (!empId) {
+    alert("يجب إدخال رقم ID للموظف!");
+    return;
   }
+
+  const newKey = db.ref('employees').push().key;
+  db.ref('employees/' + newKey).set({ name, empId });
+  loadEmployees();
+  alert(`تمت إضافة الموظف: ${name} برقم ID: ${empId}`);
 };
+
 deleteEmpBtn.onclick=()=>{
   const key = empSelect.value;
   if(key && confirm("هل أنت متأكد من حذف هذا الموظف؟")){
@@ -296,20 +302,6 @@ deleteEmpBtn.onclick=()=>{
     loadEmployees();
   }
 };
-
-// 🔹 تحميل الموظفين
-function loadEmployees(){
-  empSelect.innerHTML='';
-  db.ref('employees').once('value',snapshot=>{
-    snapshot.forEach(child=>{
-      const emp=child.val();
-      const option=document.createElement('option');
-      option.value=child.key;
-      option.text=`${emp.name} (${emp.empId})`;
-      empSelect.appendChild(option);
-    });
-  });
-}
 
 // 🔹 سجلات الرواتب
 function addRecord(data){
@@ -341,7 +333,81 @@ function loadRecords(){
           <button class="delete-btn">حذف</button>
         </td>`;
       tbody.appendChild(row);
+
       row.querySelector('.delete-btn').onclick=()=>{db.ref('payrolls/'+child.key).remove();loadRecords();}
+      row.querySelector('.edit-btn').onclick=()=>{
+        editRow=child.key;
+        document.getElementById('empJob').value=r.empJob;
+        document.getElementById('baseSalary').value=r.baseSalary;
+        document.getElementById('daysInPeriod').value=r.daysInPeriod;
+        document.getElementById('daysWorked').value=r.daysWorked;
+        document.getElementById('overtimeHours').value=r.overtimeHours;
+        document.getElementById('overtimeRate').value=r.overtimeRate;
+        document.getElementById('bonuses').value=r.bonuses;
+        document.getElementById('advance').value=r.advance;
+        document.getElementById('otherDeductions').value=r.otherDeductions;
+        document.getElementById('status').value=r.status;
+        empSelect.value=r.empId;
+      }
+    });
+  });
+}
+
+// 🔹 حساب + تسجيل
+document.getElementById('calcBtn').onclick=()=>{
+  const data=readForm();
+  showResult(calcPayroll(data));
+};
+document.getElementById('recordBtn').onclick=()=>{
+  const data=readForm();
+  if(editRow){
+    const result=calcPayroll(data);
+    db.ref('payrolls/'+editRow).update({...data,net:result.net,date:new Date().toLocaleString()});
+    editRow=null;
+  } else addRecord(data);
+  document.getElementById('clearForm').click();
+};
+document.getElementById('clearForm').onclick=()=>{
+  document.querySelectorAll('input').forEach(i=>i.value='');
+  document.getElementById('status').value='لا';
+  document.getElementById('resultBox').style.display='none';
+};
+
+// 🔹 تصدير Excel (CSV)
+document.getElementById('exportExcel').onclick=()=>{
+  let csv='ID,الموظف,الوظيفة,الراتب,الأيام,الصافي,الحالة,تاريخ\n';
+  tbody.querySelectorAll('tr').forEach(r=>{
+    const cells=r.querySelectorAll('td');
+    let row=[];
+    for(let i=1;i<cells.length-1;i++) row.push(cells[i].innerText);
+    csv+=row.join(',')+'\n';
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);
+  link.download='payroll_records.csv';
+  link.click();
+};
+
+// 🔹 البحث في السجلات
+document.getElementById('searchInput').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase();
+  tbody.querySelectorAll('tr').forEach(row=>{
+    const text=row.innerText.toLowerCase();
+    row.style.display=text.includes(q)?'':'none';
+  });
+});
+
+// 🔹 تحميل الموظفين
+function loadEmployees(){
+  empSelect.innerHTML='';
+  db.ref('employees').once('value',snapshot=>{
+    snapshot.forEach(child=>{
+      const e=child.val();
+      let opt=document.createElement("option");
+      opt.value=e.empId;
+      opt.textContent=`${e.name} (${e.empId})`;
+      empSelect.appendChild(opt);
     });
   });
 }
