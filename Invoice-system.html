@@ -53,35 +53,53 @@ th{background:var(--primary);color:#fff;}
 </div>
 
 <div id="invoice-section" style="display:none;">
+
+  <!-- Section Management -->
+  <div class="card">
+    <h2>Sections Management</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <select id="invoice-section-select"></select>
+      <button onclick="addSection()">Add Section</button>
+      <button onclick="editSection()">Edit Section</button>
+      <button onclick="deleteSection()">Delete Section</button>
+    </div>
+  </div>
+
+  <!-- Add/Edit Invoice -->
   <div class="card">
     <h2>Add / Edit Invoice</h2>
-    <select id="invoice-section-select"></select>
-    <button onclick="addSection()">Add Section</button>
     <input type="text" id="invoice-store" placeholder="Store / Vendor">
     <input type="text" id="invoice-address" placeholder="Address">
     <input type="date" id="invoice-date">
+    <select id="invoice-currency">
+      <option value="LBP">ليرة لبنانية</option>
+      <option value="USD">دولار</option>
+      <option value="EUR">يورو</option>
+    </select>
     <input type="text" id="search-invoice" placeholder="Search by store/vendor" oninput="loadInvoices()">
     <div id="items-container"></div>
     <button onclick="addItem()">Add Item</button>
     <input type="number" id="discount" placeholder="Discount" value="0">
     <input type="number" id="vat" placeholder="VAT (%)" value="11">
-    <p>Total: <span id="total-display">0</span></p>
+    <p>Total: <span id="total-display">0</span> <span id="currency-display">LBP</span></p>
     <button onclick="saveInvoice()">Save Invoice</button>
     <button onclick="logout()">Logout</button>
     <button onclick="exportExcel()">Export to Excel</button>
   </div>
 
+  <!-- Invoice List -->
   <div class="card">
     <h2>Invoices List</h2>
     <table>
       <thead>
         <tr>
-          <th>Date</th><th>Store</th><th>Total</th><th>Actions</th>
+          <th>Date</th><th>Store</th><th>Total</th><th>Currency</th><th>Actions</th>
         </tr>
       </thead>
       <tbody id="invoice-list"></tbody>
     </table>
   </div>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
@@ -144,6 +162,36 @@ function addSection(){
     .then(()=> loadSections());
 }
 
+function editSection(){
+  const select = document.getElementById('invoice-section-select');
+  const currentName = select.options[select.selectedIndex]?.text;
+  if(!currentName) return alert("Select a section first");
+  const newName = prompt("Enter new name for section:",currentName);
+  if(!newName) return;
+  const sectionId = select.value;
+  const userId = auth.currentUser.uid;
+  db.collection('users').doc(userId).collection('sections').doc(sectionId).update({name:newName})
+    .then(()=> loadSections());
+}
+
+function deleteSection(){
+  const select = document.getElementById('invoice-section-select');
+  const sectionId = select.value;
+  if(!sectionId) return alert("Select a section first");
+  if(confirm("Are you sure to delete this section and all its invoices?")){
+    const userId = auth.currentUser.uid;
+    db.collection('users').doc(userId).collection('sections').doc(sectionId).delete()
+      .then(()=>{
+        db.collection('users').doc(userId).collection('invoices')
+          .where("section","==",sectionId).get()
+          .then(snapshot=>{
+            snapshot.forEach(doc=> doc.ref.delete());
+            loadSections(); loadInvoices();
+          });
+      });
+  }
+}
+
 function loadSections(){
   const select = document.getElementById('invoice-section-select');
   const userId = auth.currentUser.uid;
@@ -186,10 +234,14 @@ function calculateTotal(){
 document.getElementById('items-container').addEventListener('input',calculateTotal);
 document.getElementById('discount').addEventListener('input',calculateTotal);
 document.getElementById('vat').addEventListener('input',calculateTotal);
+document.getElementById('invoice-currency').addEventListener('change',()=>{
+  document.getElementById('currency-display').textContent = document.getElementById('invoice-currency').value;
+});
 
 function saveInvoice(){
   const userId = auth.currentUser.uid;
   const sectionId = document.getElementById('invoice-section-select').value;
+  const currency = document.getElementById('invoice-currency').value;
   const itemsEl = document.querySelectorAll('#items-container .invoice-item');
   const items=[];
   itemsEl.forEach(item=>{
@@ -207,7 +259,8 @@ function saveInvoice(){
     items,
     discount:parseFloat(document.getElementById('discount').value)||0,
     vat:parseFloat(document.getElementById('vat').value)||0,
-    total:parseFloat(document.getElementById('total-display').textContent)||0
+    total:parseFloat(document.getElementById('total-display').textContent)||0,
+    currency
   };
   if(currentInvoiceId){
     db.collection('users').doc(userId).collection('invoices').doc(currentInvoiceId).update(invoiceData)
@@ -226,6 +279,8 @@ function clearForm(){
   document.getElementById('discount').value="0";
   document.getElementById('vat').value="11";
   document.getElementById('total-display').textContent="0";
+  document.getElementById('invoice-currency').value="LBP";
+  document.getElementById('currency-display').textContent="LBP";
   currentInvoiceId=null;
 }
 
@@ -233,7 +288,9 @@ function clearForm(){
 function loadInvoices(){
   const userId = auth.currentUser.uid;
   const search = document.getElementById('search-invoice').value.toLowerCase();
+  const sectionId = document.getElementById('invoice-section-select').value;
   db.collection('users').doc(userId).collection('invoices')
+    .where("section","==",sectionId)
     .onSnapshot(snapshot=>{
       const list=document.getElementById('invoice-list');
       list.innerHTML="";
@@ -241,7 +298,7 @@ function loadInvoices(){
         const data = doc.data();
         if(search && !data.store.toLowerCase().includes(search) && !data.address.toLowerCase().includes(search)) return;
         const tr = document.createElement('tr');
-        tr.innerHTML=`<td>${data.date}</td><td>${data.store}</td><td>${data.total.toFixed(2)}</td>
+        tr.innerHTML=`<td>${data.date}</td><td>${data.store}</td><td>${data.total.toFixed(2)}</td><td>${data.currency}</td>
           <td>
             <button onclick='editInvoice("${doc.id}")'>Edit</button>
             <button onclick='deleteInvoice("${doc.id}")'>Delete</button>
@@ -268,6 +325,8 @@ function editInvoice(id){
         document.getElementById('invoice-date').value=data.date;
         document.getElementById('discount').value=data.discount;
         document.getElementById('vat').value=data.vat;
+        document.getElementById('invoice-currency').value=data.currency;
+        document.getElementById('currency-display').textContent=data.currency;
         document.getElementById('items-container').innerHTML="";
         data.items.forEach(item=>{
           const container = document.getElementById('items-container');
@@ -291,7 +350,7 @@ function deleteInvoice(id){
 
 // Excel Export
 function exportExcel(){
-  const table = document.querySelector('#invoice-list').parentNode;
+  const table = document.querySelector('#invoice-list').parentNode.querySelector('table');
   const wb = XLSX.utils.table_to_book(table, {sheet:"Invoices"});
   XLSX.writeFile(wb, "Invoices.xlsx");
 }
