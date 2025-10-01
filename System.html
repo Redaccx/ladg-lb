@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم الرئيسية</title>
+<style>
+/* الخطوط والألوان الأساسية */
+body {
+  font-family:"Cairo","Segoe UI",Tahoma,sans-serif;
+  background: linear-gradient(135deg,#f0f2f5,#d9e2ec);
+  margin:0; padding:0;
+}
+header {
+  background:#C1272D;
+  color:white;
+  padding:25px 0;
+  text-align:center;
+  font-size:1rem;
+  font-weight:bold;
+  letter-spacing:1px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* الحاوية الرئيسية */
+main { 
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:30px;
+  padding:50px 20px;
+  max-width:1200px;
+  margin:auto;
+}
+
+/* البطاقات */
+.card {
+  background:white;
+  border-radius:20px;
+  padding:30px 25px;
+  box-shadow:0 8px 25px rgba(0,0,0,0.1);
+  transition:0.4s;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.card:hover {
+  transform:translateY(-8px) scale(1.03);
+  box-shadow:0 15px 35px rgba(0,0,0,0.2);
+}
+
+/* العنوان داخل البطاقة */
+.card h2 { 
+  margin-top:0; 
+  color:#C1272D; 
+  font-size:1.3rem;
+  text-align:center;
+}
+
+/* النصوص داخل البطاقة */
+.card p { 
+  font-size:0.8rem; 
+  line-height:1.7; 
+  margin:20px 0; 
+  flex-grow:1; 
+  color:#555;
+  text-align:center;
+}
+
+/* الزر */
+.card button {
+  background:#C1272D;
+  color:white;
+  border:none;
+  padding:14px 22px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:0.8rem;
+  transition:0.3s;
+  align-self:center;
+  min-width:150px;
+}
+.card button:hover {
+  opacity:0.9;
+  transform:scale(1.05);
+}
+
+/* أيقونات اختيارية */
+.card h2::before {
+  content:" ";
+}
+</style>
+</head>
+<body>
+
+<header>لوحة التحكم الرئيسية</header>
+
+<main>
+  <div class="card">
+    <h2>نظام الحضور</h2>
+    <p>سجّل دخول وخروج الموظفين، راقب الحضور بدقة، عدّل أو احذف السجلات بسهولة، وصدّرها إلى Excel.</p>
+    <button onclick="window.open('attendance-system','_blank')">افتح النظام</button>
+  </div>
+
+  <div class="card">
+    <h2>نظام الفواتير</h2>
+    <p>أضف، حرّر أو احذف الفواتير، أدر الأقسام، احسب الإجمالي والضرائب والخصومات، وصدّر كل شيء بسهولة.</p>
+    <button onclick="window.open('Invoice-system','_blank')">افتح النظام</button>
+  </div>
+
+  <div class="card">
+    <h2>نظام الموظفين والرواتب</h2>
+    <p>إدارة بيانات الموظفين بالكامل، احسب الرواتب الصافية، سجّل السلف والخصومات، وصدّر التقارير بصيغة Excel.</p>
+    <button onclick="window.open('payroll-system','_blank')">افتح النظام</button>
+  </div>
+</main>
+
+</body>
+</html>
