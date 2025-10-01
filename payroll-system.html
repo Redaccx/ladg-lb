@@ -166,6 +166,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
+// العناصر
 const loginBox=document.getElementById('loginBox');
 const loginBtn=document.getElementById('loginBtn');
 const logoutBtn=document.getElementById('logoutBtn');
@@ -174,17 +175,17 @@ const togglePassword=document.getElementById('togglePassword');
 const resetPassBtn=document.getElementById('resetPassBtn');
 const appContainer=document.querySelector('.container');
 const tbody=document.querySelector("#recordsTable tbody");
-
 const welcomeNotice=document.getElementById("welcomeNotice");
 const contactBtn=document.getElementById("contactBtn");
 const closeNotice=document.getElementById("closeNotice");
-
 const empSelect=document.getElementById("empSelect");
 const addEmpBtn=document.getElementById("addEmpBtn");
 const deleteEmpBtn=document.getElementById("deleteEmpBtn");
-let editRow=null;
 
-// 🔔 وظائف الحساب
+let editRow=null;
+let employeesData = {}; // لتخزين بيانات الموظفين مع مفاتيحهم
+
+// دوال الحساب
 function numberFmt(n){return parseFloat(n).toFixed(2);}
 function calcPayroll(d){
   let base=parseFloat(d.baseSalary)||0;
@@ -226,7 +227,7 @@ function showResult(r){
   document.getElementById('netPay').innerText=numberFmt(r.net);
 }
 
-// 🔔 إشعار ترحيب (تظهر مرة واحدة فقط عند تسجيل الدخول)
+// إشعار الترحيب
 function showWelcomeNotice(){
   if(!sessionStorage.getItem('welcomeShown')){
     welcomeNotice.style.display="block";
@@ -237,7 +238,7 @@ function showWelcomeNotice(){
 contactBtn.onclick=()=>window.open("https://wa.me/81112046","_blank");
 closeNotice.onclick=()=>welcomeNotice.style.display="none";
 
-// 🔐 تسجيل الدخول والخروج
+// تسجيل الدخول والخروج
 auth.onAuthStateChanged(user=>{
   if(user){
     loginBox.style.display='none';
@@ -275,45 +276,55 @@ togglePassword.onclick=()=>{
   passField.type=(passField.type==='password'?'text':'password');
 };
 
-// 🔹 إدارة الموظفين (ID كمفتاح مباشر)
+// إدارة الموظفين
+function loadEmployees(){
+  empSelect.innerHTML='';
+  employeesData = {};
+  db.ref('employees').once('value', snapshot => {
+    snapshot.forEach(child => {
+      const e = child.val();
+      const key = child.key;
+      employeesData[key] = e;
+      let opt = document.createElement("option");
+      opt.value = key; 
+      opt.textContent = `${e.name} (${e.empId})`;
+      empSelect.appendChild(opt);
+    });
+  });
+}
+
 addEmpBtn.onclick = () => {
   const name = prompt("ادخل اسم الموظف الجديد:");
   if (!name) return;
+  const empId = prompt("ادخل رقم ID للموظف:");
+  if (!empId) { alert("يجب إدخال رقم ID للموظف!"); return; }
 
-  const empId = prompt("ادخل رقم ID للموظف (يجب أن يكون فريدًا):");
-  if (!empId) {
-    alert("يجب إدخال رقم ID للموظف!");
-    return;
-  }
-
-  db.ref('employees/' + empId).set({ name, empId })
-    .then(() => {
-      loadEmployees();
-      alert(`تمت إضافة الموظف: ${name} برقم ID: ${empId}`);
-    })
-    .catch(err => alert(err.message));
+  const newKey = db.ref('employees').push().key;
+  db.ref('employees/' + newKey).set({ name, empId }).then(() => {
+    loadEmployees(); 
+    alert(`تمت إضافة الموظف: ${name} برقم ID: ${empId}`);
+  });
 };
 
 deleteEmpBtn.onclick = () => {
-  const empIdToDelete = empSelect.value;
-  if (!empIdToDelete) return;
-  if (confirm("هل أنت متأكد من حذف هذا الموظف وجميع سجلاته؟")) {
-    db.ref('employees/' + empIdToDelete).remove()
-      .then(() => {
-        db.ref('payrolls').orderByChild('empId').equalTo(empIdToDelete).once('value', snap => {
+  const key = empSelect.value;
+  if (key && confirm("هل أنت متأكد من حذف هذا الموظف؟")) {
+    db.ref('employees/' + key).remove().then(() => {
+      db.ref('payrolls').orderByChild('empId').equalTo(employeesData[key].empId)
+        .once('value', snap => {
           snap.forEach(child => db.ref('payrolls/' + child.key).remove());
         });
-        loadEmployees();
-      })
-      .catch(err => alert(err.message));
+      loadEmployees();
+    });
   }
 };
 
-// 🔹 سجلات الرواتب
+// سجلات الرواتب
 function addRecord(data){
   const result=calcPayroll(data);
   const record={...data,net:result.net,date:new Date().toLocaleString()};
-  db.ref('payrolls/'+Date.now()).set(record); // مفتاح فريد
+  const newKey=db.ref('payrolls').push().key;
+  db.ref('payrolls/'+newKey).set(record);
   loadRecords();
 }
 function loadRecords(){
@@ -358,7 +369,7 @@ function loadRecords(){
   });
 }
 
-// 🔹 حساب + تسجيل
+// حساب + تسجيل
 document.getElementById('calcBtn').onclick=()=>{
   const data=readForm();
   showResult(calcPayroll(data));
@@ -378,7 +389,7 @@ document.getElementById('clearForm').onclick=()=>{
   document.getElementById('resultBox').style.display='none';
 };
 
-// 🔹 تصدير Excel (CSV)
+// تصدير Excel (CSV)
 document.getElementById('exportExcel').onclick=()=>{
   let csv='ID,الموظف,الوظيفة,الراتب,الأيام,الصافي,الحالة,تاريخ\n';
   tbody.querySelectorAll('tr').forEach(r=>{
@@ -394,7 +405,7 @@ document.getElementById('exportExcel').onclick=()=>{
   link.click();
 };
 
-// 🔹 البحث في السجلات
+// البحث
 document.getElementById('searchInput').addEventListener('input',e=>{
   const q=e.target.value.toLowerCase();
   tbody.querySelectorAll('tr').forEach(row=>{
@@ -402,20 +413,6 @@ document.getElementById('searchInput').addEventListener('input',e=>{
     row.style.display=text.includes(q)?'':'none';
   });
 });
-
-// 🔹 تحميل الموظفين
-function loadEmployees(){
-  empSelect.innerHTML='';
-  db.ref('employees').once('value',snapshot=>{
-    snapshot.forEach(child=>{
-      const e=child.val();
-      const opt=document.createElement("option");
-      opt.value=e.empId;
-      opt.textContent=`${e.name} (${e.empId})`;
-      empSelect.appendChild(opt);
-    });
-  });
-}
 </script>
 </body>
 </html>
