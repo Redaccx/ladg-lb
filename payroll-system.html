@@ -413,20 +413,7 @@ document.getElementById('searchInput').addEventListener('input',e=>{
     row.style.display=text.includes(q)?'':'none';
   });
 });
-  window.addEventListener('DOMContentLoaded', () => {
-    if (sessionStorage.getItem("mainAccess") !== "true") {
-        window.location.href = "system"; 
-        return;
-    }
-
-    // إذا أول مرة يفتح → صفحة مقفولة
-    if (!sessionStorage.getItem("refreshedOnce")) {
-        sessionStorage.setItem("refreshedOnce", "true");
-        document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>Reload the page to access Payroll System</h2>";
-    } 
-    // إذا عمل Refresh → يبين المحتوى الطبيعي
-});
-
+  
 </script>
 </body>
 </html>
