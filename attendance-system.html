@@ -22,6 +22,8 @@ button:hover { opacity:0.85; }
 .logout{background:#8e44ad;color:white;}
 .resetPass{background:#000;color:white;}
 .login{background:#C1272D;color:white;}
+.add { background:#16a085; color:white; }
+.add:hover { opacity:0.85; }
 /* === Table === */
 table{width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0px 2px 6px rgba(0,0,0,0.1);}
 th, td{border:1px solid #ddd; padding:7px; text-align:center; font-size:12px; max-width:250px; word-break:break-word;}
@@ -110,10 +112,12 @@ th{background:#34495e;color:white;}
 <main>
 <button class="logout" onclick="logout()">Logout</button>
 <div class="controls">
-  <select id="employeeSelect"></select><br>
+  <select id="employeeSelect"></select>
   <button class="in" onclick="manualCheckIn()">Check In</button>
   <button class="out" onclick="manualCheckOut()">Check Out</button>
   <button class="excel" onclick="exportExcel()">Export Excel</button>
+  <button class="add" onclick="addEmployee()">＋ Add Employee</button>
+  <button class="delete" onclick="deleteEmployee()">Delete Employee</button>
 </div>
 
 <div>
@@ -137,6 +141,7 @@ th{background:#34495e;color:white;}
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
+// ====== Firebase config ======
 const firebaseConfig = {
   apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
   authDomain: "ladg-attendance.firebaseapp.com",
@@ -149,86 +154,75 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let employees = [
-  { id: "123-456-7907", name: "ميس السلوم" },
-  { id: "123-456-7906", name: "علي جعفر" },
-  { id: "123-456-7905", name: "وعد الأحمد" },
-  { id: "123-456-7904", name: "أنور نمر" },
-  { id: "123-456-7903", name: "محسن يوسف" },
-  { id: "123-456-7902", name: "جمعة المحمد" },
-  { id: "123-456-7901", name: "هادي جعفر" },
-  { id: "123-456-7899", name: "محمد جعفر" },
-  { id: "123-456-7898", name: "غدير مصطفى" },
-  { id: "123-456-7897", name: "إلسي عبد الساتر" },
-  { id: "123-456-7895", name: "نور نبها" },
-  { id: "123-456-7894", name: "جاد نبها" },
-  { id: "123-456-7892", name: "هادي عبد الساتر" },
-  { id: "123-456-7891", name: "رضا الجمعة" },
-{ id: "123-456-7908", name: "زهراء زعيتر " }
-];
-
+// ====== Auth listener ======
 auth.onAuthStateChanged(user => {
   if(user){
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
     loadEmployees();
     loadData();
-    // عرض الإشعار بعد تسجيل الدخول
-    setTimeout(()=>{
-      const notify = document.getElementById("welcomeNotification");
-      notify.classList.add("show");
-    }, 500);
+    if(!sessionStorage.getItem("welcomeShown")){
+      setTimeout(()=>{
+        document.getElementById("welcomeNotification").classList.add("show");
+        sessionStorage.setItem("welcomeShown","true");
+      },500);
+    }
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
+    sessionStorage.removeItem("welcomeShown");
   }
 });
 
+// ====== Auth functions ======
 function login(){
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value.trim();
   auth.signInWithEmailAndPassword(email,password).catch(err=>alert(err.message));
 }
-
-function resetPassword(){ 
-  const email=document.getElementById("email").value.trim(); 
-  if(!email){alert("Enter your email"); return;} 
-  auth.sendPasswordResetEmail(email).then(()=>alert("Reset link sent")).catch(err=>alert(err.message)); 
-}
-
 function logout(){ auth.signOut(); }
-
-function loadEmployees(){ 
-  const sel=document.getElementById("employeeSelect"); sel.innerHTML=""; 
-  employees.forEach(e=>{ 
-    const opt=document.createElement("option"); 
-    opt.value=e.id; opt.textContent=`${e.id} - ${e.name}`; sel.appendChild(opt); 
-  }); 
+function resetPassword(){
+  const email=document.getElementById("email").value.trim();
+  if(!email){alert("Enter your email"); return;}
+  auth.sendPasswordResetEmail(email).then(()=>alert("Reset link sent")).catch(err=>alert(err.message));
 }
 
-function formatDate(dateStr){ 
-  const d=new Date(dateStr); 
-  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; 
+// ====== Employees ======
+function loadEmployees(){
+  const sel=document.getElementById("employeeSelect"); sel.innerHTML="";
+  db.collection("employees").get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      const e=doc.data();
+      const opt=document.createElement("option");
+      opt.value=doc.id;
+      opt.textContent=`${doc.id} - ${e.name}`;
+      sel.appendChild(opt);
+    });
+  });
 }
 
+// ====== Attendance ======
+function formatDate(dateStr){
+  const d=new Date(dateStr);
+  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+}
 function calculateWorkHours(checkin, checkout, date){
   if(!checkin || !checkout || checkout==='-') return '-';
-  const inParts = checkin.split(':').map(Number);
-  const outParts = checkout.split(':').map(Number);
-  const inDate = new Date(date); inDate.setHours(inParts[0], inParts[1], 0,0);
-  const outDate = new Date(date); outDate.setHours(outParts[0], outParts[1],0,0);
-  const diffMs = outDate - inDate;
-  const diffH = Math.floor(diffMs/3600000);
-  const diffM = Math.floor((diffMs%3600000)/60000);
+  const inParts=checkin.split(':').map(Number);
+  const outParts=checkout.split(':').map(Number);
+  const inDate=new Date(date); inDate.setHours(inParts[0],inParts[1],0,0);
+  const outDate=new Date(date); outDate.setHours(outParts[0],outParts[1],0,0);
+  const diffMs=outDate-inDate;
+  const diffH=Math.floor(diffMs/3600000);
+  const diffM=Math.floor((diffMs%3600000)/60000);
   return `${diffH}h ${diffM}m`;
 }
-
 function loadData(){
   db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
     const table=document.getElementById("attendanceTable");
     table.innerHTML=`<tr>
-      <th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Status</th><th>Actions</th>
-      </tr>`;
+<th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Status</th><th>Actions</th>
+</tr>`;
     snapshot.forEach(doc=>{
       const r=doc.data();
       const row=table.insertRow();
@@ -237,7 +231,7 @@ function loadData(){
       row.insertCell(2).innerText=formatDate(r.date);
       row.insertCell(3).innerText=r.checkin?r.checkin:"-";
       row.insertCell(4).innerText=r.checkout?r.checkout:"-";
-      row.insertCell(5).innerText=calculateWorkHours(r.checkin, r.checkout, r.date);
+      row.insertCell(5).innerText=calculateWorkHours(r.checkin,r.checkout,r.date);
       const st=row.insertCell(6);
       st.innerText=r.status;
       st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
@@ -250,37 +244,41 @@ function loadData(){
 }
 
 function manualCheckIn(){
-  const id=document.getElementById("employeeSelect").value;
-  const emp=employees.find(e=>e.id===id);
-  const now=new Date();
-  db.collection("attendance").add({
-    id: emp.id, name: emp.name,
-    date: now.toISOString(),
-    checkin: now.toLocaleTimeString("en-GB",{hour12:false}),
-    checkout: "-",
-    status: "حاضر"
-  }).then(()=>loadData());
+  const empId=document.getElementById("employeeSelect").value;
+  if(!empId){alert("Select employee"); return;}
+  db.collection("employees").doc(empId).get().then(doc=>{
+    if(!doc.exists){alert("Employee not found"); return;}
+    const emp=doc.data();
+    const now=new Date();
+    db.collection("attendance").add({
+      id: empId, name: emp.name,
+      date: now.toISOString(),
+      checkin: now.toLocaleTimeString("en-GB",{hour12:false}),
+      checkout: "-",
+      status: "حاضر"
+    }).then(()=>loadData());
+  });
 }
 
 function manualCheckOut(){
-  const id=document.getElementById("employeeSelect").value;
-  db.collection("attendance").where("id","==",id).where("checkout","==","-").get().then(snap=>{
+  const empId=document.getElementById("employeeSelect").value;
+  if(!empId){alert("Select employee"); return;}
+  db.collection("attendance").where("id","==",empId).where("checkout","==","-").get().then(snap=>{
     if(!snap.empty){
       snap.forEach(doc=>{
         const now=new Date();
-        const checkout=now.toLocaleTimeString("en-GB",{hour12:false});
-        doc.ref.update({checkout:checkout}).then(()=>loadData());
+        doc.ref.update({checkout:now.toLocaleTimeString("en-GB",{hour12:false})}).then(()=>loadData());
       });
     } else alert("No check-in found");
   });
 }
 
 function toggleStatus(docId,current){
-  const newStatus = current==="حاضر"?"غائب":"حاضر";
+  const newStatus=current==="حاضر"?"غائب":"حاضر";
   db.collection("attendance").doc(docId).update({status:newStatus}).then(()=>loadData());
 }
 
-function editRecord(docId){ 
+function editRecord(docId){
   db.collection("attendance").doc(docId).get().then(doc=>{
     const r=doc.data();
     const newDate=prompt("Enter Date YYYY-MM-DD", r.date.substring(0,10));
@@ -294,10 +292,8 @@ function editRecord(docId){
   });
 }
 
-function deleteRecord(docId){ 
-  if(confirm("Delete this record?")){ 
-    db.collection("attendance").doc(docId).delete().then(()=>loadData()); 
-  } 
+function deleteRecord(docId){
+  if(confirm("Delete this record?")) db.collection("attendance").doc(docId).delete().then(()=>loadData());
 }
 
 function exportExcel(){
@@ -321,30 +317,46 @@ function exportExcel(){
 
 function searchRecords(){
   const q=document.getElementById("searchBox").value.toLowerCase();
-  const table=document.getElementById("attendanceTable");const tr=table.getElementsByTagName("tr");
+  const table=document.getElementById("attendanceTable");
+  const tr=table.getElementsByTagName("tr");
   for(let i=1;i<tr.length;i++){
-    let td0=tr[i].getElementsByTagName("td")[0];let td1=tr[i].getElementsByTagName("td")[1];
-    if(td0&&td1){let txt=(td0.textContent+td1.textContent).toLowerCase();tr[i].style.display=txt.includes(q)?"":"none";}
+    let td0=tr[i].getElementsByTagName("td")[0];
+    let td1=tr[i].getElementsByTagName("td")[1];
+    if(td0&&td1){
+      let txt=(td0.textContent+td1.textContent).toLowerCase();
+      tr[i].style.display=txt.includes(q)?"":"none";
+    }
   }
 }
 
-// Password toggle
-let passVisible = false;
-document.getElementById("togglePass").addEventListener("click", ()=>{
-  const pass = document.getElementById("password");
-  passVisible = !passVisible;
-  pass.type = passVisible ? "text" : "password";
-  document.getElementById("togglePass").textContent = passVisible ? "Hide" : "Show";
+// ====== Add / Delete employee in Firebase =====
+function addEmployee(){
+  const name=prompt("Enter Employee Name:");
+  if(!name) return;
+  const id=prompt("Enter Employee ID:");
+  if(!id) return;
+  db.collection("employees").doc(id).set({name:name}).then(()=>loadEmployees());
+}
+function deleteEmployee(){
+  const empId=document.getElementById("employeeSelect").value;
+  if(!empId){alert("Select employee"); return;}
+  if(confirm("Delete this employee permanently?")){
+    db.collection("employees").doc(empId).delete().then(()=>loadEmployees());
+  }
+}
+
+// ====== Password toggle ======
+let passVisible=false;
+document.getElementById("togglePass").addEventListener("click",()=>{
+  const pass=document.getElementById("password");
+  passVisible=!passVisible;
+  pass.type=passVisible?"text":"password";
+  document.getElementById("togglePass").textContent=passVisible?"Hide":"Show";
 });
 
-// Notification buttons
-document.getElementById("closeNotify").onclick = () => {
-  document.getElementById("welcomeNotification").classList.remove("show");
-};
-document.getElementById("contactWhatsapp").onclick = () => {
-  const phone = "81112046";
-  window.open(`https://wa.me/${phone}`,"_blank");
-};
+// ====== Notification buttons ======
+document.getElementById("closeNotify").onclick=()=>{document.getElementById("welcomeNotification").classList.remove("show");};
+document.getElementById("contactWhatsapp").onclick=()=>{window.open("https://wa.me/81112046","_blank");};
 </script>
 </body>
 </html>
