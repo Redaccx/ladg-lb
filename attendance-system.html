@@ -357,6 +357,11 @@ document.getElementById("togglePass").addEventListener("click",()=>{
 // ====== Notification buttons ======
 document.getElementById("closeNotify").onclick=()=>{document.getElementById("welcomeNotification").classList.remove("show");};
 document.getElementById("contactWhatsapp").onclick=()=>{window.open("https://wa.me/81112046","_blank");};
+ window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem("mainAccess") !== "true") {
+        window.location.href = "system"; // يرجعو للرئيسية
+    }
+});
 </script>
 </body>
 </html>
