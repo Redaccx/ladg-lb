@@ -74,7 +74,7 @@ main {
   cursor:pointer;
   font-weight:bold;
   font-size:0.8rem;
-  transition:0.2s ease, transform 0.1s ease; /* أضفنا انتقال أسرع للضغط */
+  transition:0.2s ease, transform 0.1s ease;
   align-self:center;
   min-width:150px;
 }
@@ -84,7 +84,6 @@ main {
   transform:scale(1.05);
 }
 
-/* تأثير الضغط على الزر */
 .card button:active {
   transform:scale(0.95);
 }
@@ -98,29 +97,28 @@ main {
   <div class="card">
     <h2>Attendance System</h2>
     <p>Record employee check-ins and check-outs, monitor attendance accurately, edit or delete records easily, and export to Excel.</p>
-    <button onclick="navigateTo('attendance-system')">Open System</button>
+    <button onclick="navigateTo('attendance-system.html')">Open System</button>
   </div>
 
   <div class="card">
     <h2>Invoice System</h2>
     <p>Add, edit, or delete invoices, manage categories, calculate totals, taxes, and discounts, and export everything easily.</p>
-    <button onclick="navigateTo('Invoice-system')">Open System</button>
+    <button onclick="navigateTo('invoice-system.html')">Open System</button>
   </div>
 
   <div class="card">
     <h2>Payroll System</h2>
     <p>Manage all employee data, calculate net salaries, record advances and deductions, and export reports to Excel.</p>
-    <button onclick="navigateTo('payroll-system')">Open System</button>
+    <button onclick="navigateTo('payroll-system.html')">Open System</button>
   </div>
 </main>
 
 <script>
-// عند تحميل الصفحة، نضيف تأثير الظهور
 window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('fade-in');
+    sessionStorage.setItem("mainAccess", "true"); // السماح بالدخول للأنظمة
 });
 
-// عند الضغط على زر الانتقال
 function navigateTo(url) {
     document.body.classList.remove('fade-in');
     document.body.classList.add('fade-out'); 
