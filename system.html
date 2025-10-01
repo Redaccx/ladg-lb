@@ -1,25 +1,29 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم الرئيسية</title>
+<title>Main Control Panel</title>
 <style>
 body {
   font-family:"Cairo","Segoe UI",Tahoma,sans-serif;
   background: linear-gradient(135deg,#f0f2f5,#d9e2ec);
   margin:0; padding:0;
+  opacity:0;
+  transition: opacity 0.5s ease;
 }
+body.fade-in { opacity:1; }
+body.fade-out { opacity:0; }
+
 header {
   background:#C1272D;
   color:white;
   padding:25px 0;
   text-align:center;
-  font-size:1rem;
   font-weight:bold;
-  letter-spacing:1px;
   box-shadow:0 4px 12px rgba(0,0,0,0.2);
 }
+
 main { 
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
@@ -28,6 +32,7 @@ main {
   max-width:1200px;
   margin:auto;
 }
+
 .card {
   background:white;
   border-radius:20px;
@@ -38,16 +43,19 @@ main {
   flex-direction:column;
   justify-content:space-between;
 }
+
 .card:hover {
   transform:translateY(-8px) scale(1.03);
   box-shadow:0 15px 35px rgba(0,0,0,0.2);
 }
+
 .card h2 { 
   margin-top:0; 
   color:#C1272D; 
   font-size:1.3rem;
   text-align:center;
 }
+
 .card p { 
   font-size:0.8rem; 
   line-height:1.7; 
@@ -56,6 +64,7 @@ main {
   color:#555;
   text-align:center;
 }
+
 .card button {
   background:#C1272D;
   color:white;
@@ -65,52 +74,59 @@ main {
   cursor:pointer;
   font-weight:bold;
   font-size:0.8rem;
-  transition:0.3s;
+  transition:0.2s ease, transform 0.1s ease; /* أضفنا انتقال أسرع للضغط */
   align-self:center;
   min-width:150px;
 }
+
 .card button:hover {
   opacity:0.9;
   transform:scale(1.05);
+}
+
+/* تأثير الضغط على الزر */
+.card button:active {
+  transform:scale(0.95);
 }
 </style>
 </head>
 <body>
 
-<header>لوحة التحكم الرئيسية</header>
+<header>Main Control Panel</header>
 
 <main>
   <div class="card">
-    <h2>نظام الحضور</h2>
-    <p>سجّل دخول وخروج الموظفين، راقب الحضور بدقة، عدّل أو احذف السجلات بسهولة، وصدّرها إلى Excel.</p>
-    <button onclick="openSystem('attendance-system')">افتح النظام</button>
+    <h2>Attendance System</h2>
+    <p>Record employee check-ins and check-outs, monitor attendance accurately, edit or delete records easily, and export to Excel.</p>
+    <button onclick="navigateTo('attendance-system')">Open System</button>
   </div>
 
   <div class="card">
-    <h2>نظام الفواتير</h2>
-    <p>أضف، حرّر أو احذف الفواتير، أدر الأقسام، احسب الإجمالي والضرائب والخصومات، وصدّر كل شيء بسهولة.</p>
-    <button onclick="openSystem('Invoice-system')">افتح النظام</button>
+    <h2>Invoice System</h2>
+    <p>Add, edit, or delete invoices, manage categories, calculate totals, taxes, and discounts, and export everything easily.</p>
+    <button onclick="navigateTo('Invoice-system')">Open System</button>
   </div>
 
   <div class="card">
-    <h2>نظام الموظفين والرواتب</h2>
-    <p>إدارة بيانات الموظفين بالكامل، احسب الرواتب الصافية، سجّل السلف والخصومات، وصدّر التقارير بصيغة Excel.</p>
-    <button onclick="openSystem('payroll-system')">افتح النظام</button>
+    <h2>Payroll System</h2>
+    <p>Manage all employee data, calculate net salaries, record advances and deductions, and export reports to Excel.</p>
+    <button onclick="navigateTo('payroll-system')">Open System</button>
   </div>
 </main>
 
 <script>
-let sharedWindow;
+// عند تحميل الصفحة، نضيف تأثير الظهور
+window.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('fade-in');
+});
 
-function openSystem(url) {
-    if (!sharedWindow || sharedWindow.closed) {
-        // فتح نافذة جديدة إذا ما في واحدة أو أغلقت
-        sharedWindow = window.open(url, "sharedWindow", "width=900,height=600");
-    } else {
-        // تغيير الرابط والتركيز على نفس النافذة مباشرة
-        sharedWindow.location.href = url;
-        sharedWindow.focus();
-    }
+// عند الضغط على زر الانتقال
+function navigateTo(url) {
+    document.body.classList.remove('fade-in');
+    document.body.classList.add('fade-out'); 
+    setTimeout(() => {
+        window.location.href = url;
+    }, 500);
 }
 </script>
 
