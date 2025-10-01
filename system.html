@@ -84,11 +84,6 @@ main {
   opacity:0.9;
   transform:scale(1.05);
 }
-
-/* أيقونات اختيارية */
-.card h2::before {
-  content:" ";
-}
 </style>
 </head>
 <body>
@@ -99,21 +94,36 @@ main {
   <div class="card">
     <h2>نظام الحضور</h2>
     <p>سجّل دخول وخروج الموظفين، راقب الحضور بدقة، عدّل أو احذف السجلات بسهولة، وصدّرها إلى Excel.</p>
-    <button onclick="window.open('attendance-system','_blank')">افتح النظام</button>
+    <button onclick="openSystem('attendance-system')">افتح النظام</button>
   </div>
 
   <div class="card">
     <h2>نظام الفواتير</h2>
     <p>أضف، حرّر أو احذف الفواتير، أدر الأقسام، احسب الإجمالي والضرائب والخصومات، وصدّر كل شيء بسهولة.</p>
-    <button onclick="window.open('Invoice-system','_blank')">افتح النظام</button>
+    <button onclick="openSystem('Invoice-system')">افتح النظام</button>
   </div>
 
   <div class="card">
     <h2>نظام الموظفين والرواتب</h2>
     <p>إدارة بيانات الموظفين بالكامل، احسب الرواتب الصافية، سجّل السلف والخصومات، وصدّر التقارير بصيغة Excel.</p>
-    <button onclick="window.open('payroll-system','_blank')">افتح النظام</button>
+    <button onclick="openSystem('payroll-system')">افتح النظام</button>
   </div>
 </main>
+
+<script>
+let sharedWindow;
+
+function openSystem(url) {
+    if (!sharedWindow || sharedWindow.closed) {
+        // فتح نافذة جديدة إذا ما في واحدة أو أغلقت
+        sharedWindow = window.open(url, "sharedWindow", "width=900,height=600");
+    } else {
+        // تغيير الرابط والتركيز على نفس النافذة
+        sharedWindow.location.href = url;
+        sharedWindow.focus();
+    }
+}
+</script>
 
 </body>
 </html>
