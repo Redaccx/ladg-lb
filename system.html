@@ -9,7 +9,12 @@ body {
   font-family:"Cairo","Segoe UI",Tahoma,sans-serif;
   background: linear-gradient(135deg,#f0f2f5,#d9e2ec);
   margin:0; padding:0;
+  opacity:0;
+  transition: opacity 0.5s ease;
 }
+body.fade-in { opacity:1; }
+body.fade-out { opacity:0; }
+
 header {
   background:#C1272D;
   color:white;
@@ -18,6 +23,7 @@ header {
   font-weight:bold;
   box-shadow:0 4px 12px rgba(0,0,0,0.2);
 }
+
 main { 
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
@@ -26,16 +32,17 @@ main {
   max-width:1200px;
   margin:auto;
 }
+
 .card {
   background:white;
   border-radius:20px;
   padding:30px 25px;
   box-shadow:0 8px 25px rgba(0,0,0,0.1);
+  transition:0.4s;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
   cursor:pointer;
-  transition:0.3s;
 }
 .card:hover {
   transform:translateY(-8px) scale(1.03);
@@ -50,6 +57,7 @@ main {
   font-size:0.8rem; 
   line-height:1.7; 
   margin:20px 0; 
+  flex-grow:1;
   color:#555;
   text-align:center;
 }
@@ -67,16 +75,17 @@ main {
   min-width:150px;
 }
 .card button:hover { opacity:0.9; transform:scale(1.05); }
+.card button:active { transform:scale(0.95); }
 
-/* منطقة المحتوى الديناميكي */
+/* منطقة محتوى النظام الديناميكي */
 #systemContent {
+  display:none;
   margin:50px auto;
   padding:30px;
   max-width:900px;
   background:#fff;
   border-radius:20px;
   box-shadow:0 8px 25px rgba(0,0,0,0.1);
-  display:none;
 }
 #systemContent h2 { color:#C1272D; text-align:center; }
 #systemContent p { text-align:center; color:#555; }
@@ -90,24 +99,24 @@ main {
 <main>
   <div class="card" onclick="openSystem('Attendance')">
     <h2>Attendance System</h2>
-    <p>Record employee check-ins and check-outs, monitor attendance, edit or delete records easily.</p>
+    <p>Record employee check-ins and check-outs, monitor attendance accurately, edit or delete records easily, and export to Excel.</p>
     <button>Open System</button>
   </div>
 
   <div class="card" onclick="openSystem('Invoice')">
     <h2>Invoice System</h2>
-    <p>Add, edit, or delete invoices, manage categories, calculate totals, taxes, and discounts.</p>
+    <p>Add, edit, or delete invoices, manage categories, calculate totals, taxes, and discounts, and export everything easily.</p>
     <button>Open System</button>
   </div>
 
   <div class="card" onclick="openSystem('Payroll')">
     <h2>Payroll System</h2>
-    <p>Manage employee data, calculate salaries, record advances/deductions, and export reports.</p>
+    <p>Manage all employee data, calculate net salaries, record advances and deductions, and export reports to Excel.</p>
     <button>Open System</button>
   </div>
 </main>
 
-<!-- محتوى النظام يظهر هنا -->
+<!-- محتوى النظام الديناميكي يظهر هنا -->
 <div id="systemContent">
   <h2 id="systemTitle"></h2>
   <p id="systemDesc"></p>
@@ -130,15 +139,28 @@ const systems = {
   }
 };
 
+// عند تحميل الصفحة لأول مرة
+window.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('fade-in');
+});
+
+// تحديث تلقائي عند الرجوع من أي صفحة نظام
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+// فتح النظام داخل نفس الصفحة
 function openSystem(name) {
-  // اخفاء الـ main cards
   document.querySelector('main').style.display = 'none';
-  // اظهار محتوى النظام
-  document.getElementById('systemContent').style.display = 'block';
+  const content = document.getElementById('systemContent');
+  content.style.display = 'block';
   document.getElementById('systemTitle').innerText = systems[name].title;
   document.getElementById('systemDesc').innerText = systems[name].desc;
 }
 
+// العودة للوحة التحكم
 function closeSystem() {
   document.getElementById('systemContent').style.display = 'none';
   document.querySelector('main').style.display = 'grid';
