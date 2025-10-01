@@ -357,20 +357,7 @@ document.getElementById("togglePass").addEventListener("click",()=>{
 // ====== Notification buttons ======
 document.getElementById("closeNotify").onclick=()=>{document.getElementById("welcomeNotification").classList.remove("show");};
 document.getElementById("contactWhatsapp").onclick=()=>{window.open("https://wa.me/81112046","_blank");};
- window.addEventListener('DOMContentLoaded', () => {
-    if (sessionStorage.getItem("mainAccess") !== "true") {
-        window.location.href = "system"; 
-        return;
-    }
-
-    // إذا أول مرة يفتح → صفحة مقفولة
-    if (!sessionStorage.getItem("refreshedOnce")) {
-        sessionStorage.setItem("refreshedOnce", "true");
-        document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px;'>Reload the page to access Payroll System</h2>";
-    } 
-    // إذا عمل Refresh → يبين المحتوى الطبيعي
-});
-
+ 
 </script>
 </body>
 </html>
