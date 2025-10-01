@@ -284,6 +284,12 @@ function exportExcel(){
   const wb=XLSX.utils.table_to_book(table,{sheet:"Invoices"});
   XLSX.writeFile(wb,"Invoices.xlsx");
 }
+window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem("mainAccess") !== "true") {
+        window.location.href = "index.html"; // يرجعو للرئيسية
+    }
+});
+  
 </script>
 </body>
 </html>
