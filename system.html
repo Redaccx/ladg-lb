@@ -13,7 +13,6 @@ body {
   transition: opacity 0.5s ease;
 }
 body.fade-in { opacity:1; }
-body.fade-out { opacity:0; }
 
 header {
   background:#C1272D;
@@ -77,6 +76,7 @@ main {
 .card button:hover { opacity:0.9; transform:scale(1.05); }
 .card button:active { transform:scale(0.95); }
 
+/* محتوى النظام الديناميكي */
 #systemContent {
   display:none;
   margin:50px auto;
@@ -135,16 +135,14 @@ const systems = {
   }
 };
 
+// عند تحميل الصفحة
 window.addEventListener('DOMContentLoaded', () => {
   document.body.classList.add('fade-in');
-
-  // عند تحميل الصفحة، اجعل Main Panel ظاهر
   showMainPanel();
 });
 
 // التعامل مع زر الرجوع في المتصفح
 window.addEventListener('popstate', function(event) {
-  // كل مرة المستخدم يرجع للخلف، نعرض Main Panel
   showMainPanel();
 });
 
@@ -155,7 +153,7 @@ function openSystem(name) {
   document.getElementById('systemTitle').innerText = systems[name].title;
   document.getElementById('systemDesc').innerText = systems[name].desc;
 
-  // أضف حالة جديدة للتاريخ عند فتح النظام
+  // أضف حالة للتاريخ عند فتح النظام
   history.pushState({system: name}, systems[name].title);
 }
 
