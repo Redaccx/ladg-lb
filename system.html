@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة التحكم الرئيسية</title>
 <style>
-/* الخطوط والألوان الأساسية */
 body {
   font-family:"Cairo","Segoe UI",Tahoma,sans-serif;
   background: linear-gradient(135deg,#f0f2f5,#d9e2ec);
@@ -21,8 +20,6 @@ header {
   letter-spacing:1px;
   box-shadow:0 4px 12px rgba(0,0,0,0.2);
 }
-
-/* الحاوية الرئيسية */
 main { 
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
@@ -31,8 +28,6 @@ main {
   max-width:1200px;
   margin:auto;
 }
-
-/* البطاقات */
 .card {
   background:white;
   border-radius:20px;
@@ -47,16 +42,12 @@ main {
   transform:translateY(-8px) scale(1.03);
   box-shadow:0 15px 35px rgba(0,0,0,0.2);
 }
-
-/* العنوان داخل البطاقة */
 .card h2 { 
   margin-top:0; 
   color:#C1272D; 
   font-size:1.3rem;
   text-align:center;
 }
-
-/* النصوص داخل البطاقة */
 .card p { 
   font-size:0.8rem; 
   line-height:1.7; 
@@ -65,8 +56,6 @@ main {
   color:#555;
   text-align:center;
 }
-
-/* الزر */
 .card button {
   background:#C1272D;
   color:white;
@@ -118,7 +107,7 @@ function openSystem(url) {
         // فتح نافذة جديدة إذا ما في واحدة أو أغلقت
         sharedWindow = window.open(url, "sharedWindow", "width=900,height=600");
     } else {
-        // تغيير الرابط والتركيز على نفس النافذة
+        // تغيير الرابط والتركيز على نفس النافذة مباشرة
         sharedWindow.location.href = url;
         sharedWindow.focus();
     }
