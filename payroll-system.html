@@ -413,6 +413,11 @@ document.getElementById('searchInput').addEventListener('input',e=>{
     row.style.display=text.includes(q)?'':'none';
   });
 });
+  window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem("mainAccess") !== "true") {
+        window.location.href = "system"; // يرجعو للرئيسية
+    }
+});
 </script>
 </body>
 </html>
