@@ -77,7 +77,6 @@ main {
 .card button:hover { opacity:0.9; transform:scale(1.05); }
 .card button:active { transform:scale(0.95); }
 
-/* منطقة محتوى النظام الديناميكي */
 #systemContent {
   display:none;
   margin:50px auto;
@@ -89,7 +88,6 @@ main {
 }
 #systemContent h2 { color:#C1272D; text-align:center; }
 #systemContent p { text-align:center; color:#555; }
-#systemContent button { margin-top:20px; }
 </style>
 </head>
 <body>
@@ -97,30 +95,28 @@ main {
 <header>Main Control Panel</header>
 
 <main>
-  <div class="card" onclick="openSystem('attendance-system')">
+  <div class="card" onclick="openSystem('attendance-system.html')">
     <h2>Attendance System</h2>
     <p>Record employee check-ins and check-outs, monitor attendance accurately, edit or delete records easily, and export to Excel.</p>
     <button>Open System</button>
   </div>
 
-  <div class="card" onclick="openSystem('invoice-system')">
+  <div class="card" onclick="openSystem('invoice-system.html')">
     <h2>Invoice System</h2>
     <p>Add, edit, or delete invoices, manage categories, calculate totals, taxes, and discounts, and export everything easily.</p>
     <button>Open System</button>
   </div>
 
-  <div class="card" onclick="openSystem('payroll-system')">
+  <div class="card" onclick="openSystem('payroll-system.html')">
     <h2>Payroll System</h2>
     <p>Manage all employee data, calculate net salaries, record advances and deductions, and export reports to Excel.</p>
     <button>Open System</button>
   </div>
 </main>
 
-<!-- محتوى النظام الديناميكي يظهر هنا -->
 <div id="systemContent">
   <h2 id="systemTitle"></h2>
   <p id="systemDesc"></p>
-  <button onclick="closeSystem()">Back to Main Panel</button>
 </div>
 
 <script>
@@ -139,31 +135,33 @@ const systems = {
   }
 };
 
-// عند تحميل الصفحة لأول مرة
 window.addEventListener('DOMContentLoaded', () => {
-    document.body.classList.add('fade-in');
+  document.body.classList.add('fade-in');
+
+  // عند تحميل الصفحة، اجعل Main Panel ظاهر
+  showMainPanel();
 });
 
-// تحديث تلقائي عند الرجوع من أي صفحة نظام
-window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-        window.location.reload();
-    }
+// التعامل مع زر الرجوع في المتصفح
+window.addEventListener('popstate', function(event) {
+  // كل مرة المستخدم يرجع للخلف، نعرض Main Panel
+  showMainPanel();
 });
 
-// فتح النظام داخل نفس الصفحة
 function openSystem(name) {
   document.querySelector('main').style.display = 'none';
   const content = document.getElementById('systemContent');
   content.style.display = 'block';
   document.getElementById('systemTitle').innerText = systems[name].title;
   document.getElementById('systemDesc').innerText = systems[name].desc;
+
+  // أضف حالة جديدة للتاريخ عند فتح النظام
+  history.pushState({system: name}, systems[name].title);
 }
 
-// العودة للوحة التحكم
-function closeSystem() {
-  document.getElementById('systemContent').style.display = 'none';
+function showMainPanel() {
   document.querySelector('main').style.display = 'grid';
+  document.getElementById('systemContent').style.display = 'none';
 }
 </script>
 
