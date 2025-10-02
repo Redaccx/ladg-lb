@@ -13,7 +13,33 @@ body {
   text-align:center;
   padding:20px;
 }
-input { padding:10px; margin:10px; border-radius:6px; border:1px solid #ccc; width:250px; }
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+input { 
+  padding:10px; 
+  margin:10px; 
+  border-radius:6px; 
+  border:1px solid #ccc; 
+  width:250px; 
+}
+.clear-btn {
+  position: absolute;
+  right:5px;
+  top:50%;
+  transform: translateY(-50%);
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width:22px;
+  height:22px;
+  cursor: pointer;
+  font-weight:bold;
+  line-height: 20px;
+  padding:0;
+}
 button {
   padding:12px 25px; margin:10px;
   cursor:pointer;
@@ -32,7 +58,10 @@ label { display:block; margin-top:10px; font-weight:bold; }
 
 <h2>QR Generator - Lebanese Association for Development & Giving</h2>
 
-<input type="text" id="linkInput" placeholder="Enter your link here">
+<div class="input-wrapper">
+  <input type="text" id="linkInput" placeholder="Enter your link here">
+  <button class="clear-btn" onclick="document.getElementById('linkInput').value=''">✖</button>
+</div>
 
 <label>QR Color:</label>
 <input type="color" id="colorDark" value="#1a1a1a">
@@ -62,7 +91,7 @@ let qrCode;
 
 function generateQR() {
   const link = document.getElementById("linkInput").value.trim();
-  if(!link){ alert("Enter a link first!"); return; }
+  if(!link){ alert("Please enter a link first!"); return; }
 
   const colorDark = document.getElementById("colorDark").value;
   const transparent = document.getElementById("transparentBg").checked;
