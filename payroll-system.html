@@ -7,7 +7,7 @@
 <style>
 body{font-family:"Cairo","Segoe UI",Tahoma,sans-serif;background:#f6f7fb;margin:0;padding:10px;color:#222}
 .container{max-width:1000px;margin:0 auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);display:none;}
-h1{text-align:center;color:#C1272D;margin:0 0 12px;font-size:1.4rem}
+h1{text-align:center;color:#C1272D;margin:0 0 12px;font-size:1.3rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
 label{display:block;margin-bottom:5px;font-weight:600;font-size:14px}
 input,select{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px}
@@ -205,8 +205,8 @@ function calcPayroll(d){
   return {proratedSalary:prorated,overtimeAmount:overtime,gross:gross,advAndOthers:deductions,net:net};
 }
 function readForm(){return{
-  empId: empSelect.value,
-  empName: empSelect.selectedOptions[0]?.text.split("(")[0].trim()||'',
+  empId: employeesData[empSelect.value]?.empId || '',
+  empName: employeesData[empSelect.value]?.name || '',
   empJob: document.getElementById('empJob').value,
   baseSalary: document.getElementById('baseSalary').value,
   daysInPeriod: document.getElementById('daysInPeriod').value,
@@ -363,7 +363,14 @@ function loadRecords(){
         document.getElementById('advance').value=r.advance;
         document.getElementById('otherDeductions').value=r.otherDeductions;
         document.getElementById('status').value=r.status;
-        empSelect.value=r.empId;
+
+        // تعيين الموظف الصحيح بالقائمة بناءً على empId
+        for (let key in employeesData) {
+          if (employeesData[key].empId === r.empId) {
+            empSelect.value = key;
+            break;
+          }
+        }
       }
     });
   });
@@ -413,7 +420,7 @@ document.getElementById('searchInput').addEventListener('input',e=>{
     row.style.display=text.includes(q)?'':'none';
   });
 });
-  
+
 </script>
 </body>
 </html>
