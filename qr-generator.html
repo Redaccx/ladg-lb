@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Generator - Lebanese Association for Development & Giving</title>
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling/lib/qr-code-styling.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body {
+  font-family:"Segoe UI",Tahoma,sans-serif;
+  background:#f0f2f5;
+  text-align:center;
+  padding:20px;
+}
+input { padding:10px; margin:10px; border-radius:6px; border:1px solid #ccc; width:250px; }
+button {
+  padding:12px 25px; margin:10px;
+  cursor:pointer;
+  background:linear-gradient(135deg,#007bff,#00d4ff);
+  color:#fff; font-weight:bold; border:none; border-radius:8px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.2);
+  transition:0.3s;
+}
+button:hover { box-shadow:0 6px 20px rgba(0,0,0,0.3); transform:scale(1.05); }
+#qrOutput { margin-top:20px; display:inline-block; }
+#titleText { font-weight:bold; margin-top:10px; font-size:16px; }
+label { display:block; margin-top:10px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<h2>QR Generator - Lebanese Association for Development & Giving</h2>
+
+<input type="text" id="linkInput" placeholder="Enter your link here">
+
+<label>QR Color:</label>
+<input type="color" id="colorDark" value="#1a1a1a">
+
+<label>Background Color:</label>
+<input type="color" id="colorLight" value="#ffffff">
+
+<label>
+<input type="checkbox" id="transparentBg"> Transparent Background
+</label>
+
+<label>Title under QR (optional):</label>
+<input type="text" id="qrTitle" placeholder="Enter title here">
+
+<br>
+<button onclick="generateQR()">Generate QR</button>
+<br>
+<button onclick="downloadPNG()">Download PNG</button>
+<button onclick="downloadSVG()">Download SVG</button>
+<button onclick="downloadPDF()">Download PDF</button>
+
+<div id="qrOutput"></div>
+<div id="titleText"></div>
+
+<script>
+let qrCode;
+
+function generateQR() {
+  const link = document.getElementById("linkInput").value.trim();
+  if(!link){ alert("Enter a link first!"); return; }
+
+  const colorDark = document.getElementById("colorDark").value;
+  const transparent = document.getElementById("transparentBg").checked;
+  const colorLight = transparent ? "transparent" : document.getElementById("colorLight").value;
+  const title = document.getElementById("qrTitle").value.trim();
+
+  const container = document.getElementById("qrOutput");
+  container.innerHTML = "";
+  document.getElementById("titleText").textContent = title;
+
+  qrCode = new QRCodeStyling({
+    width: 250,
+    height: 250,
+    data: link,
+    dotsOptions: {
+      color: colorDark,
+      type: "square"
+    },
+    backgroundOptions: {
+      color: colorLight
+    },
+    imageOptions: {
+      crossOrigin: "anonymous",
+      margin: 5
+    }
+  });
+
+  qrCode.append(container);
+}
+
+// Download PNG
+function downloadPNG() {
+  if(!qrCode) { alert("No QR to download!"); return; }
+  qrCode.download({ name: "QRCode", extension: "png" });
+}
+
+// Download SVG
+function downloadSVG() {
+  if(!qrCode) { alert("No QR to download!"); return; }
+  qrCode.download({ name: "QRCode", extension: "svg" });
+}
+
+// Download PDF
+async function downloadPDF() {
+  if(!qrCode) { alert("No QR to download!"); return; }
+
+  const canvas = document.querySelector("#qrOutput canvas");
+  if(!canvas) return;
+
+  const imgData = canvas.toDataURL("image/png");
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  const title = document.getElementById("qrTitle").value.trim();
+  
+  pdf.setFontSize(16);
+  if(title) pdf.text(title, pdf.internal.pageSize.getWidth()/2, 20, { align: "center" });
+  pdf.addImage(imgData, 'PNG', 55, 30, 100, 100);
+  pdf.save("QRCode.pdf");
+}
+</script>
+
+</body>
+</html>
