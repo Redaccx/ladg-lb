@@ -41,7 +41,6 @@ main {
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-  cursor:pointer;
 }
 .card:hover {
   transform:translateY(-8px) scale(1.03);
@@ -75,19 +74,6 @@ main {
 }
 .card button:hover { opacity:0.9; transform:scale(1.05); }
 .card button:active { transform:scale(0.95); }
-
-/* محتوى النظام الديناميكي */
-.systemContent {
-  display:none;
-  margin:50px auto;
-  padding:30px;
-  max-width:900px;
-  background:#fff;
-  border-radius:20px;
-  box-shadow:0 8px 25px rgba(0,0,0,0.1);
-}
-.systemContent h2 { color:#C1272D; text-align:center; }
-.systemContent p { text-align:center; color:#555; }
 </style>
 </head>
 <body>
@@ -95,67 +81,28 @@ main {
 <header>Main Control Panel</header>
 
 <main>
-  <div class="card" onclick="openSystem('attendance-system.html')">
+  <div class="card">
     <h2>Attendance System</h2>
     <p>Record employee check-ins and check-outs, monitor attendance accurately, edit or delete records easily, and export to Excel.</p>
-    <button>Open System</button>
+    <button onclick="window.location.href='attendance-system.html'">Open System</button>
   </div>
 
-  <div class="card" onclick="openSystem('invoice-system.html')">
+  <div class="card">
     <h2>Invoice System</h2>
     <p>Add, edit, or delete invoices, manage categories, calculate totals, taxes, and discounts, and export everything easily.</p>
-    <button>Open System</button>
+    <button onclick="window.location.href='invoice-system.html'">Open System</button>
   </div>
 
-  <div class="card" onclick="openSystem('payroll-system.html')">
+  <div class="card">
     <h2>Payroll System</h2>
     <p>Manage all employee data, calculate net salaries, record advances and deductions, and export reports to Excel.</p>
-    <button>Open System</button>
+    <button onclick="window.location.href='payroll-system.html'">Open System</button>
   </div>
 </main>
 
-<!-- كل الأنظمة مخفية مسبقًا -->
-<div id="attendance" class="systemContent">
-  <h2>Attendance System</h2>
-  <p>Here you can record employee check-ins and check-outs, monitor attendance, edit or delete records, and export to Excel.</p>
-</div>
-
-<div id="invoice" class="systemContent">
-  <h2>Invoice System</h2>
-  <p>Here you can add, edit, delete invoices, manage categories, calculate totals, taxes, discounts, and export everything.</p>
-</div>
-
-<div id="payroll" class="systemContent">
-  <h2>Payroll System</h2>
-  <p>Here you can manage all employee data, calculate net salaries, record advances/deductions, and export reports to Excel.</p>
-</div>
-
 <script>
-// عند تحميل الصفحة
 window.addEventListener('DOMContentLoaded', () => {
   document.body.classList.add('fade-in');
-});
-
-// تحديث تلقائي عند العودة من أي نظام
-window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-        window.location.reload();
-    }
-});
-
-// فتح النظام وإخفاء اللوحة الرئيسية
-function openSystem(systemId) {
-  document.querySelector('main').style.display = 'none';
-  const systems = document.querySelectorAll('.systemContent');
-  systems.forEach(s => s.style.display = 'none'); // أخفي كل الأنظمة
-  document.getElementById(systemId).style.display = 'block';
-}
-
-// العودة تلقائيًا عند ضغط Back في المتصفح
-window.addEventListener('popstate', function(event) {
-  document.querySelector('main').style.display = 'grid';
-  const systems = document.querySelectorAll('.systemContent');
-  systems.forEach(s => s.style.display = 'none');
 });
 </script>
 
