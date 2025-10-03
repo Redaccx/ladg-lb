@@ -16,19 +16,18 @@ body {margin:0;font-family:'Cairo',sans-serif;background:var(--bg);}
 header {background:var(--primary);color:#fff;padding:16px;text-align:center;}
 header h1 {margin:0;font-size:15px;}
 main {padding:20px;max-width:1200px;margin:20px auto;text-align:center;}
-.card {background:var(--card);border-radius:12px;padding:20px;margin-bottom:20px;min-width:320px;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.card, .invoice-card {background:var(--card);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1);text-align:right;}
 input, select {width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;border:1px solid #ddd;text-align:center;}
-button {padding:8px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;margin:2px;transition:0.2s;}
+button {padding:6px 10px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;margin:2px;transition:0.2s;}
 button:hover {opacity:0.8;}
 .invoice-item {display:flex;gap:10px;align-items:center;margin-bottom:8px;justify-content:center;}
 .invoice-item input, .invoice-item select {flex:1;text-align:center;}
-.table-wrapper {overflow-x:auto; -webkit-overflow-scrolling: touch; margin-top:10px;}
-table {width:100%;border-collapse:collapse;margin-top:20px;text-align:center;min-width:600px;}
-th, td {border:1px solid #ddd;padding:10px;font-size:14px;}
-th {background:var(--primary);color:#fff;}
+.item-list {text-align:right;padding-left:20px;margin:0;list-style: disc inside;}
+.item-list li {margin:2px 0;padding:4px 6px;background:#f4f4f4;border-radius:4px;}
+#search-invoice {width:200px;padding:6px;margin:0 6px;border-radius:6px;border:1px solid #ddd;text-align:center;}
+.items-list {margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;}
 @media(max-width:600px){
   .invoice-item {flex-direction:column;}
-  table th, table td {font-size:12px; min-width:100px;}
 }
 </style>
 </head>
@@ -77,21 +76,9 @@ th {background:var(--primary);color:#fff;}
 
 <div class="card">
 <h2>قائمة الفواتير</h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr>
-<th>رقم الفاتورة</th>
-<th>التاريخ</th>
-<th>المتجر</th>
-<th>الهاتف</th>
-<th>الإجمالي</th>
-<th>الإجراءات</th>
-</tr>
-</thead>
-<tbody id="invoice-list"></tbody>
-</table>
-</div>
+<input type="text" id="search-invoice" placeholder="ابحث برقم الفاتورة">
+<button onclick="searchInvoice()">🔍 بحث</button>
+<div id="invoice-list" style="margin-top:10px;"></div>
 </div>
 </div>
 </main>
@@ -116,7 +103,6 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 
 let currentInvoiceId=null;
-const exchangeRates = { LBP: 89500, USD: 1 };
 
 // Add item
 function addItem(){
@@ -136,10 +122,6 @@ function addItem(){
   calculateTotal();
 }
 
-document.getElementById('items-container').addEventListener('input',calculateTotal);
-document.getElementById('discount').addEventListener('input',calculateTotal);
-document.getElementById('vat').addEventListener('input',calculateTotal);
-
 // Calculate total
 function calculateTotal(){
   const items=document.querySelectorAll('#items-container .invoice-item');
@@ -150,7 +132,7 @@ function calculateTotal(){
     const price=parseFloat(item.children[2].value)||0;
     const currency=item.querySelector('.item-currency').value;
     if(currency==='USD') totalUSD += qty*price;
-    else if(currency==='LBP') totalLBP += qty*price;
+    else totalLBP += qty*price;
   });
 
   const discount=parseFloat(document.getElementById('discount').value)||0;
@@ -161,6 +143,10 @@ function calculateTotal(){
 
   document.getElementById('total-display').textContent = `USD: ${totalUSD.toFixed(2)} | LBP: ${totalLBP.toFixed(0)}`;
 }
+
+document.getElementById('items-container').addEventListener('input',calculateTotal);
+document.getElementById('discount').addEventListener('input',calculateTotal);
+document.getElementById('vat').addEventListener('input',calculateTotal);
 
 // Save invoice
 function saveInvoice(){
@@ -214,19 +200,60 @@ function clearForm(){
   currentInvoiceId=null;
 }
 
-// Load invoices
+// Load invoices as cards
 function loadInvoices(){
   const userId=auth.currentUser.uid;
   db.collection('users').doc(userId).collection('invoices').onSnapshot(snapshot=>{
-    const list=document.getElementById('invoice-list');
-    list.innerHTML="";
+    const container=document.getElementById('invoice-list');
+    container.innerHTML="";
     snapshot.forEach(doc=>{
       const data=doc.data();
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${data.invoiceNumber}</td><td>${data.date}</td><td>${data.store}</td><td>${data.phone}</td><td>${data.total}</td>
-      <td><button onclick='editInvoice("${doc.id}")'>✏️</button><button onclick='deleteInvoice("${doc.id}")'>🗑</button></td>`;
-      list.appendChild(tr);
+
+      // حساب الخصم حسب العملة
+      let totalUSD=0, totalLBP=0;
+      data.items.forEach(item=>{
+        if(item.currency==='USD') totalUSD += item.quantity*item.price;
+        else totalLBP += item.quantity*item.price;
+      });
+      const discountAmount = data.discount || 0;
+      const discountUSD = (totalUSD/(totalUSD+totalLBP))*discountAmount || 0;
+      const discountLBP = (totalLBP/(totalUSD+totalLBP))*discountAmount || 0;
+
+      const card=document.createElement('div');
+      card.className="invoice-card";
+      card.innerHTML=`
+        <p><strong>رقم الفاتورة:</strong> ${data.invoiceNumber}</p>
+        <p><strong>التاريخ:</strong> ${data.date}</p>
+        <p><strong>المتجر:</strong> ${data.store}</p>
+        <p><strong>الهاتف:</strong> ${data.phone}</p>
+        <p><strong>الإجمالي:</strong> ${data.total}</p>
+        <button onclick="toggleItems(this)">View Items</button>
+        <div class="items-list" style="display:none;">
+          <ul class="item-list">
+            ${data.items.map(item=>`<li>${item.name} - ${item.quantity} × ${item.price} ${item.currency}</li>`).join('')}
+          </ul>
+          <p style="font-weight:bold;">خصم: USD ${discountUSD.toFixed(2)}, LBP ${discountLBP.toFixed(0)}</p>
+        </div>
+        <button onclick='editInvoice("${doc.id}")'>✏️ تعديل</button>
+        <button onclick='deleteInvoice("${doc.id}")'>🗑 حذف</button>`;
+      container.appendChild(card);
     });
+  });
+}
+
+// Toggle items
+function toggleItems(btn){
+  const div=btn.nextElementSibling;
+  div.style.display = div.style.display==="none" ? "block" : "none";
+}
+
+// Search invoice
+function searchInvoice(){
+  const query=document.getElementById('search-invoice').value.trim().toLowerCase();
+  const cards=document.querySelectorAll('#invoice-list .invoice-card');
+  cards.forEach(card=>{
+    const number=card.querySelector('p').textContent.toLowerCase();
+    card.style.display = number.includes(query) ? "" : "none";
   });
 }
 
