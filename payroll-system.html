@@ -27,26 +27,24 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 #loginBox button{width:48%;margin:4px 1%;padding:10px;}
 .password-toggle{margin-top:4px;background:#eee;color:#222;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px;width:100%;}
 .search-box{margin:15px 0;text-align:right}
-#totalNetBox{display:block;margin-top:15px;padding:10px;background:#e7f0e7;border:1px solid #c1e0c1;border-radius:8px;text-align:right}
-#totalNetBox {
-  display: flex;
-  justify-content: center;   /* توسيط أفقي */
-  align-items: center;       /* توسيط عمودي */
-  margin: 15px auto;
-  padding: 10px;
-  background: #e7f0e7;
-  border: 1px solid #c1e0c1;
-  border-radius: 8px;
-  font-weight: 700;
+#totalNetBox{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:15px auto;
+  padding:10px;
+  background:#e7f0e7;
+  border:1px solid #c1e0c1;
+  border-radius:8px;
+  font-weight:700;
 }
 #empActions{display:flex;gap:6px;margin-bottom:6px}
-#empActions button{
-  flex:none;         /* لا يملأ كل المساحة */
-  width:47%;         /* كل زر تقريباً نصف المساحة */
-  padding:8px;
-  font-size:12px;
+#empActions button{flex:none;width:47%;padding:8px;font-size:12px;}
+@media (max-width:600px){
+  .row{flex-direction:column;align-items:flex-start;font-size:13px}
+  .actions{flex-direction:column}button{flex:unset;width:100%}
+  h1{font-size:1.2rem}.container{padding:10px}
 }
-@media (max-width:600px){.row{flex-direction:column;align-items:flex-start;font-size:13px}.actions{flex-direction:column}button{flex:unset;width:100%}h1{font-size:1.2rem}.container{padding:10px}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -126,9 +124,9 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 </div>
 
 <div class="result" id="resultBox" style="display:none">
-  <div class="row"><div>الراتب النسبي</div><div id="proratedSalary">0</div></div>
+  <div class="row"><div>الراتب النسبي (المعاش)</div><div id="proratedSalary">0</div></div>
   <div class="row"><div>الساعات الإضافية</div><div id="overtimeAmount">0</div></div>
-  <div class="row"><div>الإجمالي</div><div id="grossBeforeDeductions">0</div></div>
+  <div class="row"><div>الإجمالي قبل الخصومات</div><div id="grossBeforeDeductions">0</div></div>
   <div class="row"><div>خصومات</div><div id="advAndOthers">0</div></div>
   <div class="row"><div><strong>الصافي</strong></div><div id="netPay"><strong>0</strong></div></div>
 </div>
@@ -143,7 +141,7 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 <table id="recordsTable">
   <thead>
     <tr>
-      <th>#</th><th>ID</th><th>الموظف</th><th>الوظيفة</th><th>الراتب</th>
+      <th>#</th><th>ID</th><th>الموظف</th><th>الوظيفة</th><th>الراتب النسبي</th>
       <th>الأيام</th><th>الصافي</th><th>الحالة</th><th>تاريخ</th><th>خيارات</th>
     </tr>
   </thead>
@@ -177,6 +175,7 @@ const empSelect=document.getElementById("empSelect");
 const addEmpBtn=document.getElementById("addEmpBtn");
 const deleteEmpBtn=document.getElementById("deleteEmpBtn");
 
+const recordBtn=document.getElementById('recordBtn');
 const totalNetSpan=document.getElementById('totalNetSpan');
 
 let editRow=null;
@@ -194,7 +193,7 @@ function calcPayroll(d){
   let adv=parseFloat(d.advance)||0;
   let other=parseFloat(d.otherDeductions)||0;
   let dailyRate = daysIn ? base/daysIn : 0;
-  let prorated = dailyRate*days;
+  let prorated = base; // الآن الراتب النسبي = الراتب الكامل بدون خصم
   let overtime = otH*otR;
   let gross = prorated+overtime+bonus;
   let deductions = adv+other;
@@ -299,6 +298,7 @@ function attachRowListeners(){
     row.querySelector('.delete-btn').onclick=()=>{db.ref('payrolls/'+key).remove();loadRecords();}
     row.querySelector('.edit-btn').onclick=()=>{
       editRow=key;
+      recordBtn.innerText = '💾 حفظ التعديل';
       const fields=['empJob','baseSalary','daysInPeriod','daysWorked','overtimeHours','overtimeRate','bonuses','advance','otherDeductions','status'];
       const r = JSON.parse(row.dataset.json);
       fields.forEach(f=>document.getElementById(f).value=r[f]);
@@ -343,7 +343,6 @@ function updateTotalNet(){
     totalNetValue+=parseFloat(row.children[6].innerText)||0;
   });
   totalNetSpan.innerText=numberFmt(totalNetValue);
-  // حفظ مباشر
   db.ref('totals/latest').set({ totalNet: totalNetValue, date: new Date().toLocaleString() });
 }
 
@@ -352,12 +351,13 @@ document.getElementById('calcBtn').onclick=()=>{
   const data=readForm();
   showResult(calcPayroll(data));
 };
-document.getElementById('recordBtn').onclick=()=>{
+recordBtn.onclick=()=>{
   const data=readForm();
   const result=calcPayroll(data);
   if(editRow){
     db.ref('payrolls/'+editRow).update({...data,net:result.net,date:new Date().toLocaleString()});
     editRow=null;
+    recordBtn.innerText='تسجيل';
   } else addRecord(data);
   document.getElementById('clearForm').click();
 };
@@ -365,11 +365,12 @@ document.getElementById('clearForm').onclick=()=>{
   document.querySelectorAll('input').forEach(i=>i.value='');
   document.getElementById('status').value='لا';
   document.getElementById('resultBox').style.display='none';
+  recordBtn.innerText='تسجيل';
 };
 
 // تصدير Excel (CSV)
 document.getElementById('exportExcel').onclick=()=>{
-  let csv='ID,الموظف,الوظيفة,الراتب,الأيام,الصافي,الحالة,تاريخ\n';
+  let csv='ID,الموظف,الوظيفة,الراتب النسبي,الأيام,الصافي,الحالة,تاريخ\n';
   tbody.querySelectorAll('tr').forEach(r=>{
     const cells=r.querySelectorAll('td');
     let row=[];
