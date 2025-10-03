@@ -38,62 +38,11 @@ th{background:#34495e;color:white;}
 .password-wrapper input{width:100%; padding-right:50px;}
 .toggle-pass{position:absolute; right:-10px; top:-20%; height:100%; cursor:pointer; font-size:14px; background:none; border:none;}
 #searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
-/* === Notification === */
-#welcomeNotification {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  text-align: center;
-  z-index: 9999;
-  width: 90%;
-  max-width: 350px;
-  transition: transform 0.4s ease, opacity 0.4s ease;
-  opacity: 0;
-}
-#welcomeNotification.show {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 1;
-}
-#welcomeNotification button {
-  margin-top: 10px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-#welcomeNotification #closeNotify {
-  position: absolute;
-  margin-top: -40px;
-  left: 300px;
-  font-size: 20px;
-  background: none;
-  color: red;
-}
-#welcomeNotification #contactWhatsapp {
-  background-color: #25D366;
-  color: white;
-  font-weight: bold;
-}
 </style>
 </head>
 <body>
 
 <header>Attendance System</header>
-
-<!-- إشعار الترحيب -->
-<div id="welcomeNotification">
-  <div class="notifyContent">
-    <button id="closeNotify">×</button>
-    <h3>مرحباً بك 👋</h3>
-    <p>مرحبًا بك في نظام الحضور! لأي خلل أو مشكلة اتصل على الرقم 81112046.</p>
-    <button id="contactWhatsapp">تواصل عبر واتساب</button>
-  </div>
-</div>
 
 <div id="loginPage">
   <div class="login-container">
@@ -161,16 +110,9 @@ auth.onAuthStateChanged(user => {
     document.getElementById("app").style.display = "block";
     loadEmployees();
     loadData();
-    if(!sessionStorage.getItem("welcomeShown")){
-      setTimeout(()=>{
-        document.getElementById("welcomeNotification").classList.add("show");
-        sessionStorage.setItem("welcomeShown","true");
-      },500);
-    }
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
-    sessionStorage.removeItem("welcomeShown");
   }
 });
 
@@ -210,13 +152,19 @@ function calculateWorkHours(checkin, checkout, date){
   if(!checkin || !checkout || checkout==='-') return '-';
   const inParts=checkin.split(':').map(Number);
   const outParts=checkout.split(':').map(Number);
-  const inDate=new Date(date); inDate.setHours(inParts[0],inParts[1],0,0);
-  const outDate=new Date(date); outDate.setHours(outParts[0],outParts[1],0,0);
+  if(inParts.length!==2 || outParts.length!==2) return '-';
+  const inDate=new Date(date); 
+  inDate.setHours(inParts[0],inParts[1],0,0);
+  const outDate=new Date(date); 
+  outDate.setHours(outParts[0],outParts[1],0,0);
+  if(isNaN(inDate.getTime()) || isNaN(outDate.getTime())) return '-';
   const diffMs=outDate-inDate;
+  if(diffMs<0) return '-';
   const diffH=Math.floor(diffMs/3600000);
   const diffM=Math.floor((diffMs%3600000)/60000);
   return `${diffH}h ${diffM}m`;
 }
+
 function loadData(){
   db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
     const table=document.getElementById("attendanceTable");
@@ -281,9 +229,12 @@ function toggleStatus(docId,current){
 function editRecord(docId){
   db.collection("attendance").doc(docId).get().then(doc=>{
     const r=doc.data();
-    const newDate=prompt("Enter Date YYYY-MM-DD", r.date.substring(0,10));
-    const newCheckIn=prompt("Enter Check In HH:MM", r.checkin);
-    const newCheckOut=prompt("Enter Check Out HH:MM", r.checkout);
+    let newDate=prompt("Enter Date YYYY-MM-DD", r.date.substring(0,10));
+    if(!newDate) newDate = r.date.substring(0,10);
+    let newCheckIn=prompt("Enter Check In HH:MM", r.checkin);
+    if(!newCheckIn) newCheckIn = r.checkin;
+    let newCheckOut=prompt("Enter Check Out HH:MM", r.checkout);
+    if(!newCheckOut) newCheckOut = r.checkout;
     db.collection("attendance").doc(docId).update({
       date: newDate+"T00:00:00.000Z",
       checkin: newCheckIn,
@@ -353,11 +304,6 @@ document.getElementById("togglePass").addEventListener("click",()=>{
   pass.type=passVisible?"text":"password";
   document.getElementById("togglePass").textContent=passVisible?"Hide":"Show";
 });
-
-// ====== Notification buttons ======
-document.getElementById("closeNotify").onclick=()=>{document.getElementById("welcomeNotification").classList.remove("show");};
-document.getElementById("contactWhatsapp").onclick=()=>{window.open("https://wa.me/81112046","_blank");};
- 
 </script>
 </body>
 </html>
