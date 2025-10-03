@@ -152,19 +152,13 @@ function calculateWorkHours(checkin, checkout, date){
   if(!checkin || !checkout || checkout==='-') return '-';
   const inParts=checkin.split(':').map(Number);
   const outParts=checkout.split(':').map(Number);
-  if(inParts.length!==2 || outParts.length!==2) return '-';
-  const inDate=new Date(date); 
-  inDate.setHours(inParts[0],inParts[1],0,0);
-  const outDate=new Date(date); 
-  outDate.setHours(outParts[0],outParts[1],0,0);
-  if(isNaN(inDate.getTime()) || isNaN(outDate.getTime())) return '-';
+  const inDate=new Date(date); inDate.setHours(inParts[0],inParts[1],0,0);
+  const outDate=new Date(date); outDate.setHours(outParts[0],outParts[1],0,0);
   const diffMs=outDate-inDate;
-  if(diffMs<0) return '-';
   const diffH=Math.floor(diffMs/3600000);
   const diffM=Math.floor((diffMs%3600000)/60000);
   return `${diffH}h ${diffM}m`;
 }
-
 function loadData(){
   db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
     const table=document.getElementById("attendanceTable");
@@ -229,12 +223,9 @@ function toggleStatus(docId,current){
 function editRecord(docId){
   db.collection("attendance").doc(docId).get().then(doc=>{
     const r=doc.data();
-    let newDate=prompt("Enter Date YYYY-MM-DD", r.date.substring(0,10));
-    if(!newDate) newDate = r.date.substring(0,10);
-    let newCheckIn=prompt("Enter Check In HH:MM", r.checkin);
-    if(!newCheckIn) newCheckIn = r.checkin;
-    let newCheckOut=prompt("Enter Check Out HH:MM", r.checkout);
-    if(!newCheckOut) newCheckOut = r.checkout;
+    const newDate=prompt("Enter Date YYYY-MM-DD", r.date.substring(0,10));
+    const newCheckIn=prompt("Enter Check In HH:MM", r.checkin);
+    const newCheckOut=prompt("Enter Check Out HH:MM", r.checkout);
     db.collection("attendance").doc(docId).update({
       date: newDate+"T00:00:00.000Z",
       checkin: newCheckIn,
