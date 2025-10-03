@@ -50,7 +50,8 @@ function openStore() {
     // Play Store مباشرة
     window.location.href = 'https://play.google.com/store/apps/details?id=com.whishmoney.android';
   } else {
-    alert('يرجى استخدام جهاز iOS أو Android للتبرع عبر التطبيق.');
+    // جهاز كمبيوتر أو غير مدعوم → يفتح الصفحة الرسمية على الويب
+    window.location.href = 'https://whish.money/';
   }
 }
 
