@@ -21,8 +21,7 @@ input, select {width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;borde
 button {padding:6px 10px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;margin:2px;transition:0.2s;}
 button:hover {opacity:0.8;}
 .invoice-item {display:flex;gap:10px;align-items:center;margin-bottom:8px;justify-content:center;}
-.invoice-item input, .invoice-item select {flex:1;text-align:center;}
-.item-list {text-align:right;padding-left:20px;margin:0;list-style: disc inside;}
+.invoice-item input {flex:1;text-align:center;}
 .item-list li {margin:2px 0;padding:4px 6px;background:#f4f4f4;border-radius:4px;}
 #search-invoice {width:200px;padding:6px;margin:0 6px;border-radius:6px;border:1px solid #ddd;text-align:center;}
 .items-list {margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;}
@@ -61,6 +60,12 @@ button:hover {opacity:0.8;}
 <input type="text" id="invoice-phone" placeholder="رقم الهاتف">
 <input type="text" id="invoice-date" placeholder="أدخل التاريخ (YYYY-MM-DD)">
 
+<!-- اختيار العملة للفواتير -->
+<select id="invoice-currency">
+  <option value="USD">USD</option>
+  <option value="LBP">LBP</option>
+</select>
+
 <div id="items-container"></div>
 <button onclick="addItem()">➕ منتج</button>
 
@@ -91,12 +96,12 @@ button:hover {opacity:0.8;}
 <script>
 // Firebase config
 const firebaseConfig = {
-apiKey:"AIzaSyB4NzOcosALN-8oLzMM1ONXdi2R-SvZ_co",
-authDomain:"invoice-app-6345a.firebaseapp.com",
-projectId:"invoice-app-6345a",
-storageBucket:"invoice-app-6345a.firebasestorage.app",
-messagingSenderId:"289913191209",
-appId:"1:289913191209:web:2e64b56a2d549f7fa15538"
+ apiKey:"AIzaSyB4NzOcosALN-8oLzMM1ONXdi2R-SvZ_co",
+ authDomain:"invoice-app-6345a.firebaseapp.com",
+ projectId:"invoice-app-6345a",
+ storageBucket:"invoice-app-6345a.firebasestorage.app",
+ messagingSenderId:"289913191209",
+ appId:"1:289913191209:web:2e64b56a2d549f7fa15538"
 };
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
@@ -113,10 +118,6 @@ function addItem(){
     <input placeholder="اسم المنتج">
     <input type="number" placeholder="الكمية" value="1">
     <input type="number" placeholder="السعر" value="0">
-    <select class="item-currency">
-      <option value="USD">USD</option>
-      <option value="LBP">LBP</option>
-    </select>
     <button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
   container.appendChild(div);
   calculateTotal();
@@ -125,28 +126,24 @@ function addItem(){
 // Calculate total
 function calculateTotal(){
   const items=document.querySelectorAll('#items-container .invoice-item');
-  let totalUSD=0, totalLBP=0;
-
+  let total=0;
   items.forEach(item=>{
     const qty=parseFloat(item.children[1].value)||0;
     const price=parseFloat(item.children[2].value)||0;
-    const currency=item.querySelector('.item-currency').value;
-    if(currency==='USD') totalUSD += qty*price;
-    else totalLBP += qty*price;
+    total += qty*price;
   });
-
   const discount=parseFloat(document.getElementById('discount').value)||0;
   const vat=parseFloat(document.getElementById('vat').value)||0;
+  total = (total - discount) + (total * vat/100);
 
-  totalUSD = (totalUSD - discount) + (totalUSD * vat/100);
-  totalLBP = (totalLBP - discount) + (totalLBP * vat/100);
-
-  document.getElementById('total-display').textContent = `USD: ${totalUSD.toFixed(2)} | LBP: ${totalLBP.toFixed(0)}`;
+  const currency=document.getElementById('invoice-currency').value;
+  document.getElementById('total-display').textContent = `${total.toFixed(2)} ${currency}`;
 }
 
 document.getElementById('items-container').addEventListener('input',calculateTotal);
 document.getElementById('discount').addEventListener('input',calculateTotal);
 document.getElementById('vat').addEventListener('input',calculateTotal);
+document.getElementById('invoice-currency').addEventListener('change',calculateTotal);
 
 // Save invoice
 function saveInvoice(){
@@ -163,8 +160,7 @@ function saveInvoice(){
     items.push({
       name:item.children[0].value,
       quantity:parseFloat(item.children[1].value)||0,
-      price:parseFloat(item.children[2].value)||0,
-      currency:item.querySelector('.item-currency').value
+      price:parseFloat(item.children[2].value)||0
     });
   });
   const invoiceData={
@@ -174,6 +170,7 @@ function saveInvoice(){
     address:document.getElementById('invoice-address').value,
     phone:document.getElementById('invoice-phone').value,
     date:document.getElementById('invoice-date').value,
+    currency:document.getElementById('invoice-currency').value,
     items,
     discount:parseFloat(document.getElementById('discount').value)||0,
     vat:parseFloat(document.getElementById('vat').value)||0,
@@ -208,17 +205,6 @@ function loadInvoices(){
     container.innerHTML="";
     snapshot.forEach(doc=>{
       const data=doc.data();
-
-      // حساب الخصم حسب العملة
-      let totalUSD=0, totalLBP=0;
-      data.items.forEach(item=>{
-        if(item.currency==='USD') totalUSD += item.quantity*item.price;
-        else totalLBP += item.quantity*item.price;
-      });
-      const discountAmount = data.discount || 0;
-      const discountUSD = (totalUSD/(totalUSD+totalLBP))*discountAmount || 0;
-      const discountLBP = (totalLBP/(totalUSD+totalLBP))*discountAmount || 0;
-
       const card=document.createElement('div');
       card.className="invoice-card";
       card.innerHTML=`
@@ -227,12 +213,12 @@ function loadInvoices(){
         <p><strong>المتجر:</strong> ${data.store}</p>
         <p><strong>الهاتف:</strong> ${data.phone}</p>
         <p><strong>الإجمالي:</strong> ${data.total}</p>
-        <button onclick="toggleItems(this)">View Items</button>
+        <button onclick="toggleItems(this)">عرض المنتجات</button>
         <div class="items-list" style="display:none;">
           <ul class="item-list">
-            ${data.items.map(item=>`<li>${item.name} - ${item.quantity} × ${item.price} ${item.currency}</li>`).join('')}
+            ${data.items.map(item=>`<li>${item.name} - ${item.quantity} × ${item.price} ${data.currency}</li>`).join('')}
           </ul>
-          <p style="font-weight:bold;">خصم: USD ${discountUSD.toFixed(2)}, LBP ${discountLBP.toFixed(0)}</p>
+          <p style="font-weight:bold;">خصم: ${data.discount} ${data.currency}, ضريبة: ${data.vat}%</p>
         </div>
         <button onclick='editInvoice("${doc.id}")'>✏️ تعديل</button>
         <button onclick='deleteInvoice("${doc.id}")'>🗑 حذف</button>`;
@@ -269,7 +255,8 @@ function editInvoice(id){
       document.getElementById('invoice-phone').value=data.phone;
       document.getElementById('invoice-date').value=data.date;
       document.getElementById('discount').value=data.discount;
-      document.getElementById('vat').placeholder=data.vat;
+      document.getElementById('vat').value=data.vat;
+      document.getElementById('invoice-currency').value=data.currency;
       document.getElementById('items-container').innerHTML="";
       data.items.forEach(item=>{
         const div=document.createElement('div');
@@ -277,10 +264,6 @@ function editInvoice(id){
         div.innerHTML=`<input value="${item.name}">
                          <input type="number" value="${item.quantity}">
                          <input type="number" value="${item.price}">
-                         <select class="item-currency">
-                           <option value="USD" ${item.currency==='USD'?'selected':''}>USD</option>
-                           <option value="LBP" ${item.currency==='LBP'?'selected':''}>LBP</option>
-                         </select>
                          <button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
         document.getElementById('items-container').appendChild(div);
       });
