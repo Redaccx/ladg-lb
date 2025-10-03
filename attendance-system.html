@@ -38,6 +38,7 @@ th{background:#34495e;color:white;}
 .password-wrapper input{width:100%; padding-right:50px;}
 .toggle-pass{position:absolute; right:-10px; top:-20%; height:100%; cursor:pointer; font-size:14px; background:none; border:none;}
 #searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
+#loading { margin-top:50px; font-size:18px; color:#555; display:none; }
 </style>
 </head>
 <body>
@@ -73,6 +74,8 @@ th{background:#34495e;color:white;}
   <input type="text" id="searchBox" placeholder="Search by Name or ID" onkeyup="searchRecords()">
 </div>
 
+<div id="loading">Loading data...</div>
+
 <h2>Records</h2>
 <div class="table-container">
 <table id="attendanceTable">
@@ -90,7 +93,7 @@ th{background:#34495e;color:white;}
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
-// ====== Firebase config ======
+// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
   authDomain: "ladg-attendance.firebaseapp.com",
@@ -103,20 +106,21 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ====== Auth listener ======
+// ===== Auth listener =====
 auth.onAuthStateChanged(user => {
   if(user){
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
-    loadEmployees();
-    loadData();
+    document.getElementById("loading").style.display = "block";
+    loadEmployees().then(()=>{}); // تحميل الموظفين
+    loadData().then(()=>{ document.getElementById("loading").style.display="none"; }); // تحميل الحضور
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
   }
 });
 
-// ====== Auth functions ======
+// ===== Auth functions =====
 function login(){
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value.trim();
@@ -129,21 +133,20 @@ function resetPassword(){
   auth.sendPasswordResetEmail(email).then(()=>alert("Reset link sent")).catch(err=>alert(err.message));
 }
 
-// ====== Employees ======
-function loadEmployees(){
+// ===== Employees =====
+async function loadEmployees(){
   const sel=document.getElementById("employeeSelect"); sel.innerHTML="";
-  db.collection("employees").get().then(snapshot=>{
-    snapshot.forEach(doc=>{
-      const e=doc.data();
-      const opt=document.createElement("option");
-      opt.value=doc.id;
-      opt.textContent=`${doc.id} - ${e.name}`;
-      sel.appendChild(opt);
-    });
+  const snapshot = await db.collection("employees").get();
+  snapshot.forEach(doc=>{
+    const e=doc.data();
+    const opt=document.createElement("option");
+    opt.value=doc.id;
+    opt.textContent=`${doc.id} - ${e.name}`;
+    sel.appendChild(opt);
   });
 }
 
-// ====== Attendance ======
+// ===== Attendance =====
 function formatDate(dateStr){
   const d=new Date(dateStr);
   return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
@@ -159,32 +162,33 @@ function calculateWorkHours(checkin, checkout, date){
   const diffM=Math.floor((diffMs%3600000)/60000);
   return `${diffH}h ${diffM}m`;
 }
-function loadData(){
-  db.collection("attendance").orderBy("date","desc").get().then(snapshot=>{
-    const table=document.getElementById("attendanceTable");
-    table.innerHTML=`<tr>
+
+async function loadData(){
+  const table=document.getElementById("attendanceTable");
+  table.innerHTML=`<tr>
 <th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Work Hours</th><th>Status</th><th>Actions</th>
 </tr>`;
-    snapshot.forEach(doc=>{
-      const r=doc.data();
-      const row=table.insertRow();
-      row.insertCell(0).innerText=r.id;
-      row.insertCell(1).innerText=r.name;
-      row.insertCell(2).innerText=formatDate(r.date);
-      row.insertCell(3).innerText=r.checkin?r.checkin:"-";
-      row.insertCell(4).innerText=r.checkout?r.checkout:"-";
-      row.insertCell(5).innerText=calculateWorkHours(r.checkin,r.checkout,r.date);
-      const st=row.insertCell(6);
-      st.innerText=r.status;
-      st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
-      const actions=row.insertCell(7);
-      actions.innerHTML=`<button class="present" onclick="toggleStatus('${doc.id}','${r.status}')">Status</button>
-                         <button class="edit" onclick="editRecord('${doc.id}')">Edit</button>
-                         <button class="delete" onclick="deleteRecord('${doc.id}')">Delete</button>`;
-    });
+  const snapshot = await db.collection("attendance").orderBy("date","desc").limit(50).get();
+  snapshot.forEach(doc=>{
+    const r=doc.data();
+    const row=table.insertRow();
+    row.insertCell(0).innerText=r.id;
+    row.insertCell(1).innerText=r.name;
+    row.insertCell(2).innerText=formatDate(r.date);
+    row.insertCell(3).innerText=r.checkin?r.checkin:"-";
+    row.insertCell(4).innerText=r.checkout?r.checkout:"-";
+    row.insertCell(5).innerText=calculateWorkHours(r.checkin,r.checkout,r.date);
+    const st=row.insertCell(6);
+    st.innerText=r.status;
+    st.className=r.status==="حاضر"?"status-hadir":"status-ghayeb";
+    const actions=row.insertCell(7);
+    actions.innerHTML=`<button class="present" onclick="toggleStatus('${doc.id}','${r.status}')">Status</button>
+                       <button class="edit" onclick="editRecord('${doc.id}')">Edit</button>
+                       <button class="delete" onclick="deleteRecord('${doc.id}')">Delete</button>`;
   });
 }
 
+// ===== Check In / Out =====
 function manualCheckIn(){
   const empId=document.getElementById("employeeSelect").value;
   if(!empId){alert("Select employee"); return;}
@@ -201,7 +205,6 @@ function manualCheckIn(){
     }).then(()=>loadData());
   });
 }
-
 function manualCheckOut(){
   const empId=document.getElementById("employeeSelect").value;
   if(!empId){alert("Select employee"); return;}
@@ -219,7 +222,6 @@ function toggleStatus(docId,current){
   const newStatus=current==="حاضر"?"غائب":"حاضر";
   db.collection("attendance").doc(docId).update({status:newStatus}).then(()=>loadData());
 }
-
 function editRecord(docId){
   db.collection("attendance").doc(docId).get().then(doc=>{
     const r=doc.data();
@@ -233,11 +235,11 @@ function editRecord(docId){
     }).then(()=>loadData());
   });
 }
-
 function deleteRecord(docId){
   if(confirm("Delete this record?")) db.collection("attendance").doc(docId).delete().then(()=>loadData());
 }
 
+// ===== Export Excel =====
 function exportExcel(){
   db.collection("attendance").get().then(snapshot=>{
     const data=[];
@@ -257,6 +259,7 @@ function exportExcel(){
   });
 }
 
+// ===== Search =====
 function searchRecords(){
   const q=document.getElementById("searchBox").value.toLowerCase();
   const table=document.getElementById("attendanceTable");
@@ -271,7 +274,7 @@ function searchRecords(){
   }
 }
 
-// ====== Add / Delete employee in Firebase =====
+// ===== Add/Delete Employee =====
 function addEmployee(){
   const name=prompt("Enter Employee Name:");
   if(!name) return;
@@ -287,7 +290,7 @@ function deleteEmployee(){
   }
 }
 
-// ====== Password toggle ======
+// ===== Password toggle =====
 let passVisible=false;
 document.getElementById("togglePass").addEventListener("click",()=>{
   const pass=document.getElementById("password");
