@@ -1,157 +1,167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coming Soon</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:'Arial', sans-serif; }
+  <meta charset="UTF-8">
+  <title>تبرع عبر ويش ماني - جمعية الأمل الخيرية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      color: #333;
+      direction: rtl;
+      text-align: center;
+    }
 
-  body {
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background: linear-gradient(135deg, #C1272D, #8e1a21);
-    color:#fff;
-    overflow:hidden;
-  }
+    header {
+      background-color: #c1272d;
+      color: white;
+      padding: 15px 10px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  .container {
-    text-align:center;
-    position: relative;
-    max-width:700px;
-  }
+    .lang-toggle, .back-btn {
+      padding: 5px 15px;
+      background: #fff;
+      color: #c1272d;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
 
-  h1 {
-    font-size:3rem;
-    margin-bottom:20px;
-    letter-spacing:2px;
-    animation: slideDown 1s ease forwards;
-  }
+    .header-center {
+      flex: 1;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      direction: rtl;
+    }
 
-  p {
-    font-size:1.2rem;
-    margin-bottom:40px;
-    animation: fadeIn 2s ease forwards;
-  }
+    .logo {
+      width: 100px;
+      margin-top: 20px;
+    }
 
-  /* Card Animation */
-  .card {
-    width: 320px;
-    height: 200px;
-    background: linear-gradient(145deg, #fff, #eee);
-    border-radius: 20px;
-    color: #333;
-    margin:0 auto;
-    padding:20px;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-    perspective: 1000px;
-    transform-style: preserve-3d;
-    animation: float 3s ease-in-out infinite;
-    position: relative;
-  }
+    h1 {
+      color: #c1272d;
+      margin: 20px 0 10px;
+      font-size: 20px;
+    }
 
-  .card-front {
-    width:100%;
-    height:100%;
-    border-radius:20px;
-    background: linear-gradient(135deg, #C1272D, #8e1a21);
-    color:#fff;
-    padding:20px;
-    position:absolute;
-    backface-visibility: hidden;
-  }
+    p {
+      max-width: 600px;
+      margin: 20px auto;
+      font-size: 16px;
+      line-height: 1.8;
+    }
 
-  .card-front h2 {
-    margin-bottom:50px;
-    font-size:1.5rem;
-  }
+    .donate-box {
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+    }
 
-  .card-front .chip {
-    width:50px;
-    height:35px;
-    background: gold;
-    border-radius:5px;
-    margin-bottom:30px;
-  }
+    .donate-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      background: #c1272d;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      text-decoration: none;
+      margin-top: 15px;
+    }
 
-  .card-front .number {
-    letter-spacing: 3px;
-    font-size: 1.2rem;
-    margin-bottom:20px;
-  }
+    .donate-btn:hover {
+      background: #a61f24;
+    }
 
-  .card-front .name {
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    display:flex;
-    justify-content: space-between;
-  }
+    .phone-number {
+      font-size: 20px;
+      margin-top: 10px;
+      color: #444;
+    }
 
-  /* Animations */
-  @keyframes slideDown {
-    0% { opacity:0; transform: translateY(-50px);}
-    100% { opacity:1; transform: translateY(0);}
-  }
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 10px;
+      }
 
-  @keyframes fadeIn {
-    0% {opacity:0;}
-    100% {opacity:1;}
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0) rotateX(0) rotateY(0);}
-    50% { transform: translateY(-20px) rotateX(5deg) rotateY(5deg);}
-  }
-
-  /* Floating shapes in background */
-  .shape {
-    position: absolute;
-    border-radius: 50%;
-    opacity:0.2;
-    animation: moveShape 10s linear infinite;
-  }
-
-  .shape1 { width:80px; height:80px; background:#fff; top:10%; left:5%; animation-delay:0s; }
-  .shape2 { width:120px; height:120px; background:#ffdcdc; top:70%; left:80%; animation-delay:2s; }
-  .shape3 { width:50px; height:50px; background:#fff; top:40%; left:60%; animation-delay:4s; }
-
-  @keyframes moveShape {
-    0% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-100px) rotate(180deg); }
-    100% { transform: translateY(0) rotate(360deg); }
-  }
-
-  /* Responsive */
-  @media(max-width:500px){
-    h1 { font-size:2rem; }
-    .card { width:260px; height:160px; }
-  }
-</style>
+      .header-center {
+        order: -1;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>Coming Soon</h1>
-  <p>طريقة التبرع عن طريق <strong>ويش ماني</strong> ستكون متاحة قريبًا!</p>
+<header>
+  <button class="lang-toggle" onclick="toggleLanguage()">English</button>
+  <div class="header-center" id="assoc-name">الجمعية اللبنانية للأنماء</div>
+  <button class="back-btn" onclick="history.back()" id="back-btn">← رجوع</button>
+</header>
 
-  <div class="card">
-    <div class="card-front">
-      <div class="chip"></div>
-      <h2>WHISH MONEY VISA</h2>
-      <div class="number">1234 5678 9012 3456</div>
-      <div class="name">
-        <span>hasan abdallah</span>
-        <span style="text-decoration:none;color:#ffffff;" >12/28</span>
-      </div>
-    </div>
-  </div>
+<img src="https://j.top4top.io/p_3490h7fyo1.jpg" class="logo" alt="Wish Money Logo">
+
+<h1 id="title">تبرع الآن عبر ويش ماني </h1>
+<p id="desc">
+  تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج.
+</p>
+
+<div class="donate-box">
+  <div class="phone-number" id="phone-label"></div>
+  <div class="phone-number" id="phone">81866177‬</div>
+  <a href="#" class="donate-btn" id="donate-btn" onclick="openWish()">تبرع الآن</a>
 </div>
 
-<div class="shape shape1"></div>
-<div class="shape shape2"></div>
-<div class="shape shape3"></div>
+<script>
+  function openWish() {
+    const deepLink = 'wishmoney://'; // رابط التطبيق إذا مثبت
+    const fallback = 'https://www.wish.com/'; // رابط ويب إذا التطبيق غير موجود
+
+    const now = Date.now();
+    const timeout = setTimeout(function() {
+      // بعد 1 ثانية إذا التطبيق لم يفتح، افتح الرابط في المتصفح
+      if (Date.now() - now < 1500) {
+        window.location.href = fallback;
+      }
+    }, 1000);
+
+    // محاولة فتح التطبيق
+    window.location.href = deepLink;
+  }
+
+  function toggleLanguage() {
+    const isArabic = document.documentElement.lang === 'ar';
+    document.documentElement.lang = isArabic ? 'en' : 'ar';
+    document.body.dir = isArabic ? 'ltr' : 'rtl';
+
+    document.getElementById('assoc-name').textContent = isArabic ? 'Al-Amal Charity Association' : 'جمعية الأمل الخيرية';
+    document.getElementById('title').textContent = isArabic ? 'Donate Now via Wish Money' : 'تبرع الآن عبر ويش ماني';
+    document.getElementById('desc').textContent = isArabic
+      ? 'A one-dollar donation might be small for you, but it can make a big difference in someone’s life'
+      : 'تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج..';
+    document.getElementById('phone-label').textContent = isArabic ? 'Ahlam al nemer:' : 'أحلام النمر  :';
+    document.getElementById('donate-btn').textContent = isArabic ? 'Donate Now' : 'تبرع الآن';
+    document.querySelector('.lang-toggle').textContent = isArabic ? 'العربية' : 'English';
+    document.getElementById('back-btn').textContent = isArabic ? '← Back' : '← رجوع';
+  }
+</script>
 
 </body>
 </html>
