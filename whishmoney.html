@@ -35,20 +35,22 @@
 <div class="donate-box">
   <div class="phone-number" id="phone-label">أحلام النمر  :</div>
   <div class="phone-number" id="phone">81866177‬</div>
-  <a href="#" class="donate-btn" id="donate-btn" onclick="openWishMoney()">تبرع الآن</a>
+  <a href="#" class="donate-btn" id="donate-btn" onclick="openStore()">تبرع الآن</a>
 </div>
 
 <script>
-function openWishMoney() {
+function openStore() {
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const isAndroid = /Android/i.test(navigator.userAgent);
 
   if(isIOS){
+    // App Store مباشرة
     window.location.href = 'https://apps.apple.com/lb/app/whish-money/id1284243483';
   } else if(isAndroid){
+    // Play Store مباشرة
     window.location.href = 'https://play.google.com/store/apps/details?id=com.whishmoney.android';
   } else {
-    alert('يرجى استخدام هاتف iOS أو Android للتبرع عبر التطبيق');
+    alert('يرجى استخدام جهاز iOS أو Android للتبرع عبر التطبيق.');
   }
 }
 
