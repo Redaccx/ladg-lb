@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تبرع عبر ويش ماني - جمعية الأمل الخيرية</title>
+  <title>تبرع عبر Wish Money - جمعية الأمل الخيرية</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Tahoma', sans-serif; margin:0; background:#f9f9f9; color:#333; direction:rtl; text-align:center; }
@@ -29,39 +29,37 @@
 
 <img src="https://j.top4top.io/p_3490h7fyo1.jpg" class="logo" alt="Wish Money Logo">
 
-<h1 id="title">تبرع الآن عبر ويش ماني </h1>
+<h1 id="title">تبرع الآن عبر Wish Money</h1>
 <p id="desc">تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج.</p>
 
 <div class="donate-box">
   <div class="phone-number" id="phone-label">أحلام النمر  :</div>
   <div class="phone-number" id="phone">81866177‬</div>
-  <a href="#" class="donate-btn" id="donate-btn" onclick="openWish()">تبرع الآن</a>
+  <a href="#" class="donate-btn" id="donate-btn" onclick="openWishMoney()">تبرع الآن</a>
 </div>
 
 <script>
-function openWish() {
+function openWishMoney() {
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const isAndroid = /Android/i.test(navigator.userAgent);
 
-  // deep link التطبيق حسب النظام
   let deepLink;
-  if(isIOS){
+  if (isIOS) {
     deepLink = 'wishmoney://'; // ضع الرابط الرسمي لتطبيق iOS
-  } else if(isAndroid){
-    deepLink = 'intent://#Intent;scheme=wishmoney;package=com.wish.android;end'; // Android Intent
+  } else if (isAndroid) {
+    deepLink = 'intent://#Intent;scheme=wishmoney;package=com.whishmoney.android;end'; // Android Intent
   } else {
-    deepLink = 'https://www.wish.com/';
+    deepLink = 'https://whish.money/';
   }
 
-  // fallback لموقع الويب
-  const fallback = 'https://www.wish.com/';
+  const fallback = 'https://whish.money/';
 
   const now = Date.now();
-  setTimeout(function(){
-    if(Date.now() - now < 1500){
+  setTimeout(() => {
+    if (Date.now() - now < 1500) {
       window.location.href = fallback;
     }
-  },1000);
+  }, 1000);
 
   window.location.href = deepLink;
 }
@@ -72,8 +70,8 @@ function toggleLanguage() {
   document.body.dir = isArabic ? 'ltr' : 'rtl';
 
   document.getElementById('assoc-name').textContent = isArabic ? 'Al-Amal Charity Association' : 'جمعية الأمل الخيرية';
-  document.getElementById('title').textContent = isArabic ? 'Donate Now via Wish Money' : 'تبرع الآن عبر ويش ماني';
-  document.getElementById('desc').textContent = isArabic ? 
+  document.getElementById('title').textContent = isArabic ? 'Donate Now via Wish Money' : 'تبرع الآن عبر Wish Money';
+  document.getElementById('desc').textContent = isArabic ?
     'A one-dollar donation might be small for you, but it can make a big difference in someone’s life' :
     'تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج..';
   document.getElementById('phone-label').textContent = isArabic ? 'Ahlam al nemer:' : 'أحلام النمر  :';
