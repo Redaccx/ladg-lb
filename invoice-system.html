@@ -21,7 +21,7 @@ input, select {width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;borde
 button {padding:8px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;margin:2px;transition:0.2s;}
 button:hover {opacity:0.8;}
 .invoice-item {display:flex;gap:10px;align-items:center;margin-bottom:8px;justify-content:center;}
-.invoice-item input {flex:1;text-align:center;}
+.invoice-item input, .invoice-item select {flex:1;text-align:center;}
 .table-wrapper {overflow-x:auto; -webkit-overflow-scrolling: touch; margin-top:10px;}
 table {width:100%;border-collapse:collapse;margin-top:20px;text-align:center;min-width:600px;}
 th, td {border:1px solid #ddd;padding:10px;font-size:14px;}
@@ -61,14 +61,13 @@ th {background:var(--primary);color:#fff;}
 <input type="text" id="invoice-address" placeholder="العنوان">
 <input type="text" id="invoice-phone" placeholder="رقم الهاتف">
 <input type="text" id="invoice-date" placeholder="أدخل التاريخ (YYYY-MM-DD)">
-<select id="currency"></select>
 
 <div id="items-container"></div>
 <button onclick="addItem()">➕ منتج</button>
 
-<input type="number" id="discount" placeholder="خصم" value="0">
-<input type="number" id="vat" placeholder="ضريبة (%)" value="11">
-<p>الإجمالي: <span id="total-display">0</span> <span id="currency-display"></span></p>
+<input type="number" id="discount" placeholder="خصم">
+<input type="number" id="vat" placeholder="ضريبة (%)">
+<p>الإجمالي: <span id="total-display">0</span></p>
 
 <button onclick="saveInvoice()">💾 حفظ الفاتورة</button>
 <button onclick="clearForm()">🆑 مسح الحقول</button>
@@ -87,7 +86,6 @@ th {background:var(--primary);color:#fff;}
 <th>المتجر</th>
 <th>الهاتف</th>
 <th>الإجمالي</th>
-<th>العملة</th>
 <th>الإجراءات</th>
 </tr>
 </thead>
@@ -118,55 +116,51 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 
 let currentInvoiceId=null;
-let exchangeRates={};
-const currencies=["LBP","USD","EUR","CHF","ITL"];
-const currencySelect=document.getElementById('currency');
-currencies.forEach(c=>{let opt=document.createElement('option'); opt.value=c; opt.textContent=c; currencySelect.appendChild(opt);});
-document.getElementById('currency-display').textContent=currencySelect.value;
-
-// Load exchange rates
-async function loadExchangeRates(){
-  try{
-    const res=await fetch('https://api.exchangerate.host/latest?base=USD&symbols=LBP,EUR,CHF,ITL');
-    const data=await res.json();
-    exchangeRates=data.rates;
-  }catch(err){console.log("خطأ في تحميل أسعار الصرف:",err);}
-}
-loadExchangeRates();
-
-// Calculate total
-function calculateTotal(){
-  const items=document.querySelectorAll('#items-container .invoice-item');
-  let totalUSD=0;
-  items.forEach(item=>{
-    const qty=parseFloat(item.children[1].value)||0;
-    const price=parseFloat(item.children[2].value)||0;
-    totalUSD+=qty*price;
-  });
-  const discount=parseFloat(document.getElementById('discount').value)||0;
-  const vat=parseFloat(document.getElementById('vat').value)||0;
-  totalUSD=totalUSD-discount+(totalUSD*vat/100);
-  const currency=document.getElementById('currency').value;
-  let total=totalUSD;
-  if(currency!=="USD"){ total=totalUSD*exchangeRates[currency]; }
-  document.getElementById('total-display').textContent=total.toFixed(2);
-  document.getElementById('currency-display').textContent=currency;
-}
-
-currencySelect.addEventListener('change',calculateTotal);
-document.getElementById('discount').addEventListener('input',calculateTotal);
-document.getElementById('vat').addEventListener('input',calculateTotal);
+const exchangeRates = { LBP: 89500, USD: 1 };
 
 // Add item
 function addItem(){
   const container=document.getElementById('items-container');
   const div=document.createElement('div');
   div.className="invoice-item";
-  div.innerHTML=`<input placeholder="اسم المنتج"><input type="number" placeholder="الكمية" value="1"><input type="number" placeholder="السعر" value="0"><button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
+  div.innerHTML=`
+    <input placeholder="اسم المنتج">
+    <input type="number" placeholder="الكمية" value="1">
+    <input type="number" placeholder="السعر" value="0">
+    <select class="item-currency">
+      <option value="USD">USD</option>
+      <option value="LBP">LBP</option>
+    </select>
+    <button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
   container.appendChild(div);
   calculateTotal();
 }
+
 document.getElementById('items-container').addEventListener('input',calculateTotal);
+document.getElementById('discount').addEventListener('input',calculateTotal);
+document.getElementById('vat').addEventListener('input',calculateTotal);
+
+// Calculate total
+function calculateTotal(){
+  const items=document.querySelectorAll('#items-container .invoice-item');
+  let totalUSD=0, totalLBP=0;
+
+  items.forEach(item=>{
+    const qty=parseFloat(item.children[1].value)||0;
+    const price=parseFloat(item.children[2].value)||0;
+    const currency=item.querySelector('.item-currency').value;
+    if(currency==='USD') totalUSD += qty*price;
+    else if(currency==='LBP') totalLBP += qty*price;
+  });
+
+  const discount=parseFloat(document.getElementById('discount').value)||0;
+  const vat=parseFloat(document.getElementById('vat').value)||0;
+
+  totalUSD = (totalUSD - discount) + (totalUSD * vat/100);
+  totalLBP = (totalLBP - discount) + (totalLBP * vat/100);
+
+  document.getElementById('total-display').textContent = `USD: ${totalUSD.toFixed(2)} | LBP: ${totalLBP.toFixed(0)}`;
+}
 
 // Save invoice
 function saveInvoice(){
@@ -180,9 +174,14 @@ function saveInvoice(){
   if(itemsEl.length===0){alert("أضف منتجاً واحداً على الأقل"); return;}
   const items=[];
   itemsEl.forEach(item=>{
-    items.push({name:item.children[0].value,quantity:parseFloat(item.children[1].value)||0,price:parseFloat(item.children[2].value)||0});
+    items.push({
+      name:item.children[0].value,
+      quantity:parseFloat(item.children[1].value)||0,
+      price:parseFloat(item.children[2].value)||0,
+      currency:item.querySelector('.item-currency').value
+    });
   });
-  let invoiceData={
+  const invoiceData={
     section:sectionId,
     invoiceNumber:document.getElementById('invoice-number').value || "INV-" + Date.now(),
     store:document.getElementById('invoice-store').value,
@@ -192,8 +191,7 @@ function saveInvoice(){
     items,
     discount:parseFloat(document.getElementById('discount').value)||0,
     vat:parseFloat(document.getElementById('vat').value)||0,
-    total:parseFloat(document.getElementById('total-display').textContent)||0,
-    currency:document.getElementById('currency').value
+    total:document.getElementById('total-display').textContent
   };
   if(currentInvoiceId){
     db.collection('users').doc(userId).collection('invoices').doc(currentInvoiceId).update(invoiceData).then(()=>{alert("تم تعديل الفاتورة");clearForm();});
@@ -210,10 +208,9 @@ function clearForm(){
   document.getElementById('invoice-phone').value="";
   document.getElementById('invoice-date').value="";
   document.getElementById('items-container').innerHTML="";
-  document.getElementById('discount').value="0";
-  document.getElementById('vat').value="11";
+  document.getElementById('discount').value="";
+  document.getElementById('vat').value="";
   document.getElementById('total-display').textContent="0";
-  document.getElementById('currency').value="USD";
   currentInvoiceId=null;
 }
 
@@ -226,7 +223,7 @@ function loadInvoices(){
     snapshot.forEach(doc=>{
       const data=doc.data();
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${data.invoiceNumber}</td><td>${data.date}</td><td>${data.store}</td><td>${data.phone}</td><td>${data.total.toFixed(2)}</td><td>${data.currency}</td>
+      tr.innerHTML=`<td>${data.invoiceNumber}</td><td>${data.date}</td><td>${data.store}</td><td>${data.phone}</td><td>${data.total}</td>
       <td><button onclick='editInvoice("${doc.id}")'>✏️</button><button onclick='deleteInvoice("${doc.id}")'>🗑</button></td>`;
       list.appendChild(tr);
     });
@@ -245,13 +242,19 @@ function editInvoice(id){
       document.getElementById('invoice-phone').value=data.phone;
       document.getElementById('invoice-date').value=data.date;
       document.getElementById('discount').value=data.discount;
-      document.getElementById('vat').value=data.vat;
-      document.getElementById('currency').value=data.currency;
+      document.getElementById('vat').placeholder=data.vat;
       document.getElementById('items-container').innerHTML="";
       data.items.forEach(item=>{
         const div=document.createElement('div');
         div.className="invoice-item";
-        div.innerHTML=`<input value="${item.name}"><input type="number" value="${item.quantity}"><input type="number" value="${item.price}"><button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
+        div.innerHTML=`<input value="${item.name}">
+                         <input type="number" value="${item.quantity}">
+                         <input type="number" value="${item.price}">
+                         <select class="item-currency">
+                           <option value="USD" ${item.currency==='USD'?'selected':''}>USD</option>
+                           <option value="LBP" ${item.currency==='LBP'?'selected':''}>LBP</option>
+                         </select>
+                         <button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
         document.getElementById('items-container').appendChild(div);
       });
       calculateTotal();
@@ -267,9 +270,26 @@ function deleteInvoice(id){
 }
 
 // Auth
-function login(){ const email=document.getElementById('email').value; const password=document.getElementById('password').value; auth.signInWithEmailAndPassword(email,password).then(()=>{document.getElementById('auth-msg').textContent=""; loadInvoices(); loadSections();}).catch(e=>document.getElementById('auth-msg').textContent=e.message);}
-function resetPassword(){ const email=document.getElementById('email').value; auth.sendPasswordResetEmail(email).then(()=>alert("تم إرسال البريد")).catch(e=>alert(e.message));}
-auth.onAuthStateChanged(user=>{ if(user){ document.getElementById('auth-section').style.display="none"; document.getElementById('invoice-section').style.display="block"; loadSections(); loadInvoices(); } else { document.getElementById('auth-section').style.display="block"; document.getElementById('invoice-section').style.display="none"; } });
+function login(){ 
+  const email=document.getElementById('email').value; 
+  const password=document.getElementById('password').value; 
+  auth.signInWithEmailAndPassword(email,password)
+    .then(()=>{
+      document.getElementById('auth-msg').textContent=""; 
+      loadInvoices(); loadSections();
+      document.getElementById('auth-section').style.display="none";
+      document.getElementById('invoice-section').style.display="block";
+    })
+    .catch(e=>document.getElementById('auth-msg').textContent=e.message);
+}
+function resetPassword(){ 
+  const email=document.getElementById('email').value; 
+  auth.sendPasswordResetEmail(email).then(()=>alert("تم إرسال البريد")).catch(e=>alert(e.message));
+}
+auth.onAuthStateChanged(user=>{
+  if(user){ document.getElementById('auth-section').style.display="none"; document.getElementById('invoice-section').style.display="block"; loadSections(); loadInvoices();}
+  else{ document.getElementById('auth-section').style.display="block"; document.getElementById('invoice-section').style.display="none";}
+});
 function logout(){ auth.signOut(); }
 
 // Sections
@@ -284,8 +304,6 @@ function exportExcel(){
   const wb=XLSX.utils.table_to_book(table,{sheet:"Invoices"});
   XLSX.writeFile(wb,"Invoices.xlsx");
 }
-
-  
 </script>
 </body>
 </html>
