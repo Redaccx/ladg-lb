@@ -10,7 +10,7 @@ body{font-family:"Cairo","Segoe UI",Tahoma,sans-serif;background:#f6f7fb;margin:
 h1{text-align:center;color:#C1272D;margin:0 0 12px;font-size:1.3rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
 label{display:block;margin-bottom:5px;font-weight:600;font-size:14px}
-input,select{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px}
+input,select{width:97%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;margin-bottom:6px;box-sizing:border-box;}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 button{background:#C1272D;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;flex:1}
 button.ghost{background:#fff;color:#C1272D;border:2px solid #C1272D}
@@ -27,19 +27,26 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 #loginBox button{width:48%;margin:4px 1%;padding:10px;}
 .password-toggle{margin-top:4px;background:#eee;color:#222;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px;width:100%;}
 .search-box{margin:15px 0;text-align:right}
-#welcomeNotice{
-  display:none; position:fixed; top:50%; left:50%;
-  transform:translate(-50%, -50%) scale(0.5);
-  width:320px;background:#fff;box-shadow:0 2px 15px rgba(0,0,0,0.3);
-  border-radius:10px;padding:20px;z-index:9999;text-align:center;color:#333;
-  opacity:0; transition: all 0.4s ease;
+#totalNetBox{display:block;margin-top:15px;padding:10px;background:#e7f0e7;border:1px solid #c1e0c1;border-radius:8px;text-align:right}
+#totalNetBox {
+  display: flex;
+  justify-content: center;   /* توسيط أفقي */
+  align-items: center;       /* توسيط عمودي */
+  margin: 15px auto;
+  padding: 10px;
+  background: #e7f0e7;
+  border: 1px solid #c1e0c1;
+  border-radius: 8px;
+  font-weight: 700;
 }
-#welcomeNotice.show{opacity:1; transform:translate(-50%, -50%) scale(1);}
-#welcomeNotice h3{margin:0 0 10px 0;color:#C1272D;font-size:18px;}
-#welcomeNotice p{margin:0;font-size:14px;line-height:1.5;}
-#welcomeNotice button#contactBtn{margin-top:10px;padding:8px 14px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;}
-#welcomeNotice button#closeNotice{position:absolute;top:1px;left:170px;background:transparent;border:none;font-size:20px;cursor:pointer;color:red;}
-@media (max-width:600px){.row{flex-direction:column;align-items:flex-start;font-size:13px}.actions{flex-direction:column}button{flex:unset;width:100%}h1{font-size:1.2rem}.container{padding:10px}#welcomeNotice{width:90%;}}
+#empActions{display:flex;gap:6px;margin-bottom:6px}
+#empActions button{
+  flex:none;         /* لا يملأ كل المساحة */
+  width:47%;         /* كل زر تقريباً نصف المساحة */
+  padding:8px;
+  font-size:12px;
+}
+@media (max-width:600px){.row{flex-direction:column;align-items:flex-start;font-size:13px}.actions{flex-direction:column}button{flex:unset;width:100%}h1{font-size:1.2rem}.container{padding:10px}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -71,34 +78,36 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
   <div>
     <label>الموظف</label>
     <select id="empSelect"></select>
-    <button id="addEmpBtn" class="ghost">➕ إضافة موظف</button>
-    <button id="deleteEmpBtn" class="ghost">🗑 حذف الموظف</button>
-    <label class="small">الوظيفة</label>
+    <div id="empActions">
+      <button id="addEmpBtn" class="ghost">➕ إضافة موظف</button>
+      <button id="deleteEmpBtn" class="ghost">🗑 حذف الموظف</button>
+    </div>
+    <label>الوظيفة</label>
     <input id="empJob" type="text" placeholder="مثال: إدخال بيانات">
   </div>
   <div>
     <label>الراتب الشهري الأساسي</label>
-    <input id="baseSalary" type="number" min="0" step="0.01">
-    <label class="small">أيام الشهر</label>
-    <input id="daysInPeriod" type="number" value="30" min="1">
+    <input id="baseSalary" type="number" placeholder="مثال: 500" min="0" step="0.01">
+    <label>أيام الشهر</label>
+    <input id="daysInPeriod" type="number" placeholder="30" value="30" min="1">
   </div>
   <div>
     <label>أيام الحضور</label>
-    <input id="daysWorked" type="number" value="30" min="0">
-    <label class="small">ساعات إضافية</label>
-    <input id="overtimeHours" type="number" value="0" min="0">
+    <input id="daysWorked" type="number" placeholder="مثال: 28" value="30" min="0">
+    <label>ساعات إضافية</label>
+    <input id="overtimeHours" type="number" placeholder="مثال: 5" value="0" min="0">
   </div>
   <div>
     <label>أجر الساعة الإضافية</label>
-    <input id="overtimeRate" type="number" value="0" min="0" step="0.01">
-    <label class="small">مكافآت</label>
-    <input id="bonuses" type="number" value="0" min="0" step="0.01">
+    <input id="overtimeRate" type="number" placeholder="مثال: 10" value="0" min="0" step="0.01">
+    <label>مكافآت</label>
+    <input id="bonuses" type="number" placeholder="مثال: 100" value="0" min="0" step="0.01">
   </div>
   <div>
     <label>سلفة</label>
-    <input id="advance" type="number" value="0" min="0" step="0.01">
-    <label class="small">خصومات أخرى</label>
-    <input id="otherDeductions" type="number" value="0" min="0" step="0.01">
+    <input id="advance" type="number" placeholder="مثال: 50" value="0" min="0" step="0.01">
+    <label>خصومات أخرى</label>
+    <input id="otherDeductions" type="number" placeholder="مثال: 20" value="0" min="0" step="0.01">
   </div>
   <div>
     <label>استلم المعاش؟</label>
@@ -124,6 +133,8 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
   <div class="row"><div><strong>الصافي</strong></div><div id="netPay"><strong>0</strong></div></div>
 </div>
 
+<div id="totalNetBox">إجمالي الصافي: <span id="totalNetSpan">0</span></div>
+
 <h3 style="margin-top:18px">السجلات</h3>
 <div class="search-box">
   <input type="text" id="searchInput" placeholder="🔎 ابحث بالاسم أو ID">
@@ -140,18 +151,6 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 </table>
 </div>
 
-<!-- إشعار الترحيب -->
-<div id="welcomeNotice">
-  <button id="closeNotice">&times;</button>
-  <h3>مرحباً بك 👋</h3>
-  <p>
-    تم برمجة هذا النظام بواسطة <strong>beweble</strong><br>
-    Instagram: <a href="https://instagram.com/beweble" target="_blank" style="color:#C1272D;text-decoration:none;">@beweble</a><br>
-    📞 للاستفسار: 
-    <button id="contactBtn">اتصل واتساب</button>
-  </p>
-</div>
-
 <script>
 const firebaseConfig = {
  apiKey: "AIzaSyA6fS9KVSX_XVUyXVuG1Zr3xbJCWrakBaU",
@@ -166,26 +165,24 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-// العناصر
 const loginBox=document.getElementById('loginBox');
 const loginBtn=document.getElementById('loginBtn');
 const logoutBtn=document.getElementById('logoutBtn');
 const loginMsg=document.getElementById('loginMsg');
 const togglePassword=document.getElementById('togglePassword');
-const resetPassBtn=document.getElementById('resetPassBtn');
 const appContainer=document.querySelector('.container');
 const tbody=document.querySelector("#recordsTable tbody");
-const welcomeNotice=document.getElementById("welcomeNotice");
-const contactBtn=document.getElementById("contactBtn");
-const closeNotice=document.getElementById("closeNotice");
+
 const empSelect=document.getElementById("empSelect");
 const addEmpBtn=document.getElementById("addEmpBtn");
 const deleteEmpBtn=document.getElementById("deleteEmpBtn");
 
-let editRow=null;
-let employeesData = {}; // لتخزين بيانات الموظفين مع مفاتيحهم
+const totalNetSpan=document.getElementById('totalNetSpan');
 
-// دوال الحساب
+let editRow=null;
+let employeesData = {};
+let totalNetValue=0;
+
 function numberFmt(n){return parseFloat(n).toFixed(2);}
 function calcPayroll(d){
   let base=parseFloat(d.baseSalary)||0;
@@ -204,6 +201,7 @@ function calcPayroll(d){
   let net = gross-deductions;
   return {proratedSalary:prorated,overtimeAmount:overtime,gross:gross,advAndOthers:deductions,net:net};
 }
+
 function readForm(){return{
   empId: employeesData[empSelect.value]?.empId || '',
   empName: employeesData[empSelect.value]?.name || '',
@@ -218,6 +216,7 @@ function readForm(){return{
   otherDeductions: document.getElementById('otherDeductions').value,
   status: document.getElementById('status').value
 };}
+
 function showResult(r){
   document.getElementById('resultBox').style.display='block';
   document.getElementById('proratedSalary').innerText=numberFmt(r.proratedSalary);
@@ -227,30 +226,16 @@ function showResult(r){
   document.getElementById('netPay').innerText=numberFmt(r.net);
 }
 
-// إشعار الترحيب
-function showWelcomeNotice(){
-  if(!sessionStorage.getItem('welcomeShown')){
-    welcomeNotice.style.display="block";
-    setTimeout(()=>welcomeNotice.classList.add("show"),10);
-    sessionStorage.setItem('welcomeShown','true');
-  }
-}
-contactBtn.onclick=()=>window.open("https://wa.me/81112046","_blank");
-closeNotice.onclick=()=>welcomeNotice.style.display="none";
-
 // تسجيل الدخول والخروج
 auth.onAuthStateChanged(user=>{
   if(user){
     loginBox.style.display='none';
     appContainer.style.display='block';
-    logoutBtn.style.display='inline-block';
     loadEmployees();
     loadRecords();
-    showWelcomeNotice();
   } else {
     loginBox.style.display='block';
     appContainer.style.display='none';
-    logoutBtn.style.display='none';
   }
 });
 
@@ -262,15 +247,6 @@ loginBtn.onclick=()=>{
     .catch(err=>loginMsg.innerText=err.message);
 };
 logoutBtn.onclick=()=>auth.signOut();
-
-resetPassBtn.onclick=()=>{
-  const email=document.getElementById('email').value;
-  if(!email){loginMsg.innerText='يرجى إدخال البريد الإلكتروني أولاً'; return;}
-  auth.sendPasswordResetEmail(email)
-    .then(()=>{loginMsg.style.color='green';loginMsg.innerText='تم إرسال رابط إعادة التعيين إلى بريدك';})
-    .catch(err=>{loginMsg.style.color='red';loginMsg.innerText=err.message;});
-};
-
 togglePassword.onclick=()=>{
   const passField=document.getElementById('password');
   passField.type=(passField.type==='password'?'text':'password');
@@ -298,24 +274,14 @@ addEmpBtn.onclick = () => {
   if (!name) return;
   const empId = prompt("ادخل رقم ID للموظف:");
   if (!empId) { alert("يجب إدخال رقم ID للموظف!"); return; }
-
   const newKey = db.ref('employees').push().key;
-  db.ref('employees/' + newKey).set({ name, empId }).then(() => {
-    loadEmployees(); 
-    alert(`تمت إضافة الموظف: ${name} برقم ID: ${empId}`);
-  });
+  db.ref('employees/' + newKey).set({ name, empId }).then(() => loadEmployees());
 };
 
 deleteEmpBtn.onclick = () => {
   const key = empSelect.value;
   if (key && confirm("هل أنت متأكد من حذف هذا الموظف؟")) {
-    db.ref('employees/' + key).remove().then(() => {
-      db.ref('payrolls').orderByChild('empId').equalTo(employeesData[key].empId)
-        .once('value', snap => {
-          snap.forEach(child => db.ref('payrolls/' + child.key).remove());
-        });
-      loadEmployees();
-    });
+    db.ref('employees/' + key).remove().then(() => loadEmployees());
   }
 };
 
@@ -327,6 +293,20 @@ function addRecord(data){
   db.ref('payrolls/'+newKey).set(record);
   loadRecords();
 }
+function attachRowListeners(){
+  tbody.querySelectorAll('tr').forEach(row=>{
+    const key=row.dataset.key;
+    row.querySelector('.delete-btn').onclick=()=>{db.ref('payrolls/'+key).remove();loadRecords();}
+    row.querySelector('.edit-btn').onclick=()=>{
+      editRow=key;
+      const fields=['empJob','baseSalary','daysInPeriod','daysWorked','overtimeHours','overtimeRate','bonuses','advance','otherDeductions','status'];
+      const r = JSON.parse(row.dataset.json);
+      fields.forEach(f=>document.getElementById(f).value=r[f]);
+      for (let k in employeesData) if(employeesData[k].empId===r.empId) empSelect.value=k;
+      showResult(calcPayroll(r));
+    }
+  });
+}
 function loadRecords(){
   tbody.innerHTML='';
   db.ref('payrolls').once('value',snapshot=>{
@@ -335,6 +315,7 @@ function loadRecords(){
       const r=child.val();
       const row=document.createElement("tr");
       row.dataset.key=child.key;
+      row.dataset.json=JSON.stringify(r);
       row.innerHTML=`<td>${i++}</td>
         <td>${r.empId}</td>
         <td>${r.empName}</td>
@@ -349,31 +330,21 @@ function loadRecords(){
           <button class="delete-btn">حذف</button>
         </td>`;
       tbody.appendChild(row);
-
-      row.querySelector('.delete-btn').onclick=()=>{db.ref('payrolls/'+child.key).remove();loadRecords();}
-      row.querySelector('.edit-btn').onclick=()=>{
-        editRow=child.key;
-        document.getElementById('empJob').value=r.empJob;
-        document.getElementById('baseSalary').value=r.baseSalary;
-        document.getElementById('daysInPeriod').value=r.daysInPeriod;
-        document.getElementById('daysWorked').value=r.daysWorked;
-        document.getElementById('overtimeHours').value=r.overtimeHours;
-        document.getElementById('overtimeRate').value=r.overtimeRate;
-        document.getElementById('bonuses').value=r.bonuses;
-        document.getElementById('advance').value=r.advance;
-        document.getElementById('otherDeductions').value=r.otherDeductions;
-        document.getElementById('status').value=r.status;
-
-        // تعيين الموظف الصحيح بالقائمة بناءً على empId
-        for (let key in employeesData) {
-          if (employeesData[key].empId === r.empId) {
-            empSelect.value = key;
-            break;
-          }
-        }
-      }
     });
+    attachRowListeners();
+    updateTotalNet();
   });
+}
+
+// تحديث إجمالي الصافي تلقائي
+function updateTotalNet(){
+  totalNetValue=0;
+  tbody.querySelectorAll('tr').forEach(row=>{
+    totalNetValue+=parseFloat(row.children[6].innerText)||0;
+  });
+  totalNetSpan.innerText=numberFmt(totalNetValue);
+  // حفظ مباشر
+  db.ref('totals/latest').set({ totalNet: totalNetValue, date: new Date().toLocaleString() });
 }
 
 // حساب + تسجيل
@@ -383,8 +354,8 @@ document.getElementById('calcBtn').onclick=()=>{
 };
 document.getElementById('recordBtn').onclick=()=>{
   const data=readForm();
+  const result=calcPayroll(data);
   if(editRow){
-    const result=calcPayroll(data);
     db.ref('payrolls/'+editRow).update({...data,net:result.net,date:new Date().toLocaleString()});
     editRow=null;
   } else addRecord(data);
@@ -416,11 +387,9 @@ document.getElementById('exportExcel').onclick=()=>{
 document.getElementById('searchInput').addEventListener('input',e=>{
   const q=e.target.value.toLowerCase();
   tbody.querySelectorAll('tr').forEach(row=>{
-    const text=row.innerText.toLowerCase();
-    row.style.display=text.includes(q)?'':'none';
+    row.style.display=row.innerText.toLowerCase().includes(q)?'':'none';
   });
 });
-
 </script>
 </body>
 </html>
