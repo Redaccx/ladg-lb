@@ -23,7 +23,7 @@ button:hover {opacity:0.8;}
 .invoice-item {display:flex;gap:10px;align-items:center;margin-bottom:8px;justify-content:center;}
 .invoice-item input {flex:1;text-align:center;}
 .item-list li {margin:2px 0;padding:4px 6px;background:#f4f4f4;border-radius:4px;}
-#search-invoice {width:200px;padding:6px;margin:0 6px;border-radius:6px;border:1px solid #ddd;text-align:center;}
+#search-invoice, #filter-section {width:200px;padding:6px;margin:0 6px;border-radius:6px;border:1px solid #ddd;text-align:center;}
 .items-list {margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;}
 @media(max-width:600px){
   .invoice-item {flex-direction:column;}
@@ -81,6 +81,9 @@ button:hover {opacity:0.8;}
 
 <div class="card">
 <h2>قائمة الفواتير</h2>
+<select id="filter-section" onchange="filterInvoices()">
+  <option value="">كل الأقسام</option>
+</select>
 <input type="text" id="search-invoice" placeholder="ابحث برقم الفاتورة">
 <button onclick="searchInvoice()">🔍 بحث</button>
 <div id="invoice-list" style="margin-top:10px;"></div>
@@ -108,6 +111,7 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 
 let currentInvoiceId=null;
+let allInvoices=[]; // لتخزين كل الفواتير
 
 // Add item
 function addItem(){
@@ -176,10 +180,11 @@ function saveInvoice(){
     vat:parseFloat(document.getElementById('vat').value)||0,
     total:document.getElementById('total-display').textContent
   };
+  const userInvoices=db.collection('users').doc(userId).collection('invoices');
   if(currentInvoiceId){
-    db.collection('users').doc(userId).collection('invoices').doc(currentInvoiceId).update(invoiceData).then(()=>{alert("تم تعديل الفاتورة");clearForm();});
+    userInvoices.doc(currentInvoiceId).update(invoiceData).then(()=>{alert("تم تعديل الفاتورة");clearForm();});
   } else {
-    db.collection('users').doc(userId).collection('invoices').add(invoiceData).then(()=>{alert("تمت إضافة الفاتورة");clearForm();});
+    userInvoices.add(invoiceData).then(()=>{alert("تمت إضافة الفاتورة");clearForm();});
   }
 }
 
@@ -201,29 +206,40 @@ function clearForm(){
 function loadInvoices(){
   const userId=auth.currentUser.uid;
   db.collection('users').doc(userId).collection('invoices').onSnapshot(snapshot=>{
-    const container=document.getElementById('invoice-list');
-    container.innerHTML="";
+    allInvoices=[];
     snapshot.forEach(doc=>{
       const data=doc.data();
-      const card=document.createElement('div');
-      card.className="invoice-card";
-      card.innerHTML=`
-        <p><strong>رقم الفاتورة:</strong> ${data.invoiceNumber}</p>
-        <p><strong>التاريخ:</strong> ${data.date}</p>
-        <p><strong>المتجر:</strong> ${data.store}</p>
-        <p><strong>الهاتف:</strong> ${data.phone}</p>
-        <p><strong>الإجمالي:</strong> ${data.total}</p>
-        <button onclick="toggleItems(this)">عرض المنتجات</button>
-        <div class="items-list" style="display:none;">
-          <ul class="item-list">
-            ${data.items.map(item=>`<li>${item.name} - ${item.quantity} × ${item.price} ${data.currency}</li>`).join('')}
-          </ul>
-          <p style="font-weight:bold;">خصم: ${data.discount} ${data.currency}, ضريبة: ${data.vat}%</p>
-        </div>
-        <button onclick='editInvoice("${doc.id}")'>✏️ تعديل</button>
-        <button onclick='deleteInvoice("${doc.id}")'>🗑 حذف</button>`;
-      container.appendChild(card);
+      data.id=doc.id;
+      allInvoices.push(data);
     });
+    displayInvoices(allInvoices);
+  });
+}
+
+// Display invoices
+function displayInvoices(list){
+  const container=document.getElementById('invoice-list');
+  container.innerHTML="";
+  list.forEach(data=>{
+    const card=document.createElement('div');
+    card.className="invoice-card";
+    card.innerHTML=`
+      <p><strong>رقم الفاتورة:</strong> ${data.invoiceNumber}</p>
+      <p><strong>القسم:</strong> ${getSectionName(data.section)}</p>
+      <p><strong>التاريخ:</strong> ${data.date}</p>
+      <p><strong>المتجر:</strong> ${data.store}</p>
+      <p><strong>الهاتف:</strong> ${data.phone}</p>
+      <p><strong>الإجمالي:</strong> ${data.total}</p>
+      <p><strong>الخصم:</strong> ${data.discount} ${data.currency}</p>
+      <button onclick="toggleItems(this)">عرض المنتجات</button>
+      <div class="items-list" style="display:none;">
+        <ul class="item-list">
+          ${data.items.map(item=>`<li>${item.name} - ${item.quantity} × ${item.price} ${data.currency}</li>`).join('')}
+        </ul>
+      </div>
+      <button onclick='editInvoice("${data.id}")'>✏️ تعديل</button>
+      <button onclick='deleteInvoice("${data.id}")'>🗑 حذف</button>`;
+    container.appendChild(card);
   });
 }
 
@@ -233,14 +249,25 @@ function toggleItems(btn){
   div.style.display = div.style.display==="none" ? "block" : "none";
 }
 
+// Filter invoices by section
+function filterInvoices(){
+  const sectionId=document.getElementById('filter-section').value;
+  if(!sectionId) displayInvoices(allInvoices);
+  else displayInvoices(allInvoices.filter(inv=>inv.section===sectionId));
+}
+
 // Search invoice
 function searchInvoice(){
   const query=document.getElementById('search-invoice').value.trim().toLowerCase();
-  const cards=document.querySelectorAll('#invoice-list .invoice-card');
-  cards.forEach(card=>{
-    const number=card.querySelector('p').textContent.toLowerCase();
-    card.style.display = number.includes(query) ? "" : "none";
-  });
+  const filtered=allInvoices.filter(inv=>inv.invoiceNumber.toLowerCase().includes(query));
+  displayInvoices(filtered);
+}
+
+// Get section name from ID
+function getSectionName(id){
+  const select=document.getElementById('invoice-section-select');
+  const option=Array.from(select.options).find(opt=>opt.value===id);
+  return option ? option.textContent : "";
 }
 
 // Edit/Delete invoice
@@ -257,6 +284,7 @@ function editInvoice(id){
       document.getElementById('discount').value=data.discount;
       document.getElementById('vat').value=data.vat;
       document.getElementById('invoice-currency').value=data.currency;
+      document.getElementById('invoice-section-select').value=data.section;
       document.getElementById('items-container').innerHTML="";
       data.items.forEach(item=>{
         const div=document.createElement('div');
@@ -306,7 +334,19 @@ function logout(){ auth.signOut(); }
 function addSection(){ const name=prompt("أدخل اسم القسم:"); if(!name) return; db.collection('users').doc(auth.currentUser.uid).collection('sections').add({name});}
 function editSection(){ const select=document.getElementById('invoice-section-select'); if(!select.value) return alert("اختر قسم للتعديل"); const newName=prompt("الاسم الجديد:"); if(newName) db.collection('users').doc(auth.currentUser.uid).collection('sections').doc(select.value).update({name:newName});}
 function deleteSection(){ const select=document.getElementById('invoice-section-select'); if(!select.value) return alert("اختر قسم للحذف"); if(confirm("هل تريد الحذف؟")) db.collection('users').doc(auth.currentUser.uid).collection('sections').doc(select.value).delete();}
-function loadSections(){ const select=document.getElementById('invoice-section-select'); db.collection('users').doc(auth.currentUser.uid).collection('sections').get().then(snapshot=>{ select.innerHTML=""; snapshot.forEach(doc=>{ const opt=document.createElement('option'); opt.value=doc.id; opt.textContent=doc.data().name; select.appendChild(opt); });});}
+function loadSections(){ 
+  const select=document.getElementById('invoice-section-select'); 
+  const filter=document.getElementById('filter-section');
+  db.collection('users').doc(auth.currentUser.uid).collection('sections').get().then(snapshot=>{
+    select.innerHTML="";
+    filter.innerHTML = '<option value="">كل الأقسام</option>';
+    snapshot.forEach(doc=>{
+      const name = doc.data().name;
+      const opt=document.createElement('option'); opt.value=doc.id; opt.textContent=name; select.appendChild(opt);
+      const fOpt=document.createElement('option'); fOpt.value=doc.id; fOpt.textContent=name; filter.appendChild(fOpt);
+    });
+  });
+}
 
 // Export Excel
 function exportExcel(){
