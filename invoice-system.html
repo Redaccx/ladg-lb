@@ -23,10 +23,12 @@ button:hover {opacity:0.8;}
 .invoice-item {display:flex;gap:10px;align-items:center;margin-bottom:8px;justify-content:center;}
 .invoice-item input {flex:1;text-align:center;}
 .item-list li {margin:2px 0;padding:4px 6px;background:#f4f4f4;border-radius:4px;}
-#search-invoice, #filter-section {width:200px;padding:6px;margin:0 6px;border-radius:6px;border:1px solid #ddd;text-align:center;}
 .items-list {margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;}
+#search-invoice, #filter-section {min-width:150px;padding:6px;border-radius:6px;border:1px solid #ddd;text-align:center;}
+#search-invoice:focus, #filter-section:focus {outline:none;border-color:var(--primary);box-shadow:0 0 4px rgba(193,39,45,0.5);}
 @media(max-width:600px){
   .invoice-item {flex-direction:column;}
+  #search-invoice, #filter-section {width:100%;margin-bottom:6px;}
 }
 </style>
 </head>
@@ -60,7 +62,6 @@ button:hover {opacity:0.8;}
 <input type="text" id="invoice-phone" placeholder="رقم الهاتف">
 <input type="text" id="invoice-date" placeholder="أدخل التاريخ (YYYY-MM-DD)">
 
-<!-- اختيار العملة للفواتير -->
 <select id="invoice-currency">
   <option value="USD">USD</option>
   <option value="LBP">LBP</option>
@@ -81,13 +82,13 @@ button:hover {opacity:0.8;}
 
 <div class="card">
 <h2>قائمة الفواتير</h2>
-<select id="filter-section" onchange="filterInvoices()">
-  <option value="">كل الأقسام</option>
-</select>
-<input type="text" id="search-invoice" placeholder="ابحث برقم الفاتورة">
-<button onclick="searchInvoice()">🔍 بحث</button>
-<div id="invoice-list" style="margin-top:10px;"></div>
+<div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+  <select id="filter-section">
+    <option value="">كل الأقسام</option>
+  </select>
+  <input type="text" id="search-invoice" placeholder="ابحث برقم الفاتورة">
 </div>
+<div id="invoice-list" style="margin-top:10px;"></div>
 </div>
 </main>
 
@@ -111,7 +112,7 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 
 let currentInvoiceId=null;
-let allInvoices=[]; // لتخزين كل الفواتير
+let allInvoices=[];
 
 // Add item
 function addItem(){
@@ -139,7 +140,6 @@ function calculateTotal(){
   const discount=parseFloat(document.getElementById('discount').value)||0;
   const vat=parseFloat(document.getElementById('vat').value)||0;
   total = (total - discount) + (total * vat/100);
-
   const currency=document.getElementById('invoice-currency').value;
   document.getElementById('total-display').textContent = `${total.toFixed(2)} ${currency}`;
 }
@@ -202,7 +202,7 @@ function clearForm(){
   currentInvoiceId=null;
 }
 
-// Load invoices as cards
+// Load invoices
 function loadInvoices(){
   const userId=auth.currentUser.uid;
   db.collection('users').doc(userId).collection('invoices').onSnapshot(snapshot=>{
@@ -250,27 +250,21 @@ function toggleItems(btn){
 }
 
 // Filter invoices by section
+document.getElementById('filter-section').addEventListener('change', filterInvoices);
 function filterInvoices(){
   const sectionId=document.getElementById('filter-section').value;
   if(!sectionId) displayInvoices(allInvoices);
   else displayInvoices(allInvoices.filter(inv=>inv.section===sectionId));
 }
 
-// Search invoice
-function searchInvoice(){
-  const query=document.getElementById('search-invoice').value.trim().toLowerCase();
+// Live search
+document.getElementById('search-invoice').addEventListener('input', function(){
+  const query=this.value.trim().toLowerCase();
   const filtered=allInvoices.filter(inv=>inv.invoiceNumber.toLowerCase().includes(query));
   displayInvoices(filtered);
-}
+});
 
-// Get section name from ID
-function getSectionName(id){
-  const select=document.getElementById('invoice-section-select');
-  const option=Array.from(select.options).find(opt=>opt.value===id);
-  return option ? option.textContent : "";
-}
-
-// Edit/Delete invoice
+// Edit/Delete
 function editInvoice(id){
   const userId=auth.currentUser.uid;
   db.collection('users').doc(userId).collection('invoices').doc(id).get().then(doc=>{
@@ -284,7 +278,6 @@ function editInvoice(id){
       document.getElementById('discount').value=data.discount;
       document.getElementById('vat').value=data.vat;
       document.getElementById('invoice-currency').value=data.currency;
-      document.getElementById('invoice-section-select').value=data.section;
       document.getElementById('items-container').innerHTML="";
       data.items.forEach(item=>{
         const div=document.createElement('div');
@@ -312,12 +305,7 @@ function login(){
   const email=document.getElementById('email').value; 
   const password=document.getElementById('password').value; 
   auth.signInWithEmailAndPassword(email,password)
-    .then(()=>{
-      document.getElementById('auth-msg').textContent=""; 
-      loadInvoices(); loadSections();
-      document.getElementById('auth-section').style.display="none";
-      document.getElementById('invoice-section').style.display="block";
-    })
+    .then(()=>{ document.getElementById('auth-msg').textContent=""; loadInvoices(); loadSections(); document.getElementById('auth-section').style.display="none"; document.getElementById('invoice-section').style.display="block";})
     .catch(e=>document.getElementById('auth-msg').textContent=e.message);
 }
 function resetPassword(){ 
@@ -346,6 +334,12 @@ function loadSections(){
       const fOpt=document.createElement('option'); fOpt.value=doc.id; fOpt.textContent=name; filter.appendChild(fOpt);
     });
   });
+}
+
+function getSectionName(id){
+  const select=document.getElementById('invoice-section-select');
+  const opt=Array.from(select.options).find(o=>o.value===id);
+  return opt ? opt.textContent : '';
 }
 
 // Export Excel
