@@ -16,21 +16,24 @@ form button:hover { background:#a81f25; }
 .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
 .card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
 .card h3 { margin:0 0 10px 0; color:#C1272D; }
-.card button { margin-top:5px; }
-.card button.delete { background:#e74c3c; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
-.card button.edit { background:#3498db; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
-.card button.viewItems { background:#8e44ad; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; margin-top:5px; }
-.card button.saveDonation { background:#27ae60; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; margin-top:5px; }
+.card button { padding:7px 10px; border:none; border-radius:5px; cursor:pointer; }
+.card button.delete { background:#e74c3c; color:#fff; }
+.card button.edit { background:#3498db; color:#fff; }
+.card button.viewItems { background:#8e44ad; color:#fff; margin-top:5px; }
 #logout { padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
 #logout:hover { background:#222; }
 #itemField div { margin-bottom:5px; }
 .password-container { position:relative; }
 .password-container button { position:absolute; left:5px; top:50%; transform:translateY(-50%); padding:5px; cursor:pointer; background:none; border:none; font-size:1.2em; }
-#exportBtn { padding:10px; background:#27ae60; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
-#exportBtn:hover { background:#1e8449; }
+#exportExcelBtn, #exportWordBtn { padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; }
+#exportExcelBtn { background:#27ae60; }
+#exportExcelBtn:hover { background:#1e8449; }
+#exportWordBtn { background:#f39c12; }
+#exportWordBtn:hover { background:#d68910; }
 .items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; }
 .item-entry { display:flex; justify-content:space-between; margin-bottom:5px; }
 .item-entry button { margin-left:5px; padding:2px 5px; font-size:12px; }
+.card-buttons { display:flex; gap:10px; margin-top:10px; } /* الأزرار بجانب بعض */
 </style>
 </head>
 <body>
@@ -54,7 +57,8 @@ form button:hover { background:#a81f25; }
   <button id="logout">🚪 تسجيل خروج</button>
   <h2>📒 سجل التبرعات</h2>
   <input type="text" id="search" placeholder="ابحث هنا...">
-  <button id="exportBtn">💾 Export Excel</button>
+  <button id="exportExcelBtn">💾 Export Excel</button>
+  <button id="exportWordBtn">📝 Export Word</button>
 
   <form id="donationForm">
     <label>رقم فاتورة التبرع</label>
@@ -105,7 +109,7 @@ form button:hover { background:#a81f25; }
     <input type="text" id="phone" required>
     <label>📝 ملاحظات</label>
     <textarea id="notes"></textarea>
-    <button type="submit">➕ إضافة التبرع</button>
+    <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
   </form>
 
   <div class="cards" id="donationCards"></div>
@@ -127,6 +131,7 @@ const typeSelect = document.getElementById('type');
 const moneyField = document.getElementById('moneyField');
 const itemField = document.getElementById('itemField');
 const itemsContainer = document.getElementById('itemsContainer');
+const submitDonationBtn = document.getElementById('submitDonationBtn');
 let itemsList = [];
 let editingDonationId = null;
 
@@ -210,6 +215,7 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
     if(editingDonationId){
       await updateDoc(doc(db,'donations',editingDonationId), donationData);
       editingDonationId = null;
+      submitDonationBtn.textContent = '➕ إضافة التبرع';
       alert('✅ تم حفظ التعديلات بنجاح');
     } else {
       await addDoc(collection(db,"donations"), donationData);
@@ -218,7 +224,6 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
   } catch(err){ alert(err.message); }
 });
 
-// Render cards
 function renderCards(filter=''){
   const container=document.getElementById('donationCards');
   const q=query(collection(db,"donations"), orderBy("date","desc"));
@@ -229,6 +234,7 @@ function renderCards(filter=''){
       if(filter && !Object.values(donation).some(v=>v && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase()))) return;
       const card=document.createElement('div'); card.className='card';
       let content=`<h3>التبرع: ${donation.type}</h3><p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
+      if(donation.type==='مصاري'){ content += `<p>💵 المبلغ: ${donation.amount} ${donation.currency}</p>`; }
       card.innerHTML=content;
 
       if(donation.items){
@@ -265,19 +271,23 @@ function renderCards(filter=''){
           itemsList = donation.items || [];
           renderTempItems();
         }
+        submitDonationBtn.textContent = '💾 حفظ التعديلات';
       });
 
       const deleteBtn=document.createElement('button'); deleteBtn.className='delete'; deleteBtn.textContent='🗑 حذف';
       deleteBtn.addEventListener('click', ()=>deleteDonation(donation.id));
 
-      card.appendChild(editBtn); card.appendChild(deleteBtn);
+      const btnContainer = document.createElement('div');
+      btnContainer.className = 'card-buttons';
+      btnContainer.appendChild(editBtn);
+      btnContainer.appendChild(deleteBtn);
+      card.appendChild(btnContainer);
 
       container.appendChild(card);
     });
   });
 }
 
-// Delete donation
 async function deleteDonation(id){
   if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){
     try{ await deleteDoc(doc(db,"donations",id)); }
@@ -285,11 +295,9 @@ async function deleteDonation(id){
   }
 }
 
-// Search
 document.getElementById('search').addEventListener('input', function(){ renderCards(this.value); });
 
-// Export Excel
-document.getElementById('exportBtn').addEventListener('click', ()=>{
+document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
   let data='رقم الفاتورة\tنوع التبرع\tالعناصر/المبلغ\tاسم المتبرع\tالعنوان\tالهاتف\tملاحظات\tالتاريخ\n';
   document.querySelectorAll('.card').forEach(card=>{
     const lines=card.innerText.split('\n').map(l=>l.replace('✏️ تعديل','').replace('🗑 حذف','').replace('✏️','').replace('❌','').trim());
@@ -300,7 +308,18 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   const a=document.createElement('a'); a.href=url; a.download='donations.xls'; a.click(); URL.revokeObjectURL(url);
 });
 
-// Edit/Delete existing item
+document.getElementById('exportWordBtn').addEventListener('click', ()=>{
+  let content = "<h2>سجل التبرعات</h2>";
+  document.querySelectorAll('.card').forEach(card=>{
+    let cardCopy = card.cloneNode(true);
+    cardCopy.querySelectorAll('button').forEach(btn=>btn.remove());
+    content += cardCopy.outerHTML + "<hr>";
+  });
+  const blob = new Blob(['\ufeff', content], {type: 'application/msword'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'donations.doc'; a.click(); URL.revokeObjectURL(url);
+});
+
 window.editExistingItem=async function(donationId,index){
   const docRef = doc(db,"donations",donationId);
   const docSnap = await getDoc(docRef);
@@ -316,7 +335,6 @@ window.editExistingItem=async function(donationId,index){
     await updateDoc(docRef,{items:itemsArr});
   }
 }
-
 window.deleteExistingItem=async function(donationId,index){
   if(confirm('هل أنت متأكد من حذف هذا العنصر؟')){
     const docRef = doc(db,"donations",donationId);
