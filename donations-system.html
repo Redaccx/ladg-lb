@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📒 نظام إدارة التبرعات</title>
+<style>
+body { font-family:"Cairo",sans-serif; background:#f4f4f4; margin:0; padding:20px; }
+h2 { text-align:center; color:#C1272D; margin-bottom:20px; }
+form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); margin-bottom:20px; }
+form label { font-weight:bold; }
+form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; }
+form button { padding:10px; background:#C1272D; color:#fff; border:none; border-radius:5px; cursor:pointer; }
+form button:hover { background:#a81f25; }
+#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; }
+.cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
+.card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
+.card h3 { margin:0 0 10px 0; color:#C1272D; }
+.card button { margin:2px; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
+.card button.delete{ background:#e74c3c; color:#fff; }
+.card button.edit{ background:#3498db; color:#fff; }
+.card button.export{ background:#27ae60; color:#fff; position:absolute; top:10px; right:10px; }
+#logout { padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
+#logout:hover { background:#222; }
+#itemField div { margin-bottom:5px; }
+</style>
+</head>
+<body>
+
+<div id="loginSection">
+  <h2>تسجيل الدخول</h2>
+  <form id="loginForm">
+    <label>📧 البريد الإلكتروني</label>
+    <input type="email" id="email" required>
+    <label>🔑 كلمة المرور</label>
+    <input type="password" id="password" required>
+    <button type="submit">تسجيل الدخول</button>
+    <button type="button" id="resetPassword">نسيت كلمة المرور؟</button>
+  </form>
+</div>
+
+<div id="appSection" style="display:none;">
+  <button id="logout">🚪 تسجيل خروج</button>
+  <h2>📒 سجل التبرعات</h2>
+  <input type="text" id="search" placeholder="ابحث هنا...">
+
+  <form id="donationForm">
+    <label>رقم فاتورة التبرع</label>
+    <input type="text" id="invoiceNumber" placeholder="رقم الفاتورة" required>
+
+    <label>نوع التبرع</label>
+    <select id="type" required>
+      <option value="">اختر النوع</option>
+      <option value="مصاري">مصاري</option>
+      <option value="مواد غذائية">مواد غذائية</option>
+      <option value="ملابس">ملابس</option>
+      <option value="أحذية">أحذية</option>
+      <option value="أدوية">أدوية</option>
+      <option value="أخرى">أخرى</option>
+    </select>
+
+    <div id="moneyField" style="display:none;">
+      <label>💵 المبلغ</label>
+      <input type="number" id="amount">
+      <label>💱 العملة</label>
+      <select id="currency">
+        <option value="دولار">دولار</option>
+        <option value="ل.ل">ل.ل</option>
+      </select>
+    </div>
+
+    <div id="itemField" style="display:none;">
+      <label>📦 العناصر</label>
+      <div id="itemsContainer"></div>
+      <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
+        <input type="text" id="itemName" placeholder="اسم العنصر">
+        <input type="number" id="itemQuantity" placeholder="الكمية" min="0.01" step="0.01">
+        <select id="itemUnit">
+          <option value="كيلو">كيلو</option>
+          <option value="غرام">غرام</option>
+          <option value="لتر">لتر</option>
+          <option value="قطعة">قطعة</option>
+        </select>
+        <input type="number" id="itemWeight" placeholder="الوزن الصافي لكل وحدة" min="0.01" step="0.01">
+        <button type="button" id="addItem">➕ إضافة المنتج</button>
+      </div>
+    </div>
+
+    <label>👤 اسم المتبرع</label>
+    <input type="text" id="name" required>
+    <label>📍 العنوان</label>
+    <input type="text" id="address" required>
+    <label>📞 الهاتف</label>
+    <input type="text" id="phone" required>
+    <label>📝 ملاحظات</label>
+    <textarea id="notes"></textarea>
+    <button type="submit">💾 حفظ التبرع</button>
+  </form>
+
+  <div class="cards" id="donationCards"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBGiHaLE8lWuvJgVjDJjw0PXTjdBfTrzno",
+  authDomain: "prizezone-app.firebaseapp.com",
+  projectId: "prizezone-app",
+  storageBucket: "prizezone-app.appspot.com",
+  messagingSenderId: "244427738881",
+  appId: "1:244427738881:web:4a666ce66f74f4994e5500"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginSection = document.getElementById('loginSection');
+const appSection = document.getElementById('appSection');
+const typeSelect = document.getElementById('type');
+const moneyField = document.getElementById('moneyField');
+const itemField = document.getElementById('itemField');
+const itemsContainer = document.getElementById('itemsContainer');
+const itemsList = [];
+
+// تسجيل الدخول والتحقق
+onAuthStateChanged(auth, user => {
+  if(user){ loginSection.style.display='none'; appSection.style.display='block'; renderCards(); }
+  else { loginSection.style.display='block'; appSection.style.display='none'; }
+});
+
+// إضافة عنصر
+document.getElementById('addItem').addEventListener('click', ()=>{
+  const name = document.getElementById('itemName').value.trim();
+  const quantity = parseFloat(document.getElementById('itemQuantity').value);
+  const unit = document.getElementById('itemUnit').value;
+  const weight = parseFloat(document.getElementById('itemWeight').value);
+  if(!name || !quantity || !unit || !weight){ alert('⚠️ املأ جميع الحقول'); return; }
+
+  const item = {name, quantity, unit, weight};
+  itemsList.push(item);
+
+  const div = document.createElement('div');
+  div.textContent = `${name} - ${quantity} ${unit} - ${weight} كغ لكل وحدة`;
+  itemsContainer.appendChild(div);
+
+  document.getElementById('itemName').value='';
+  document.getElementById('itemQuantity').value='';
+  document.getElementById('itemWeight').value='';
+});
+
+// تغيير الحقول حسب النوع
+typeSelect.addEventListener('change', ()=>{
+  if(typeSelect.value==='مصاري'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList.length=0; itemsContainer.innerHTML=''; }
+  else if(typeSelect.value!==''){ moneyField.style.display='none'; itemField.style.display='block'; itemsList.length=0; itemsContainer.innerHTML=''; }
+  else { moneyField.style.display='none'; itemField.style.display='none'; itemsList.length=0; itemsContainer.innerHTML=''; }
+});
+
+// حفظ التبرع
+document.getElementById('donationForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const invoice = document.getElementById('invoiceNumber').value.trim();
+  if(!invoice){ alert('⚠️ أدخل رقم الفاتورة'); return; }
+
+  if(typeSelect.value==='مواد غذائية' && itemsList.length===0){ alert('⚠️ أضف على الأقل منتج واحد'); return; }
+
+  const donation = {
+    invoiceNumber: invoice,
+    type: typeSelect.value,
+    name: document.getElementById('name').value,
+    address: document.getElementById('address').value,
+    phone: document.getElementById('phone').value,
+    notes: document.getElementById('notes').value,
+    date: new Date().toISOString()
+  };
+  if(typeSelect.value==='مصاري'){ donation.amount = document.getElementById('amount').value; donation.currency = document.getElementById('currency').value; }
+  else { donation.items = [...itemsList]; }
+
+  try {
+    await addDoc(collection(db,"donations"), donation);
+    e.target.reset();
+    moneyField.style.display='none';
+    itemField.style.display='none';
+    itemsList.length=0;
+    itemsContainer.innerHTML='';
+  } catch(err){ alert(err.message); }
+});
+
+// عرض التبرعات
+function renderCards(filter=''){
+  const container = document.getElementById('donationCards');
+  const q = query(collection(db,"donations"), orderBy("date","desc"));
+  onSnapshot(q, snapshot=>{
+    container.innerHTML='';
+    snapshot.forEach(docSnap=>{
+      const donation = docSnap.data(); donation.id = docSnap.id;
+      if(filter && !Object.values(donation).some(v=>v && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase()))) return;
+      const card = document.createElement('div'); card.className='card';
+      let content = `<h3>فاتورة: ${donation.invoiceNumber} - نوع التبرع: ${donation.type}</h3>`;
+      if(donation.type==='مصاري'){ content += `<p>💵 المبلغ: ${donation.amount} ${donation.currency}</p>`; }
+      else{
+        content += `<p>📦 العناصر:</p>`;
+        let totalWeight = 0;
+        donation.items.forEach(item=>{
+          content += `<p>• ${item.name} - ${item.quantity} ${item.unit} - ${item.weight} كغ لكل وحدة</p>`;
+          totalWeight += item.quantity*item.weight;
+        });
+        content += `<p>⚖️ الوزن الإجمالي: ${totalWeight.toFixed(2)} كغ</p>`;
+      }
+      content += `<p>👤 المتبرع: ${donation.name}</p>`;
+      content += `<p>📍 العنوان: ${donation.address}</p>`;
+      content += `<p>📞 الهاتف: ${donation.phone}</p>`;
+      content += `<p>📝 ملاحظات: ${donation.notes}</p>`;
+      content += `<p>⏰ التاريخ: ${new Date(donation.date).toLocaleString()}</p>`;
+      content += `<button class="delete" onclick="deleteDonation('${donation.id}')">🗑 حذف</button>`;
+      container.appendChild(card);
+    });
+  });
+}
+
+// حذف التبرع
+window.deleteDonation = async function(id){
+  if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){
+    try { await deleteDoc(doc(db,"donations",id)); } catch(err){ alert(err.message); }
+  }
+}
+
+// البحث
+document.getElementById('search').addEventListener('input', function(){ renderCards(this.value); });
+</script>
+</body>
+</html>
