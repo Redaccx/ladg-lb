@@ -11,7 +11,7 @@ form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px
 form label { font-weight:bold; }
 form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; }
 form button { padding:10px;background:#C1272D;color:#fff; border:none; border-radius:5px; cursor:pointer; }
-form button:hover { background:#C1272D; }
+form button:hover { background:#a81f25; }
 #search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; }
 .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
 .card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
@@ -43,7 +43,7 @@ form button:hover { background:#C1272D; }
       <button type="button" id="togglePassword">👁️</button>
     </div>
 
-    <button type="submit">تسجيل الدخول</button>
+    <button type="submit" id="loginBtn">تسجيل الدخول</button>
     <button type="button" id="resetPassword">نسيت كلمة المرور؟</button>
   </form>
 </div>
@@ -72,7 +72,7 @@ form button:hover { background:#C1272D; }
 
     <div id="moneyField" style="display:none;">
       <label>💵 المبلغ</label>
-      <input type="number" id="amount">
+      <input type="number" id="amount" min="0.01" step="0.01">
       <label>💱 العملة</label>
       <select id="currency">
         <option value="دولار">دولار</option>
@@ -160,27 +160,38 @@ document.getElementById('resetPassword').addEventListener('click', async ()=>{
 
 document.getElementById('logout').addEventListener('click', ()=>signOut(auth));
 
+// Type Change
 typeSelect.addEventListener('change', ()=>{
   if(typeSelect.value==='مصاري'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList.length=0; itemsContainer.innerHTML=''; }
   else if(typeSelect.value!==''){ moneyField.style.display='none'; itemField.style.display='block'; itemsList.length=0; itemsContainer.innerHTML=''; }
   else{ moneyField.style.display='none'; itemField.style.display='none'; itemsList.length=0; itemsContainer.innerHTML=''; }
 });
 
+// Add Item
 document.getElementById('addItem').addEventListener('click', ()=>{
-  const name=document.getElementById('itemName').value.trim();
-  const quantity=parseFloat(document.getElementById('itemQuantity').value);
-  const weight=parseFloat(document.getElementById('itemWeight').value);
-  const unit=document.getElementById('itemUnit').value;
-  if(!name||!quantity||!weight||!unit){ alert('⚠️ املأ جميع الحقول'); return; }
-  const item={name, quantity, weight, unit};
+  const name = document.getElementById('itemName').value.trim();
+  const quantity = Number(document.getElementById('itemQuantity').value);
+  const weight = Number(document.getElementById('itemWeight').value);
+  const unit = document.getElementById('itemUnit').value;
+
+  if(!name || isNaN(quantity) || isNaN(weight) || !unit){
+    alert('⚠️ املأ جميع الحقول بشكل صحيح');
+    return;
+  }
+
+  const item = {name, quantity, weight, unit};
   itemsList.push(item);
-  const div=document.createElement('div');
-  div.textContent=`${name} - ${quantity} ${unit} - وزن صافي: ${weight} كغ`;
+
+  const div = document.createElement('div');
+  div.textContent = `${name} - ${quantity} ${unit} - وزن صافي: ${weight} كغ`;
   itemsContainer.appendChild(div);
-  document.getElementById('itemName').value=''; document.getElementById('itemQuantity').value=''; document.getElementById('itemWeight').value='';
+
+  document.getElementById('itemName').value='';
+  document.getElementById('itemQuantity').value='';
+  document.getElementById('itemWeight').value='';
 });
 
-// حفظ التبرع
+// Save Donation
 document.getElementById('donationForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const donation={
@@ -198,7 +209,7 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
   catch(err){ alert(err.message); }
 });
 
-// عرض التبرعات
+// Render Cards
 function renderCards(filter=''){
   const container=document.getElementById('donationCards');
   const q=query(collection(db,"donations"), orderBy("date","desc"));
@@ -219,16 +230,16 @@ function renderCards(filter=''){
   });
 }
 
-// حذف
+// Delete
 window.deleteDonation=async function(id){ if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){ try{ await deleteDoc(doc(db,"donations",id)); } catch(err){ alert(err.message); } } }
 
-// تعديل
+// Edit
 window.editDonation=function(id){ alert('ميزة التعديل ستُضاف لاحقاً'); }
 
-// البحث
+// Search
 document.getElementById('search').addEventListener('input', function(){ renderCards(this.value); });
 
-// تصدير Excel
+// Export Excel
 document.getElementById('exportBtn').addEventListener('click', ()=>{
   let data='رقم الفاتورة\tنوع التبرع\tالعناصر/المبلغ\tاسم المتبرع\tالعنوان\tالهاتف\tملاحظات\tالتاريخ\n';
   const container=document.getElementById('donationCards');
