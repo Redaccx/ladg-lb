@@ -19,6 +19,8 @@ form button:hover { background:#a81f25; }
 .card button { margin-top:5px; }
 .card button.delete { background:#e74c3c; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
 .card button.edit { background:#3498db; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
+.card button.viewItems { background:#8e44ad; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; margin-top:5px; }
+.card button.saveDonation { background:#27ae60; color:#fff; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; margin-top:5px; }
 #logout { padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
 #logout:hover { background:#222; }
 #itemField div { margin-bottom:5px; }
@@ -26,39 +28,37 @@ form button:hover { background:#a81f25; }
 .password-container button { position:absolute; left:5px; top:50%; transform:translateY(-50%); padding:5px; cursor:pointer; background:none; border:none; font-size:1.2em; }
 #exportBtn { padding:10px; background:#27ae60; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
 #exportBtn:hover { background:#1e8449; }
+.items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; }
+.item-entry { display:flex; justify-content:space-between; margin-bottom:5px; }
+.item-entry button { margin-left:5px; padding:2px 5px; font-size:12px; }
 </style>
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
 <div id="loginSection">
   <h2>تسجيل الدخول</h2>
   <form id="loginForm">
     <label>📧 البريد الإلكتروني</label>
     <input type="email" id="email" required>
-
     <label>🔑 كلمة المرور</label>
     <div class="password-container">
       <input type="password" id="password" required>
       <button type="button" id="togglePassword">👁️</button>
     </div>
-
-    <button type="submit" id="loginBtn">تسجيل الدخول</button>
+    <button type="submit">تسجيل الدخول</button>
     <button type="button" id="resetPassword">نسيت كلمة المرور؟</button>
   </form>
 </div>
 
-<!-- شاشة التطبيق -->
 <div id="appSection" style="display:none;">
   <button id="logout">🚪 تسجيل خروج</button>
   <h2>📒 سجل التبرعات</h2>
   <input type="text" id="search" placeholder="ابحث هنا...">
-  <button id="exportBtn">💾 تصدير Excel</button>
+  <button id="exportBtn">💾 Export Excel</button>
 
   <form id="donationForm">
-    <label>رقم فاتورة</label>
-    <input type="text" id="invoiceNumber" placeholder="أدخل رقم الفاتورة" required>
-
+    <label>رقم فاتورة التبرع</label>
+    <input type="text" id="invoiceNumber" required>
     <label>نوع التبرع</label>
     <select id="type" required>
       <option value="">اختر النوع</option>
@@ -86,7 +86,7 @@ form button:hover { background:#a81f25; }
       <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
         <input type="text" id="itemName" placeholder="اسم العنصر">
         <input type="number" id="itemQuantity" placeholder="الكمية" min="0.01" step="0.01">
-        <input type="number" id="itemWeight" placeholder="الوزن الصافي (كغ)" min="0.01" step="0.01">
+        <input type="number" id="itemWeight" placeholder="الوزن" min="0.01" step="0.01">
         <select id="itemUnit">
           <option value="كيلو">كيلو</option>
           <option value="غرام">غرام</option>
@@ -114,9 +114,8 @@ form button:hover { background:#a81f25; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-// إعداد Firebase
 const firebaseConfig = { apiKey:"AIzaSyBGiHaLE8lWuvJgVjDJjw0PXTjdBfTrzno", authDomain:"prizezone-app.firebaseapp.com", projectId:"prizezone-app", storageBucket:"prizezone-app.appspot.com", messagingSenderId:"244427738881", appId:"1:244427738881:web:4a666ce66f74f4994e5500" };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -128,17 +127,14 @@ const typeSelect = document.getElementById('type');
 const moneyField = document.getElementById('moneyField');
 const itemField = document.getElementById('itemField');
 const itemsContainer = document.getElementById('itemsContainer');
-const itemsList = [];
+let itemsList = [];
+let editingDonationId = null;
 
-// Show/Hide Password
-const passwordInput = document.getElementById('password');
-const toggleBtn = document.getElementById('togglePassword');
-toggleBtn.addEventListener('click', ()=>{
-  if(passwordInput.type==='password'){ passwordInput.type='text'; toggleBtn.textContent='👀️'; }
-  else{ passwordInput.type='password'; toggleBtn.textContent='👁️'; }
+document.getElementById('togglePassword').addEventListener('click', ()=>{
+  const pass=document.getElementById('password');
+  pass.type = pass.type==='password' ? 'text':'password';
 });
 
-// Auth
 onAuthStateChanged(auth, user=>{
   if(user){ loginSection.style.display='none'; appSection.style.display='block'; renderCards(); }
   else{ loginSection.style.display='block'; appSection.style.display='none'; }
@@ -146,9 +142,7 @@ onAuthStateChanged(auth, user=>{
 
 document.getElementById('loginForm').addEventListener('submit', async e=>{
   e.preventDefault();
-  const email=document.getElementById('email').value;
-  const password=document.getElementById('password').value;
-  try{ await signInWithEmailAndPassword(auth,email,password); e.target.reset(); }
+  try{ await signInWithEmailAndPassword(auth,document.getElementById('email').value,document.getElementById('password').value); e.target.reset(); }
   catch(err){ alert(err.message); }
 });
 
@@ -160,41 +154,47 @@ document.getElementById('resetPassword').addEventListener('click', async ()=>{
 
 document.getElementById('logout').addEventListener('click', ()=>signOut(auth));
 
-// Type Change
 typeSelect.addEventListener('change', ()=>{
-  if(typeSelect.value==='مصاري'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList.length=0; itemsContainer.innerHTML=''; }
-  else if(typeSelect.value!==''){ moneyField.style.display='none'; itemField.style.display='block'; itemsList.length=0; itemsContainer.innerHTML=''; }
-  else{ moneyField.style.display='none'; itemField.style.display='none'; itemsList.length=0; itemsContainer.innerHTML=''; }
+  if(typeSelect.value==='مصاري'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
+  else if(typeSelect.value!==''){ moneyField.style.display='none'; itemField.style.display='block'; itemsList=[]; itemsContainer.innerHTML=''; }
+  else{ moneyField.style.display='none'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
 });
 
-// Add Item
 document.getElementById('addItem').addEventListener('click', ()=>{
-  const name = document.getElementById('itemName').value.trim();
-  const quantity = Number(document.getElementById('itemQuantity').value);
-  const weight = Number(document.getElementById('itemWeight').value);
-  const unit = document.getElementById('itemUnit').value;
-
-  if(!name || isNaN(quantity) || isNaN(weight) || !unit){
-    alert('⚠️ املأ جميع الحقول بشكل صحيح');
-    return;
-  }
-
-  const item = {name, quantity, weight, unit};
-  itemsList.push(item);
-
-  const div = document.createElement('div');
-  div.textContent = `${name} - ${quantity} ${unit} - وزن صافي: ${weight} كغ`;
-  itemsContainer.appendChild(div);
-
-  document.getElementById('itemName').value='';
-  document.getElementById('itemQuantity').value='';
-  document.getElementById('itemWeight').value='';
+  const name=document.getElementById('itemName').value.trim();
+  const quantity=Number(document.getElementById('itemQuantity').value);
+  const weight=Number(document.getElementById('itemWeight').value);
+  const unit=document.getElementById('itemUnit').value;
+  if(!name||isNaN(quantity)||isNaN(weight)||!unit){ alert('⚠️ املأ جميع الحقول بشكل صحيح'); return; }
+  itemsList.push({name,quantity,weight,unit});
+  renderTempItems();
+  document.getElementById('itemName').value=''; document.getElementById('itemQuantity').value=''; document.getElementById('itemWeight').value='';
 });
 
-// Save Donation
+function renderTempItems(){
+  itemsContainer.innerHTML='';
+  itemsList.forEach((item,i)=>{
+    const div=document.createElement('div'); div.className='item-entry';
+    div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} كغ
+      <button onclick="editTempItem(${i})">✏️</button>
+      <button onclick="deleteTempItem(${i})">❌</button>`;
+    itemsContainer.appendChild(div);
+  });
+}
+window.editTempItem = function(i){
+  const item=itemsList[i];
+  document.getElementById('itemName').value=item.name;
+  document.getElementById('itemQuantity').value=item.quantity;
+  document.getElementById('itemWeight').value=item.weight;
+  document.getElementById('itemUnit').value=item.unit;
+  itemsList.splice(i,1);
+  renderTempItems();
+}
+window.deleteTempItem = function(i){ itemsList.splice(i,1); renderTempItems(); }
+
 document.getElementById('donationForm').addEventListener('submit', async e=>{
   e.preventDefault();
-  const donation={
+  const donationData={
     invoice: document.getElementById('invoiceNumber').value,
     type: typeSelect.value,
     name: document.getElementById('name').value,
@@ -203,13 +203,22 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
     notes: document.getElementById('notes').value,
     date: new Date().toISOString()
   };
-  if(typeSelect.value==='مصاري'){ donation.amount=document.getElementById('amount').value; donation.currency=document.getElementById('currency').value; }
-  else{ donation.items=[...itemsList]; }
-  try{ await addDoc(collection(db,"donations"),donation); e.target.reset(); moneyField.style.display='none'; itemField.style.display='none'; itemsList.length=0; itemsContainer.innerHTML=''; }
-  catch(err){ alert(err.message); }
+  if(typeSelect.value==='مصاري'){ donationData.amount=document.getElementById('amount').value; donationData.currency=document.getElementById('currency').value; }
+  else{ donationData.items=[...itemsList]; }
+
+  try{
+    if(editingDonationId){
+      await updateDoc(doc(db,'donations',editingDonationId), donationData);
+      editingDonationId = null;
+      alert('✅ تم حفظ التعديلات بنجاح');
+    } else {
+      await addDoc(collection(db,"donations"), donationData);
+    }
+    e.target.reset(); moneyField.style.display='none'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML='';
+  } catch(err){ alert(err.message); }
 });
 
-// Render Cards
+// Render cards
 function renderCards(filter=''){
   const container=document.getElementById('donationCards');
   const q=query(collection(db,"donations"), orderBy("date","desc"));
@@ -219,22 +228,62 @@ function renderCards(filter=''){
       const donation=docSnap.data(); donation.id=docSnap.id;
       if(filter && !Object.values(donation).some(v=>v && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase()))) return;
       const card=document.createElement('div'); card.className='card';
-      let content=`<h3>التبرع: ${donation.type}</h3><p>رقم الفاتورة: ${donation.invoice}</p>`;
-      if(donation.type==='مصاري'){ content+=`<p>💵 المبلغ: ${donation.amount} ${donation.currency}</p>`; }
-      else{ content+=`<p>📦 العناصر:</p>`; donation.items.forEach(item=>{ content+=`<p>• ${item.name} - ${item.quantity} ${item.unit} - وزن صافي: ${item.weight} كغ</p>`; }); }
-      content+=`<p>👤 المتبرع: ${donation.name}</p><p>📍 العنوان: ${donation.address}</p><p>📞 الهاتف: ${donation.phone}</p><p>📝 ملاحظات: ${donation.notes}</p><p>⏰ التاريخ: ${new Date(donation.date).toLocaleString()}</p>`;
-      content+=`<button class="edit" onclick="editDonation('${donation.id}')">✏️ تعديل</button> <button class="delete" onclick="deleteDonation('${donation.id}')">🗑 حذف</button>`;
+      let content=`<h3>التبرع: ${donation.type}</h3><p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
       card.innerHTML=content;
+
+      if(donation.items){
+        const btn=document.createElement('button'); btn.textContent='👁️ عرض العناصر'; btn.className='viewItems';
+        const itemsDiv=document.createElement('div'); itemsDiv.className='items-list';
+        donation.items.forEach((item,i)=>{
+          const div=document.createElement('div'); div.className='item-entry';
+          div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} كغ
+            <button onclick="editExistingItem('${donation.id}',${i})">✏️</button>
+            <button onclick="deleteExistingItem('${donation.id}',${i})">❌</button>`;
+          itemsDiv.appendChild(div);
+        });
+        btn.addEventListener('click', ()=>{ itemsDiv.style.display=itemsDiv.style.display==='none'?'block':'none'; });
+        card.appendChild(btn); card.appendChild(itemsDiv);
+      }
+
+      const infoDiv=document.createElement('div');
+      infoDiv.innerHTML=`<p>👤 المتبرع: ${donation.name}</p><p>📍 العنوان: ${donation.address}</p><p>📞 الهاتف: ${donation.phone}</p><p>📝 ملاحظات: ${donation.notes}</p><p>⏰ التاريخ: ${new Date(donation.date).toLocaleString()}</p>`;
+      card.appendChild(infoDiv);
+
+      const editBtn=document.createElement('button'); editBtn.className='edit'; editBtn.textContent='✏️ تعديل';
+      editBtn.addEventListener('click', ()=>{
+        editingDonationId = donation.id;
+        typeSelect.value = donation.type; typeSelect.dispatchEvent(new Event('change'));
+        document.getElementById('invoiceNumber').value = donation.invoice;
+        document.getElementById('name').value = donation.name;
+        document.getElementById('address').value = donation.address;
+        document.getElementById('phone').value = donation.phone;
+        document.getElementById('notes').value = donation.notes;
+        if(donation.type==='مصاري'){
+          document.getElementById('amount').value = donation.amount;
+          document.getElementById('currency').value = donation.currency;
+        } else {
+          itemsList = donation.items || [];
+          renderTempItems();
+        }
+      });
+
+      const deleteBtn=document.createElement('button'); deleteBtn.className='delete'; deleteBtn.textContent='🗑 حذف';
+      deleteBtn.addEventListener('click', ()=>deleteDonation(donation.id));
+
+      card.appendChild(editBtn); card.appendChild(deleteBtn);
+
       container.appendChild(card);
     });
   });
 }
 
-// Delete
-window.deleteDonation=async function(id){ if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){ try{ await deleteDoc(doc(db,"donations",id)); } catch(err){ alert(err.message); } } }
-
-// Edit
-window.editDonation=function(id){ alert('ميزة التعديل ستُضاف لاحقاً'); }
+// Delete donation
+async function deleteDonation(id){
+  if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){
+    try{ await deleteDoc(doc(db,"donations",id)); }
+    catch(err){ alert(err.message); }
+  }
+}
 
 // Search
 document.getElementById('search').addEventListener('input', function(){ renderCards(this.value); });
@@ -242,17 +291,43 @@ document.getElementById('search').addEventListener('input', function(){ renderCa
 // Export Excel
 document.getElementById('exportBtn').addEventListener('click', ()=>{
   let data='رقم الفاتورة\tنوع التبرع\tالعناصر/المبلغ\tاسم المتبرع\tالعنوان\tالهاتف\tملاحظات\tالتاريخ\n';
-  const container=document.getElementById('donationCards');
-  container.querySelectorAll('.card').forEach(card=>{
-    const lines=card.innerText.split('\n').map(l=>l.replace('✏️ تعديل','').replace('🗑 حذف','').trim());
+  document.querySelectorAll('.card').forEach(card=>{
+    const lines=card.innerText.split('\n').map(l=>l.replace('✏️ تعديل','').replace('🗑 حذف','').replace('✏️','').replace('❌','').trim());
     data+=lines.join('\t')+'\n';
   });
   const blob=new Blob([data],{type:'text/tab-separated-values'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='donations.xls'; a.click();
-  URL.revokeObjectURL(url);
+  const a=document.createElement('a'); a.href=url; a.download='donations.xls'; a.click(); URL.revokeObjectURL(url);
 });
+
+// Edit/Delete existing item
+window.editExistingItem=async function(donationId,index){
+  const docRef = doc(db,"donations",donationId);
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()){
+    const donation = docSnap.data();
+    const item = donation.items[index];
+    document.getElementById('itemName').value=item.name;
+    document.getElementById('itemQuantity').value=item.quantity;
+    document.getElementById('itemWeight').value=item.weight;
+    document.getElementById('itemUnit').value=item.unit;
+    itemsList=[item];
+    const itemsArr = donation.items.filter((_,i)=>i!==index);
+    await updateDoc(docRef,{items:itemsArr});
+  }
+}
+
+window.deleteExistingItem=async function(donationId,index){
+  if(confirm('هل أنت متأكد من حذف هذا العنصر؟')){
+    const docRef = doc(db,"donations",donationId);
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()){
+      const donation = docSnap.data();
+      const itemsArr = donation.items.filter((_,i)=>i!==index);
+      await updateDoc(docRef,{items:itemsArr});
+    }
+  }
+}
 </script>
 </body>
 </html>
