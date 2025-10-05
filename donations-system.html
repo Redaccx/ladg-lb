@@ -11,8 +11,8 @@ form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px
 
 #loginSection form {
   width: 90%;
-  max-width: 400px; /* الحد الأقصى على اللابتوب */
-  margin: 20px auto; /* يركّز الفرم بالوسط */
+  max-width: 400px; 
+  margin: 20px auto; 
   padding: 20px;
 }
 form label { font-weight:bold; }
@@ -46,7 +46,7 @@ form button:hover { background:#a81f25; }
   position: fixed;
   top:0; left:0;
   width:100%; height:100%;
-  background: #ffffff; /* خلفية بيضاء نظيفة */
+  background: #ffffff;
   display:flex;
   flex-direction: column;
   justify-content: center;
@@ -55,52 +55,19 @@ form button:hover { background:#a81f25; }
   font-family:"Cairo", sans-serif;
   color:#C1272D;
 }
-
-#loading p {
-  margin-top:20px;
-  font-size:18px;
-  letter-spacing:1px;
-  font-weight:600;
-}
-
-.loader {
-  display: flex;
-  gap:15px;
-}
-
-.loader div {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #C1272D;
-  box-shadow: 0 0 10px #C1272D, 0 0 20px #e74c3c, 0 0 30px #ff6f61;
-  animation: bounce 0.8s infinite alternate ease-in-out, glow 1.2s infinite alternate;
-}
-
+#loading p { margin-top:20px; font-size:18px; letter-spacing:1px; font-weight:600; }
+.loader { display: flex; gap:15px; }
+.loader div { width: 20px; height: 20px; border-radius: 50%; background: #C1272D; box-shadow: 0 0 10px #C1272D, 0 0 20px #e74c3c, 0 0 30px #ff6f61; animation: bounce 0.8s infinite alternate ease-in-out, glow 1.2s infinite alternate; }
 .loader div:nth-child(2) { animation-delay: 0.2s; background:#e74c3c; box-shadow: 0 0 10px #e74c3c, 0 0 20px #ff6f61, 0 0 30px #C1272D;}
 .loader div:nth-child(3) { animation-delay: 0.4s; background:#ff6f61; box-shadow: 0 0 10px #ff6f61, 0 0 20px #C1272D, 0 0 30px #e74c3c;}
-
-@keyframes bounce {
-  0% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-25px) scale(1.2); }
-  100% { transform: translateY(0) scale(1); }
-}
-
-@keyframes glow {
-  0% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
-  50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; }
-  100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
-}
+@keyframes bounce { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-25px) scale(1.2); } 100% { transform: translateY(0) scale(1); } }
+@keyframes glow { 0% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } 50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; } 100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } }
 </style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="loader">
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
+  <div class="loader"><div></div><div></div><div></div></div>
   <p>...Loading Database</p>
 </div>
 
@@ -181,10 +148,36 @@ form button:hover { background:#a81f25; }
   <div class="cards" id="donationCards"></div>
 </div>
 
+<!-- XLSX library -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<!-- docx library for Word -->
+<script type="module">
+import { Document, Packer, Paragraph, TextRun } from "https://cdn.jsdelivr.net/npm/docx@7.4.1/build/index.js";
+window.exportToWord = async function(){
+  const container = document.getElementById('donationCards');
+  const cards = container.querySelectorAll('.card');
+  const doc = new Document();
+  cards.forEach(card => {
+    const paras = [];
+    card.querySelectorAll('h3, p').forEach(el=>{
+      paras.push(new Paragraph({children:[new TextRun(el.innerText)]}));
+    });
+    doc.addSection({children: paras});
+  });
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "donations.docx";
+  a.click();
+}
+</script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
 const firebaseConfig = { apiKey:"AIzaSyBGiHaLE8lWuvJgVjDJjw0PXTjdBfTrzno", authDomain:"prizezone-app.firebaseapp.com", projectId:"prizezone-app", storageBucket:"prizezone-app.appspot.com", messagingSenderId:"244427738881", appId:"1:244427738881:web:4a666ce66f74f4994e5500" };
 const app = initializeApp(firebaseConfig);
@@ -417,6 +410,34 @@ window.deleteExistingItem=async function(donationId,index){
     }
   }
 }
+
+// Export Excel
+document.getElementById('exportExcelBtn').addEventListener('click', async ()=>{
+  const snapshot = await getDocs(collection(db,'donations'));
+  const data = snapshot.docs.map(d=>{
+    const dd = d.data();
+    return {
+      invoice: dd.invoice,
+      name: dd.name,
+      phone: dd.phone,
+      address: dd.address,
+      notes: dd.notes,
+      type: dd.type,
+      amount: dd.amount || '',
+      currency: dd.currency || '',
+      items: dd.items ? dd.items.map(i=>`${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight} كغ)`).join('; ') : '',
+      date: new Date(dd.date).toLocaleString()
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Donations");
+  XLSX.writeFile(wb, "donations.xlsx");
+});
+
+// Export Word
+document.getElementById('exportWordBtn').addEventListener('click', exportToWord);
+
 </script>
 </body>
 </html>
