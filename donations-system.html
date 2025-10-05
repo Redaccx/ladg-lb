@@ -35,14 +35,59 @@ form button:hover { background:#a81f25; }
 .item-entry button { margin-left:5px; padding:2px 5px; font-size:12px; }
 .card-buttons { display:flex; gap:10px; margin-top:10px; }
 #loginSection, #appSection { display:none; }
-#loading { position:fixed; top:0; left:0; width:100%; height:100%; 
-  background:rgba(255,255,255,0.8); display:flex; align-items:center; justify-content:center; 
-  font-size:20px; color:#C1272D; z-index:1000; }
+#loading {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: #ffffff; /* خلفية بيضاء ناعمة */
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index:1000;
+  font-family:"Cairo", sans-serif;
+  color:#C1272D;
+}
+
+#loading p {
+  margin-top:20px;
+  font-size:18px;
+  letter-spacing:1px;
+  font-weight:600;
+}
+
+.loader {
+  display: flex;
+  gap:10px;
+}
+
+.loader div {
+  width: 20px;
+  height: 20px;
+  background: #C1272D;
+  border-radius: 50%;
+  animation: bounce 0.50s infinite alternate;
+}
+
+.loader div:nth-child(2) { animation-delay: 0.2s; background:#e74c3c; }
+.loader div:nth-child(3) { animation-delay: 0.4s; background:#ff6f61; }
+
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-20px); }
+}
 </style>
 </head>
 <body>
 
-<div id="loading">⏳...Loading Database</div>
+<div id="loading">
+  <div class="loader">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <p>...Loading Database</p>
+</div>
 
 <div id="loginSection">
   <h2>تسجيل الدخول</h2>
