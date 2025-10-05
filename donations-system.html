@@ -100,66 +100,67 @@ form button:hover { background:#a81f25; }
 
   <h2>Donations Records📒</h2>
 
-  <form id="donationForm">
-    <label>رقم فاتورة التبرع</label>
-    <input type="text" id="invoiceNumber" required>
-    <label>نوع التبرع</label>
-    <select id="type" required>
-      <option value="">اختر النوع</option>
-      <option value="مالي">مالي</option>
-      <option value="مواد غذائية">مواد غذائية</option>
-      <option value="ملابس">ملابس</option>
-      <option value="أحذية">أحذية</option>
-      <option value="أدوية">أدوية</option>
-      <option value="نوع آخر">نوع آخر</option>
-    </select>
+<form id="donationForm">
 
-    <div id="moneyField" style="display:none;">
-      <label>💵 المبلغ</label>
-      <input type="number" id="amount" min="0.01" step="0.01">
-      <label>💱 العملة</label>
-      <select id="currency">
-        <option value="دولار">دولار</option>
-        <option value="ل.ل">ل.ل</option>
-      </select>
-    </div>
-
-    <div id="itemField" style="display:none;">
-      <label>📦 العناصر</label>
-      <div id="itemsContainer"></div>
-      <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
-        <input type="text" id="itemName" placeholder="اسم العنصر">
-        <input type="number" id="itemQuantity" placeholder="الكمية" min="0.01" step="0.01">
-        <input type="number" id="itemWeight" placeholder="الوزن" min="0.01" step="0.01">
-        <select id="itemUnit">
-          <option value="كيلو">كيلو</option>
-          <option value="غرام">غرام</option>
-          <option value="لتر">لتر</option>
-          <option value="قطعة">قطعة</option>
-        </select>
-        <button type="button" id="addItem">➕ إضافة العنصر</button>
-      </div>
-    </div>
-
-    <label>👤 اسم المتبرع</label>
-    <input type="text" id="name" required>
-    <label>📍 العنوان</label>
-    <input type="text" id="address" required>
-    <label>📞 الهاتف</label>
-    <input type="text" id="phone" required>
-    <label>📝 ملاحظات</label>
-    <textarea id="notes"></textarea>
-    <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
-  </form>
-
-  <button type="button" id="exportExcelBtn">💾 Export Excel</button>
-  <button type="button" id="logout">🚪 Logout</button>    
   
-  <input type="text" id="search" placeholder="ابحث هنا...">
-  <div class="cards" id="donationCards"></div>
-
-</div>
-
+  <label>رقم فاتورة التبرع</label>
+  <input type="text" id="invoiceNumber" required>
+  
+  <label>نوع التبرع</label>
+  <select id="type" required>
+    <option value="">اختر النوع</option>
+    <option value="مالي">مالي</option>
+    <option value="مواد غذائية">مواد غذائية</option>
+    <option value="ملابس">ملابس</option>
+    <option value="أحذية">أحذية</option>
+    <option value="أدوية">أدوية</option>
+    <option value="نوع آخر">نوع آخر</option>
+  </select>
+  
+  <div id="moneyField" style="display:none;">
+    <label>💵 المبلغ</label>
+    <input type="number" id="amount" min="0.01" step="0.01">
+    <label>💱 العملة</label>
+    <select id="currency">
+      <option value="دولار">دولار</option>
+      <option value="ل.ل">ل.ل</option>
+    </select>
+  </div>
+  
+  <div id="itemField" style="display:none;">
+    <label>📦 العناصر</label>
+    <div id="itemsContainer"></div>
+    <div style="display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;">
+      <input type="text" id="itemName" placeholder="اسم العنصر">
+      <input type="number" id="itemQuantity" placeholder="الكمية" min="0.01" step="0.01">
+      <input type="number" id="itemWeight" placeholder="الوزن" min="0.01" step="0.01">
+      <select id="itemUnit">
+        <option value="كيلو">كيلو</option>
+        <option value="غرام">غرام</option>
+        <option value="لتر">لتر</option>
+        <option value="قطعة">قطعة</option>
+      </select>
+      <button type="button" id="addItem">➕ إضافة العنصر</button>
+    </div>
+  </div>
+  
+  <label>👤 اسم المتبرع</label>
+  <input type="text" id="name" required>
+  <label>📍 العنوان</label>
+  <input type="text" id="address" required>
+  <label>📞 الهاتف</label>
+  <input type="text" id="phone" required>
+  <label>📝 ملاحظات</label>
+  <textarea id="notes"></textarea>
+  
+  <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
+  
+  <input type="text" id="search" placeholder="ابحث هنا..." style="margin-top:20px; text-align:center;">
+  
+  <button type="button" id="exportExcelBtn">💾 Export Excel</button>
+  
+  <div class="cards" id="donationCards" style="margin-top:20px;"></div>
+</form>
 <!-- XLSX library -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
