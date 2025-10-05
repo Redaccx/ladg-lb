@@ -11,9 +11,9 @@ body{
   margin:0;
   padding:10px;
   color:#222;
-  visibility: hidden; /* أخفي الصفحة بالكامل مؤقتًا */
+  
 }
-.container{max-width:1000px;margin:0 auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);display:none;}
+.container{max-width:1000px;margin:0 auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);display:block;}
 h1{text-align:center;color:#C1272D;margin:0 0 12px;font-size:1.3rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
 label{display:block;margin-bottom:5px;font-weight:600;font-size:14px}
@@ -91,7 +91,7 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 <!-- Loading -->
 <div id="loading">
   <div class="loader"><div></div><div></div><div></div></div>
-  <p>...جار التحميل</p>
+  <p>...Loading Database</p>
 </div>
 
 <!-- تسجيل الدخول -->
@@ -192,6 +192,7 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 </div>
 
 <script>
+// Firebase Config
 const firebaseConfig = {
  apiKey: "AIzaSyA6fS9KVSX_XVUyXVuG1Zr3xbJCWrakBaU",
  authDomain: "ladg-employee.firebaseapp.com",
@@ -240,7 +241,7 @@ function calcPayroll(d){
   let adv=parseFloat(d.advance)||0;
   let other=parseFloat(d.otherDeductions)||0;
   let dailyRate = daysIn ? base/daysIn : 0;
-  let prorated = base;
+  let prorated = dailyRate*days;
   let overtime = otH*otR;
   let gross = prorated+overtime+bonus;
   let deductions = adv+other;
@@ -272,7 +273,7 @@ function showResult(r){
 
 // ===== Auth =====
 auth.onAuthStateChanged(user=>{
-  document.body.style.visibility='visible'; // أظهر الصفحة بعد التحقق
+  document.body.style.visibility='visible';
   hideLoading();
   if(user){
     loginBox.style.display='none';
