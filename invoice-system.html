@@ -6,6 +6,7 @@
 <title>Invoices System</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>
+/* ===== Existing Styles ===== */
 :root {
   --primary: #C1272D;
   --bg: #f6f7fb;
@@ -31,6 +32,40 @@ button:hover {opacity:0.8;}
   #search-invoice, #filter-section {width:100%;margin-bottom:6px;}
   #auth-section, #invoice-section {display: none;}
 }
+
+/* ===== Small Login Form ===== */
+#auth-section {
+  max-width: 350px;
+  margin: 20px auto;
+  padding: 15px;
+}
+#auth-section h2 {font-size:18px;margin-bottom:10px;}
+#auth-section input {padding:8px;font-size:14px;}
+#auth-section button {padding:6px 10px;font-size:14px;}
+
+/* ===== Invoices Grid ===== */
+#invoice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: flex-start;
+}
+.invoice-card {
+  flex: 1 1 300px; /* كل بطاقة تأخذ مساحة 300px على الأقل */
+  max-width: 320px;
+  text-align: right;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 15px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.4s ease;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+}
+.invoice-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+@keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
 
 /* ===== Loading CSS ===== */
 #loading {
