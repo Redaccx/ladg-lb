@@ -33,13 +33,16 @@ form button:hover { background:#a81f25; }
 .items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; }
 .item-entry { display:flex; justify-content:space-between; margin-bottom:5px; }
 .item-entry button { margin-left:5px; padding:2px 5px; font-size:12px; }
-.card-buttons { display:flex; gap:10px; margin-top:10px; } /* الأزرار بجانب بعض */
-#loginSection, #appSection {
-  display: none; /* أخفيهم حتى يتحقق Firebase */
-}
+.card-buttons { display:flex; gap:10px; margin-top:10px; }
+#loginSection, #appSection { display:none; }
+#loading { position:fixed; top:0; left:0; width:100%; height:100%; 
+  background:rgba(255,255,255,0.8); display:flex; align-items:center; justify-content:center; 
+  font-size:20px; color:#C1272D; z-index:1000; }
 </style>
 </head>
 <body>
+
+<div id="loading">⏳...Loading Database</div>
 
 <div id="loginSection">
   <h2>تسجيل الدخول</h2>
@@ -56,7 +59,7 @@ form button:hover { background:#a81f25; }
   </form>
 </div>
 
-<div id="appSection" style="display:none;">
+<div id="appSection">
   <button id="logout">🚪 تسجيل خروج</button>
   <h2>Donations Records📒</h2>
   <input type="text" id="search" placeholder="ابحث هنا...">
@@ -130,6 +133,7 @@ const db = getFirestore(app);
 
 const loginSection = document.getElementById('loginSection');
 const appSection = document.getElementById('appSection');
+const loading = document.getElementById('loading');
 const typeSelect = document.getElementById('type');
 const moneyField = document.getElementById('moneyField');
 const itemField = document.getElementById('itemField');
@@ -138,36 +142,54 @@ const submitDonationBtn = document.getElementById('submitDonationBtn');
 let itemsList = [];
 let editingDonationId = null;
 
+// Toggle password
 document.getElementById('togglePassword').addEventListener('click', ()=>{
   const pass=document.getElementById('password');
   pass.type = pass.type==='password' ? 'text':'password';
 });
 
+// Auth state
 onAuthStateChanged(auth, user=>{
-  if(user){ loginSection.style.display='none'; appSection.style.display='block'; renderCards(); }
-  else{ loginSection.style.display='block'; appSection.style.display='none'; }
+  loading.style.display = 'flex';
+  if(user){
+    loginSection.style.display='none';
+    appSection.style.display='block';
+    renderCards().then(()=>{ loading.style.display='none'; });
+  } else {
+    loginSection.style.display='block';
+    appSection.style.display='none';
+    loading.style.display='none';
+  }
 });
 
+// Login
 document.getElementById('loginForm').addEventListener('submit', async e=>{
   e.preventDefault();
-  try{ await signInWithEmailAndPassword(auth,document.getElementById('email').value,document.getElementById('password').value); e.target.reset(); }
-  catch(err){ alert(err.message); }
+  try{ 
+    loading.style.display='flex';
+    await signInWithEmailAndPassword(auth,document.getElementById('email').value,document.getElementById('password').value);
+    e.target.reset();
+  } catch(err){ alert(err.message); loading.style.display='none'; }
 });
 
+// Reset password
 document.getElementById('resetPassword').addEventListener('click', async ()=>{
   const email=document.getElementById('email').value;
   if(email){ try{ await sendPasswordResetEmail(auth,email); alert('📩 تم إرسال رابط إعادة التعيين'); } catch(err){ alert(err.message); } }
   else alert('⚠️ أدخل البريد الإلكتروني أولاً');
 });
 
+// Logout
 document.getElementById('logout').addEventListener('click', ()=>signOut(auth));
 
+// Type change
 typeSelect.addEventListener('change', ()=>{
   if(typeSelect.value==='مالي'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
   else if(typeSelect.value!==''){ moneyField.style.display='none'; itemField.style.display='block'; itemsList=[]; itemsContainer.innerHTML=''; }
   else{ moneyField.style.display='none'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
 });
 
+// Add temp item
 document.getElementById('addItem').addEventListener('click', ()=>{
   const name=document.getElementById('itemName').value.trim();
   const quantity=Number(document.getElementById('itemQuantity').value);
@@ -200,6 +222,7 @@ window.editTempItem = function(i){
 }
 window.deleteTempItem = function(i){ itemsList.splice(i,1); renderTempItems(); }
 
+// Submit donation
 document.getElementById('donationForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const donationData={
@@ -215,6 +238,7 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
   else{ donationData.items=[...itemsList]; }
 
   try{
+    loading.style.display='flex';
     if(editingDonationId){
       await updateDoc(doc(db,'donations',editingDonationId), donationData);
       editingDonationId = null;
@@ -224,11 +248,14 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
       await addDoc(collection(db,"donations"), donationData);
     }
     e.target.reset(); moneyField.style.display='none'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML='';
-  } catch(err){ alert(err.message); }
+    loading.style.display='none';
+  } catch(err){ alert(err.message); loading.style.display='none'; }
 });
 
-function renderCards(filter=''){
+// Render cards
+async function renderCards(filter=''){
   const container=document.getElementById('donationCards');
+  loading.style.display='flex';
   const q=query(collection(db,"donations"), orderBy("date","desc"));
   onSnapshot(q,snapshot=>{
     container.innerHTML='';
@@ -288,9 +315,11 @@ function renderCards(filter=''){
 
       container.appendChild(card);
     });
+    loading.style.display='none';
   });
 }
 
+// Delete donation
 async function deleteDonation(id){
   if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){
     try{ await deleteDoc(doc(db,"donations",id)); }
@@ -298,31 +327,10 @@ async function deleteDonation(id){
   }
 }
 
-document.getElementById('search').addEventListener('input', function(){ renderCards(this.value); });
+// Search filter
+document.getElementById('search').addEventListener('input', e=>{ renderCards(e.target.value); });
 
-document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
-  let data='رقم الفاتورة\tنوع التبرع\tالعناصر/المبلغ\tاسم المتبرع\tالعنوان\tالهاتف\tملاحظات\tالتاريخ\n';
-  document.querySelectorAll('.card').forEach(card=>{
-    const lines=card.innerText.split('\n').map(l=>l.replace('✏️ تعديل','').replace('🗑 حذف','').replace('✏️','').replace('❌','').trim());
-    data+=lines.join('\t')+'\n';
-  });
-  const blob=new Blob([data],{type:'text/tab-separated-values'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download='donations.xls'; a.click(); URL.revokeObjectURL(url);
-});
-
-document.getElementById('exportWordBtn').addEventListener('click', ()=>{
-  let content = "<h2>سجل التبرعات</h2>";
-  document.querySelectorAll('.card').forEach(card=>{
-    let cardCopy = card.cloneNode(true);
-    cardCopy.querySelectorAll('button').forEach(btn=>btn.remove());
-    content += cardCopy.outerHTML + "<hr>";
-  });
-  const blob = new Blob(['\ufeff', content], {type: 'application/msword'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'donations.doc'; a.click(); URL.revokeObjectURL(url);
-});
-
+// Edit/delete existing items
 window.editExistingItem=async function(donationId,index){
   const docRef = doc(db,"donations",donationId);
   const docSnap = await getDoc(docRef);
