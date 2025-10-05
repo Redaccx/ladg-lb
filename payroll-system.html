@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title> Payroll and Pension System </title>
+<title>Payroll and Pension System</title>
 <style>
 body{
   font-family:"Cairo","Segoe UI",Tahoma,sans-serif;
@@ -52,12 +52,47 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
   .actions{flex-direction:column}button{flex:unset;width:100%}
   h1{font-size:1.2rem}.container{padding:10px}
 }
+
+/* ===== Loading CSS ===== */
+#loading {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: #ffffff;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index:1000;
+  font-family:"Cairo",sans-serif;
+  color:#C1272D;
+}
+#loading p { margin-top:20px; font-size:18px; letter-spacing:1px; font-weight:600; }
+.loader { display: flex; gap:15px; }
+.loader div {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #C1272D;
+  box-shadow: 0 0 10px #C1272D, 0 0 20px #e74c3c, 0 0 30px #ff6f61;
+  animation: bounce 0.8s infinite alternate ease-in-out, glow 1.2s infinite alternate;
+}
+.loader div:nth-child(2) { animation-delay: 0.2s; background:#e74c3c; box-shadow: 0 0 10px #e74c3c, 0 0 20px #ff6f61, 0 0 30px #C1272D;}
+.loader div:nth-child(3) { animation-delay: 0.4s; background:#ff6f61; box-shadow: 0 0 10px #ff6f61, 0 0 20px #C1272D, 0 0 30px #e74c3c;}
+@keyframes bounce { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-25px) scale(1.2); } 100% { transform: translateY(0) scale(1); } }
+@keyframes glow { 0% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } 50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; } 100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="loader"><div></div><div></div><div></div></div>
+  <p>...جار التحميل</p>
+</div>
 
 <!-- تسجيل الدخول -->
 <div id="loginBox">
@@ -170,6 +205,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
+// عناصر الصفحة
 const loginBox=document.getElementById('loginBox');
 const loginBtn=document.getElementById('loginBtn');
 const logoutBtn=document.getElementById('logoutBtn');
@@ -177,18 +213,22 @@ const loginMsg=document.getElementById('loginMsg');
 const togglePassword=document.getElementById('togglePassword');
 const appContainer=document.querySelector('.container');
 const tbody=document.querySelector("#recordsTable tbody");
-
 const empSelect=document.getElementById("empSelect");
 const addEmpBtn=document.getElementById("addEmpBtn");
 const deleteEmpBtn=document.getElementById("deleteEmpBtn");
-
 const recordBtn=document.getElementById('recordBtn');
 const totalNetSpan=document.getElementById('totalNetSpan');
+const loadingDiv = document.getElementById('loading');
 
 let editRow=null;
 let employeesData = {};
 let totalNetValue=0;
 
+// ===== Loading functions =====
+function showLoading(){loadingDiv.style.display='flex';}
+function hideLoading(){loadingDiv.style.display='none';}
+
+// ===== Utility =====
 function numberFmt(n){return parseFloat(n).toFixed(2);}
 function calcPayroll(d){
   let base=parseFloat(d.baseSalary)||0;
@@ -207,7 +247,6 @@ function calcPayroll(d){
   let net = gross-deductions;
   return {proratedSalary:prorated,overtimeAmount:overtime,gross:gross,advAndOthers:deductions,net:net};
 }
-
 function readForm(){return{
   empId: employeesData[empSelect.value]?.empId || '',
   empName: employeesData[empSelect.value]?.name || '',
@@ -222,7 +261,6 @@ function readForm(){return{
   otherDeductions: document.getElementById('otherDeductions').value,
   status: document.getElementById('status').value
 };}
-
 function showResult(r){
   document.getElementById('resultBox').style.display='block';
   document.getElementById('proratedSalary').innerText=numberFmt(r.proratedSalary);
@@ -232,10 +270,10 @@ function showResult(r){
   document.getElementById('netPay').innerText=numberFmt(r.net);
 }
 
-// تسجيل الدخول والخروج مع إخفاء flash
+// ===== Auth =====
 auth.onAuthStateChanged(user=>{
   document.body.style.visibility='visible'; // أظهر الصفحة بعد التحقق
-
+  hideLoading();
   if(user){
     loginBox.style.display='none';
     appContainer.style.display='block';
@@ -250,9 +288,11 @@ auth.onAuthStateChanged(user=>{
 loginBtn.onclick=()=>{
   const email=document.getElementById('email').value;
   const password=document.getElementById('password').value;
+  showLoading();
   auth.signInWithEmailAndPassword(email,password)
     .then(()=>loginMsg.innerText='')
-    .catch(err=>loginMsg.innerText=err.message);
+    .catch(err=>loginMsg.innerText=err.message)
+    .finally(()=>hideLoading());
 };
 logoutBtn.onclick=()=>auth.signOut();
 togglePassword.onclick=()=>{
@@ -260,8 +300,9 @@ togglePassword.onclick=()=>{
   passField.type=(passField.type==='password'?'text':'password');
 };
 
-// إدارة الموظفين
+// ===== Employees =====
 function loadEmployees(){
+  showLoading();
   empSelect.innerHTML='';
   employeesData = {};
   db.ref('employees').once('value', snapshot => {
@@ -274,6 +315,7 @@ function loadEmployees(){
       opt.textContent = `${e.name} (${e.empId})`;
       empSelect.appendChild(opt);
     });
+    hideLoading();
   });
 }
 
@@ -282,18 +324,23 @@ addEmpBtn.onclick = () => {
   if (!name) return;
   const empId = prompt("ادخل رقم ID للموظف:");
   if (!empId) { alert("يجب إدخال رقم ID للموظف!"); return; }
+
+  showLoading();
   const newKey = db.ref('employees').push().key;
-  db.ref('employees/' + newKey).set({ name, empId }).then(() => loadEmployees());
+  db.ref('employees/' + newKey).set({ name, empId })
+    .then(() => loadEmployees());
 };
 
 deleteEmpBtn.onclick = () => {
   const key = empSelect.value;
   if (key && confirm("هل أنت متأكد من حذف هذا الموظف؟")) {
-    db.ref('employees/' + key).remove().then(() => loadEmployees());
+    showLoading();
+    db.ref('employees/' + key).remove()
+      .then(() => loadEmployees());
   }
 };
 
-// سجلات الرواتب
+// ===== Payroll Records =====
 function addRecord(data){
   const result=calcPayroll(data);
   const record={...data,net:result.net,date:new Date().toLocaleString()};
@@ -304,7 +351,12 @@ function addRecord(data){
 function attachRowListeners(){
   tbody.querySelectorAll('tr').forEach(row=>{
     const key=row.dataset.key;
-    row.querySelector('.delete-btn').onclick=()=>{db.ref('payrolls/'+key).remove();loadRecords();}
+    row.querySelector('.delete-btn').onclick=()=>{
+      if(confirm('هل تريد حذف هذا السجل؟')){
+        showLoading();
+        db.ref('payrolls/'+key).remove().then(()=>loadRecords());
+      }
+    }
     row.querySelector('.edit-btn').onclick=()=>{
       editRow=key;
       recordBtn.innerText = '💾 حفظ التعديل';
@@ -317,6 +369,7 @@ function attachRowListeners(){
   });
 }
 function loadRecords(){
+  showLoading();
   tbody.innerHTML='';
   db.ref('payrolls').once('value',snapshot=>{
     let i=1;
@@ -342,10 +395,11 @@ function loadRecords(){
     });
     attachRowListeners();
     updateTotalNet();
+    hideLoading();
   });
 }
 
-// تحديث إجمالي الصافي تلقائي
+// ===== Total Net =====
 function updateTotalNet(){
   totalNetValue=0;
   tbody.querySelectorAll('tr').forEach(row=>{
@@ -355,7 +409,7 @@ function updateTotalNet(){
   db.ref('totals/latest').set({ totalNet: totalNetValue, date: new Date().toLocaleString() });
 }
 
-// حساب + تسجيل
+// ===== Buttons =====
 document.getElementById('calcBtn').onclick=()=>{
   const data=readForm();
   showResult(calcPayroll(data));
@@ -363,12 +417,13 @@ document.getElementById('calcBtn').onclick=()=>{
 recordBtn.onclick=()=>{
   const data=readForm();
   const result=calcPayroll(data);
+  showLoading();
   if(editRow){
-    db.ref('payrolls/'+editRow).update({...data,net:result.net,date:new Date().toLocaleString()});
-    editRow=null;
-    recordBtn.innerText='تسجيل';
+    db.ref('payrolls/'+editRow).update({...data,net:result.net,date:new Date().toLocaleString()})
+      .then(()=>{ editRow=null; recordBtn.innerText='تسجيل'; loadRecords(); });
   } else addRecord(data);
   document.getElementById('clearForm').click();
+  hideLoading();
 };
 document.getElementById('clearForm').onclick=()=>{
   document.querySelectorAll('input').forEach(i=>i.value='');
@@ -377,7 +432,7 @@ document.getElementById('clearForm').onclick=()=>{
   recordBtn.innerText='تسجيل';
 };
 
-// تصدير Excel (CSV)
+// ===== Export Excel =====
 document.getElementById('exportExcel').onclick=()=>{
   let csv='ID,الموظف,الوظيفة,الراتب النسبي,الأيام,الصافي,الحالة,تاريخ\n';
   tbody.querySelectorAll('tr').forEach(r=>{
@@ -393,7 +448,7 @@ document.getElementById('exportExcel').onclick=()=>{
   link.click();
 };
 
-// البحث
+// ===== Search =====
 document.getElementById('searchInput').addEventListener('input',e=>{
   const q=e.target.value.toLowerCase();
   tbody.querySelectorAll('tr').forEach(row=>{
