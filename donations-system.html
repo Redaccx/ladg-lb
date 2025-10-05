@@ -7,16 +7,13 @@
 <style>
 body { font-family:"Cairo",sans-serif; background:#f4f4f4; margin:0; padding:20px; }
 h2 { text-align:center; color:#C1272D; margin-bottom:20px; }
-form {
-  display: grid;
-  gap: 15px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  margin: 20px auto; /* يركّز الفرم بالوسط */
+form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); margin-bottom:20px; }
+
+#loginSection form {
   width: 90%;
-  max-width: 1000px; /* الحد الأقصى للعرض على لابتوب */
+  max-width: 400px; /* الحد الأقصى على اللابتوب */
+  margin: 20px auto; /* يركّز الفرم بالوسط */
+  padding: 20px;
 }
 form label { font-weight:bold; }
 form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; }
