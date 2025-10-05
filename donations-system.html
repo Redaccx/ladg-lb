@@ -19,7 +19,7 @@ form label { font-weight:bold; }
 form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; }
 form button { padding:10px;background:#C1272D;color:#fff; border:none; border-radius:5px; cursor:pointer; }
 form button:hover { background:#a81f25; }
-#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; }
+#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align: center; }
 .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
 .card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
 .card h3 { margin:0 0 10px 0; color:#C1272D; }
@@ -89,9 +89,9 @@ form button:hover { background:#a81f25; }
 <div id="appSection">
   <button id="logout">🚪 تسجيل خروج</button>
   <h2>Donations Records📒</h2>
-  <input type="text" id="search" placeholder="ابحث هنا...">
+
   <button id="exportExcelBtn">💾 Export Excel</button>
-  <button id="exportWordBtn">📝 Export Word</button>
+  
 
   <form id="donationForm">
     <label>رقم فاتورة التبرع</label>
@@ -144,6 +144,8 @@ form button:hover { background:#a81f25; }
     <textarea id="notes"></textarea>
     <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
   </form>
+  
+<input type="text" id="search" placeholder="ابحث هنا...">
 
   <div class="cards" id="donationCards"></div>
 </div>
@@ -435,8 +437,7 @@ document.getElementById('exportExcelBtn').addEventListener('click', async ()=>{
   XLSX.writeFile(wb, "donations.xlsx");
 });
 
-// Export Word
-document.getElementById('exportWordBtn').addEventListener('click', exportToWord);
+
 
 </script>
 </body>
