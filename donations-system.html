@@ -3,34 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📒Donations system </title>
+<title>📒Donations system</title>
 <style>
 body { font-family:"Cairo",sans-serif; background:#f4f4f4; margin:0; padding:20px; }
 h2 { text-align:center; color:#C1272D; margin-bottom:20px; }
-form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); margin-bottom:20px; }
 
-#loginSection form {
-  width: 90%;
-  max-width: 400px; 
-  margin: 20px auto; 
-  padding: 20px;
-}
+form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); margin-bottom:20px; }
 form label { font-weight:bold; }
 form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; }
 form button { padding:10px;background:#C1272D;color:#fff; border:none; border-radius:5px; cursor:pointer; }
 form button:hover { background:#a81f25; }
 
-/* فقط لأجهزة اللابتوب والشاشات الكبيرة */
+/* Laptop & large screens */
 @media screen and (min-width: 1024px) {
-  #donationForm {
-    width: 1000px;       /* حجم مناسب على اللابتوب */
-    margin: 30px auto;  /* يركّز النموذج بالوسط */
-    padding: 25px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    border-radius: 10px;
-  }
+  #donationForm { width:1000px; margin:30px auto; padding:25px; box-shadow:0 0 20px rgba(0,0,0,0.2); border-radius:10px; }
 }
-#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align: center; }
+
+#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align:center; }
+
 .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
 .card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
 .card h3 { margin:0 0 10px 0; color:#C1272D; }
@@ -38,21 +28,26 @@ form button:hover { background:#a81f25; }
 .card button.delete { background:#e74c3c; color:#fff; }
 .card button.edit { background:#3498db; color:#fff; }
 .card button.viewItems { background:#8e44ad; color:#fff; margin-top:5px; }
-#logout { padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
-#logout:hover { background:#222; }
+
+#logout { padding:10px 20px; background:#C1272D; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
+#logout:hover { background:#a81f25; }
+
 #itemField div { margin-bottom:5px; }
 .password-container { position:relative; }
 .password-container button { position:absolute; left:5px; top:50%; transform:translateY(-50%); padding:5px; cursor:pointer; background:none; border:none; font-size:1.2em; }
-#exportExcelBtn, { text-align:center;padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; }
+
+#exportExcelBtn, #exportWordBtn { text-align:center;padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; }
 #exportExcelBtn { background:#27ae60; }
 #exportExcelBtn:hover { background:#1e8449; }
 #exportWordBtn { background:#f39c12; }
 #exportWordBtn:hover { background:#d68910; }
-.items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; }
-.item-entry { display:flex; justify-content:space-between; margin-bottom:5px; }
-.item-entry button { margin-left:5px; padding:2px 5px; font-size:12px; }
+
+.items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; background:#f9f9f9; border-radius:5px; }
+.item-entry { display:flex; justify-content:space-between; margin-bottom:5px; padding:5px; border-bottom:1px solid #eee; }
 .card-buttons { display:flex; gap:10px; margin-top:10px; }
+
 #loginSection, #appSection { display:none; }
+
 #loading {
   position: fixed;
   top:0; left:0;
@@ -98,12 +93,7 @@ form button:hover { background:#a81f25; }
 </div>
 
 <div id="appSection">
-
   <h2>Donations Records📒</h2>
-
-
-  
-
   <form id="donationForm">
     <label>رقم فاتورة التبرع</label>
     <input type="text" id="invoiceNumber" required>
@@ -154,24 +144,18 @@ form button:hover { background:#a81f25; }
     <label>📝 ملاحظات</label>
     <textarea id="notes"></textarea>
     <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
-    
-    <button id="exportExcelBtn">💾 Export Excel</button>
-    
-<button id="logout">🚪Logout</button>    
+    <button type="button" id="exportExcelBtn">💾 Export Excel</button>
+    <button type="button" id="exportWordBtn" onclick="exportToWord()">📄 Export Word</button>
+    <button type="button" id="logout">🚪Logout</button>
     <input type="text" id="search" placeholder="ابحث هنا...">
-    
-<div class="cards" id="donationCards"></div>
+    <div class="cards" id="donationCards"></div>
   </form>
-  
-
-
-
 </div>
 
 <!-- XLSX library -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-<!-- docx library for Word -->
+<!-- docx library -->
 <script type="module">
 import { Document, Packer, Paragraph, TextRun } from "https://cdn.jsdelivr.net/npm/docx@7.4.1/build/index.js";
 window.exportToWord = async function(){
@@ -194,6 +178,7 @@ window.exportToWord = async function(){
 }
 </script>
 
+<!-- Firebase & App Logic -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
@@ -331,10 +316,11 @@ async function renderCards(filter=''){
   loading.style.display='flex';
   const q=query(collection(db,"donations"), orderBy("date","desc"));
   onSnapshot(q,snapshot=>{
-    container.innerHTML='';
+        container.innerHTML='';
     snapshot.forEach(docSnap=>{
       const donation=docSnap.data(); donation.id=docSnap.id;
       if(filter && !Object.values(donation).some(v=>v && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase()))) return;
+
       const card=document.createElement('div'); card.className='card';
       let content=`<h3>التبرع: ${donation.type}</h3><p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
       if(donation.type==='مالي'){ content += `<p>💵 المبلغ: ${donation.amount} ${donation.currency}</p>`; }
@@ -355,7 +341,11 @@ async function renderCards(filter=''){
       }
 
       const infoDiv=document.createElement('div');
-      infoDiv.innerHTML=`<p>👤 المتبرع: ${donation.name}</p><p>📍 العنوان: ${donation.address}</p><p>📞 الهاتف: ${donation.phone}</p><p>📝 ملاحظات: ${donation.notes}</p><p>⏰ التاريخ: ${new Date(donation.date).toLocaleString()}</p>`;
+      infoDiv.innerHTML=`<p>👤 المتبرع: ${donation.name}</p>
+                         <p>📍 العنوان: ${donation.address}</p>
+                         <p>📞 الهاتف: ${donation.phone}</p>
+                         <p>📝 ملاحظات: ${donation.notes}</p>
+                         <p>⏰ التاريخ: ${new Date(donation.date).toLocaleString()}</p>`;
       card.appendChild(infoDiv);
 
       const editBtn=document.createElement('button'); editBtn.className='edit'; editBtn.textContent='✏️ تعديل';
@@ -454,9 +444,7 @@ document.getElementById('exportExcelBtn').addEventListener('click', async ()=>{
   XLSX.utils.book_append_sheet(wb, ws, "Donations");
   XLSX.writeFile(wb, "donations.xlsx");
 });
-
-
-
 </script>
 </body>
 </html>
+   
