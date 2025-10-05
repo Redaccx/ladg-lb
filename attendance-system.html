@@ -38,12 +38,80 @@ th{background:#34495e;color:white;}
 .password-wrapper input{width:100%; padding-right:50px;}
 .toggle-pass{position:absolute; right:-10px; top:-20%; height:100%; cursor:pointer; font-size:14px; background:none; border:none;}
 #searchBox{width:90%; max-width:300px; padding:8px 12px; font-size:14px; margin-top:10px;}
-#loading { margin-top:50px; font-size:18px; color:#555; display:none; }
+
+/* ===== Loader Styles ===== */
+#loadingOverlay {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: #ffffff;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index:1000;
+  font-family:"Segoe UI", Tahoma, sans-serif;
+  color:#C1272D;
+}
+
+#loadingOverlay p {
+  margin-top:20px;
+  font-size:18px;
+  letter-spacing:1px;
+  font-weight:600;
+}
+
+.loader {
+  display: flex;
+  gap:15px;
+}
+
+.loader div {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #C1272D;
+  box-shadow: 0 0 10px #C1272D, 0 0 20px #e74c3c, 0 0 30px #ff6f61;
+  animation: bounce 0.8s infinite alternate ease-in-out, glow 1.2s infinite alternate;
+}
+
+.loader div:nth-child(2) { 
+  animation-delay: 0.2s; 
+  background:#e74c3c; 
+  box-shadow: 0 0 10px #e74c3c, 0 0 20px #ff6f61, 0 0 30px #C1272D;
+}
+.loader div:nth-child(3) { 
+  animation-delay: 0.4s; 
+  background:#ff6f61; 
+  box-shadow: 0 0 10px #ff6f61, 0 0 20px #C1272D, 0 0 30px #e74c3c;
+}
+
+@keyframes bounce {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-25px) scale(1.2); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
+  50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; }
+  100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; }
+}
 </style>
 </head>
 <body>
 
 <header>Attendance System</header>
+
+<!-- ===== Loader Overlay ===== -->
+<div id="loadingOverlay">
+  <div class="loader">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <p>Loading data...</p>
+</div>
 
 <div id="loginPage">
   <div class="login-container">
@@ -73,8 +141,6 @@ th{background:#34495e;color:white;}
 <div>
   <input type="text" id="searchBox" placeholder="Search by Name or ID" onkeyup="searchRecords()">
 </div>
-
-<div id="loading">Loading data...</div>
 
 <h2>Records</h2>
 <div class="table-container">
@@ -106,17 +172,20 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+const loader = document.getElementById("loadingOverlay");
+
 // ===== Auth listener =====
 auth.onAuthStateChanged(user => {
   if(user){
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
-    document.getElementById("loading").style.display = "block";
-    loadEmployees().then(()=>{}); // تحميل الموظفين
-    loadData().then(()=>{ document.getElementById("loading").style.display="none"; }); // تحميل الحضور
+    loader.style.display = "flex"; 
+    loadEmployees().then(()=>{}); 
+    loadData().then(()=>{ loader.style.display="none"; }); 
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
+    loader.style.display = "none"; 
   }
 });
 
