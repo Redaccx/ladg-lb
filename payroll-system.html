@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title> Payroll and Pension System </title>
 <style>
-body{font-family:"Cairo","Segoe UI",Tahoma,sans-serif;background:#f6f7fb;margin:0;padding:10px;color:#222}
+body{
+  font-family:"Cairo","Segoe UI",Tahoma,sans-serif;
+  background:#f6f7fb;
+  margin:0;
+  padding:10px;
+  color:#222;
+  visibility: hidden; /* أخفي الصفحة بالكامل مؤقتًا */
+}
 .container{max-width:1000px;margin:0 auto;background:#fff;padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);display:none;}
 h1{text-align:center;color:#C1272D;margin:0 0 12px;font-size:1.3rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
@@ -193,7 +200,7 @@ function calcPayroll(d){
   let adv=parseFloat(d.advance)||0;
   let other=parseFloat(d.otherDeductions)||0;
   let dailyRate = daysIn ? base/daysIn : 0;
-  let prorated = base; // الآن الراتب النسبي = الراتب الكامل بدون خصم
+  let prorated = base;
   let overtime = otH*otR;
   let gross = prorated+overtime+bonus;
   let deductions = adv+other;
@@ -225,8 +232,10 @@ function showResult(r){
   document.getElementById('netPay').innerText=numberFmt(r.net);
 }
 
-// تسجيل الدخول والخروج
+// تسجيل الدخول والخروج مع إخفاء flash
 auth.onAuthStateChanged(user=>{
+  document.body.style.visibility='visible'; // أظهر الصفحة بعد التحقق
+
   if(user){
     loginBox.style.display='none';
     appContainer.style.display='block';
