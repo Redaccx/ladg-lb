@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> Invoices System </title>
+<title>Invoices System</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -29,15 +29,53 @@ button:hover {opacity:0.8;}
 @media(max-width:600px){
   .invoice-item {flex-direction:column;}
   #search-invoice, #filter-section {width:100%;margin-bottom:6px;}
-  #auth-section, #invoice-section {
-  display: none;
+  #auth-section, #invoice-section {display: none;}
 }
+
+/* ===== Loading CSS ===== */
+#loading {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: #ffffff;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index:1000;
+  font-family:"Cairo",sans-serif;
+  color:#C1272D;
+}
+#loading p { margin-top:20px; font-size:18px; letter-spacing:1px; font-weight:600; }
+.loader { display: flex; gap:15px; }
+.loader div {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #C1272D;
+  box-shadow: 0 0 10px #C1272D, 0 0 20px #e74c3c, 0 0 30px #ff6f61;
+  animation: bounce 0.8s infinite alternate ease-in-out, glow 1.2s infinite alternate;
+}
+.loader div:nth-child(2) { animation-delay: 0.2s; background:#e74c3c; box-shadow: 0 0 10px #e74c3c, 0 0 20px #ff6f61, 0 0 30px #C1272D;}
+.loader div:nth-child(3) { animation-delay: 0.4s; background:#ff6f61; box-shadow: 0 0 10px #ff6f61, 0 0 20px #C1272D, 0 0 30px #e74c3c;}
+@keyframes bounce { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-25px) scale(1.2); } 100% { transform: translateY(0) scale(1); } }
+@keyframes glow { 0% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } 50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; } 100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } }
 </style>
 </head>
 <body>
 
+<!-- Loading -->
+<div id="loading">
+  <div class="loader">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <p>...جار تحميل البيانات</p>
+</div>
+
 <header>
-<h1> Invoices System </h1>
+<h1>Invoices System</h1>
 </header>
 
 <main>
@@ -116,7 +154,13 @@ const db=firebase.firestore();
 let currentInvoiceId=null;
 let allInvoices=[];
 
-// Add item
+// ===== Loading Functions =====
+const loading = document.getElementById('loading');
+function showLoading(){ loading.style.display='flex'; }
+function hideLoading(){ loading.style.display='none'; }
+showLoading(); // بدء التحميل
+
+// ===== Add item =====
 function addItem(){
   const container=document.getElementById('items-container');
   const div=document.createElement('div');
@@ -130,7 +174,7 @@ function addItem(){
   calculateTotal();
 }
 
-// Calculate total
+// ===== Calculate total =====
 function calculateTotal(){
   const items=document.querySelectorAll('#items-container .invoice-item');
   let total=0;
@@ -151,7 +195,69 @@ document.getElementById('discount').addEventListener('input',calculateTotal);
 document.getElementById('vat').addEventListener('input',calculateTotal);
 document.getElementById('invoice-currency').addEventListener('change',calculateTotal);
 
-// Save invoice
+// ===== Auth =====
+function login(){ 
+  const email=document.getElementById('email').value; 
+  const password=document.getElementById('password').value; 
+  showLoading();
+  auth.signInWithEmailAndPassword(email,password)
+    .then(()=>{ 
+      document.getElementById('auth-msg').textContent=""; 
+      loadInvoices(); 
+      loadSections(); 
+      document.getElementById('auth-section').style.display="none"; 
+      document.getElementById('invoice-section').style.display="block";
+      hideLoading();
+    })
+    .catch(e=>{ document.getElementById('auth-msg').textContent=e.message; hideLoading(); });
+}
+
+function resetPassword(){ 
+  const email=document.getElementById('email').value; 
+  auth.sendPasswordResetEmail(email).then(()=>alert("تم إرسال البريد")).catch(e=>alert(e.message));
+}
+
+auth.onAuthStateChanged(user=>{
+  if(user){ 
+    document.getElementById('auth-section').style.display="none"; 
+    document.getElementById('invoice-section').style.display="block"; 
+    loadSections(); 
+    loadInvoices();
+    hideLoading();
+  } else { 
+    document.getElementById('auth-section').style.display="block"; 
+    document.getElementById('invoice-section').style.display="none";
+    hideLoading();
+  }
+});
+
+function logout(){ auth.signOut(); }
+
+// ===== Sections =====
+function addSection(){ const name=prompt("أدخل اسم القسم:"); if(!name) return; db.collection('users').doc(auth.currentUser.uid).collection('sections').add({name}); }
+function editSection(){ const select=document.getElementById('invoice-section-select'); if(!select.value) return alert("اختر قسم للتعديل"); const newName=prompt("الاسم الجديد:"); if(newName) db.collection('users').doc(auth.currentUser.uid).collection('sections').doc(select.value).update({name:newName}); }
+function deleteSection(){ const select=document.getElementById('invoice-section-select'); if(!select.value) return alert("اختر قسم للحذف"); if(confirm("هل تريد الحذف؟")) db.collection('users').doc(auth.currentUser.uid).collection('sections').doc(select.value).delete(); }
+function loadSections(){ 
+  const select=document.getElementById('invoice-section-select'); 
+  const filter=document.getElementById('filter-section');
+  db.collection('users').doc(auth.currentUser.uid).collection('sections').get().then(snapshot=>{
+    select.innerHTML="";
+    filter.innerHTML = '<option value="">كل الأقسام</option>';
+    snapshot.forEach(doc=>{
+      const name = doc.data().name;
+      const opt=document.createElement('option'); opt.value=doc.id; opt.textContent=name; select.appendChild(opt);
+      const fOpt=document.createElement('option'); fOpt.value=doc.id; fOpt.textContent=name; filter.appendChild(fOpt);
+    });
+  });
+}
+
+function getSectionName(id){
+  const select=document.getElementById('invoice-section-select');
+  const opt=Array.from(select.options).find(o=>o.value===id);
+  return opt ? opt.textContent : '';
+}
+
+// ===== Invoices =====
 function saveInvoice(){
   const userId=auth.currentUser.uid;
   const sectionId=document.getElementById('invoice-section-select').value;
@@ -190,7 +296,7 @@ function saveInvoice(){
   }
 }
 
-// Clear form
+// ===== Clear form =====
 function clearForm(){
   document.getElementById('invoice-number').value="";
   document.getElementById('invoice-store').value="";
@@ -204,7 +310,7 @@ function clearForm(){
   currentInvoiceId=null;
 }
 
-// Load invoices
+// ===== Load & Display invoices =====
 function loadInvoices(){
   const userId=auth.currentUser.uid;
   db.collection('users').doc(userId).collection('invoices').onSnapshot(snapshot=>{
@@ -218,7 +324,6 @@ function loadInvoices(){
   });
 }
 
-// Display invoices
 function displayInvoices(list){
   const container=document.getElementById('invoice-list');
   container.innerHTML="";
@@ -245,111 +350,76 @@ function displayInvoices(list){
   });
 }
 
-// Toggle items
 function toggleItems(btn){
   const div=btn.nextElementSibling;
   div.style.display = div.style.display==="none" ? "block" : "none";
 }
 
-// Filter invoices by section
-document.getElementById('filter-section').addEventListener('change', filterInvoices);
-function filterInvoices(){
-  const sectionId=document.getElementById('filter-section').value;
+document.getElementById('filter-section').addEventListener('change', function(){
+  const sectionId=this.value;
   if(!sectionId) displayInvoices(allInvoices);
   else displayInvoices(allInvoices.filter(inv=>inv.section===sectionId));
-}
+});
 
-// Live search
 document.getElementById('search-invoice').addEventListener('input', function(){
   const query=this.value.trim().toLowerCase();
   const filtered=allInvoices.filter(inv=>inv.invoiceNumber.toLowerCase().includes(query));
   displayInvoices(filtered);
 });
 
-// Edit/Delete
+// ===== Edit & Delete invoice =====
 function editInvoice(id){
-  const userId=auth.currentUser.uid;
-  db.collection('users').doc(userId).collection('invoices').doc(id).get().then(doc=>{
-    if(doc.exists){
-      const data=doc.data();
-      document.getElementById('invoice-number').value=data.invoiceNumber;
-      document.getElementById('invoice-store').value=data.store;
-      document.getElementById('invoice-address').value=data.address;
-      document.getElementById('invoice-phone').value=data.phone;
-      document.getElementById('invoice-date').value=data.date;
-      document.getElementById('discount').value=data.discount;
-      document.getElementById('vat').value=data.vat;
-      document.getElementById('invoice-currency').value=data.currency;
-      document.getElementById('items-container').innerHTML="";
-      data.items.forEach(item=>{
-        const div=document.createElement('div');
-        div.className="invoice-item";
-        div.innerHTML=`<input value="${item.name}">
-                         <input type="number" value="${item.quantity}">
-                         <input type="number" value="${item.price}">
-                         <button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
-        document.getElementById('items-container').appendChild(div);
-      });
-      calculateTotal();
-      currentInvoiceId=id;
-    }
+  const inv=allInvoices.find(i=>i.id===id);
+  if(!inv) return;
+  currentInvoiceId=id;
+  document.getElementById('invoice-number').value=inv.invoiceNumber;
+  document.getElementById('invoice-store').value=inv.store;
+  document.getElementById('invoice-address').value=inv.address;
+  document.getElementById('invoice-phone').value=inv.phone;
+  document.getElementById('invoice-date').value=inv.date;
+  document.getElementById('invoice-currency').value=inv.currency;
+  document.getElementById('discount').value=inv.discount;
+  document.getElementById('vat').value=inv.vat;
+  const container=document.getElementById('items-container');
+  container.innerHTML="";
+  inv.items.forEach(item=>{
+    const div=document.createElement('div');
+    div.className="invoice-item";
+    div.innerHTML=`
+      <input value="${item.name}">
+      <input type="number" value="${item.quantity}">
+      <input type="number" value="${item.price}">
+      <button onclick="this.parentNode.remove();calculateTotal();">❌</button>`;
+    container.appendChild(div);
   });
+  calculateTotal();
 }
+
 function deleteInvoice(id){
   if(confirm("هل تريد حذف هذه الفاتورة؟")){
-    const userId=auth.currentUser.uid;
-    db.collection('users').doc(userId).collection('invoices').doc(id).delete();
+    db.collection('users').doc(auth.currentUser.uid).collection('invoices').doc(id).delete();
   }
 }
 
-// Auth
-function login(){ 
-  const email=document.getElementById('email').value; 
-  const password=document.getElementById('password').value; 
-  auth.signInWithEmailAndPassword(email,password)
-    .then(()=>{ document.getElementById('auth-msg').textContent=""; loadInvoices(); loadSections(); document.getElementById('auth-section').style.display="none"; document.getElementById('invoice-section').style.display="block";})
-    .catch(e=>document.getElementById('auth-msg').textContent=e.message);
-}
-function resetPassword(){ 
-  const email=document.getElementById('email').value; 
-  auth.sendPasswordResetEmail(email).then(()=>alert("تم إرسال البريد")).catch(e=>alert(e.message));
-}
-auth.onAuthStateChanged(user=>{
-  if(user){ document.getElementById('auth-section').style.display="none"; document.getElementById('invoice-section').style.display="block"; loadSections(); loadInvoices();}
-  else{ document.getElementById('auth-section').style.display="block"; document.getElementById('invoice-section').style.display="none";}
-});
-function logout(){ auth.signOut(); }
-
-// Sections
-function addSection(){ const name=prompt("أدخل اسم القسم:"); if(!name) return; db.collection('users').doc(auth.currentUser.uid).collection('sections').add({name});}
-function editSection(){ const select=document.getElementById('invoice-section-select'); if(!select.value) return alert("اختر قسم للتعديل"); const newName=prompt("الاسم الجديد:"); if(newName) db.collection('users').doc(auth.currentUser.uid).collection('sections').doc(select.value).update({name:newName});}
-function deleteSection(){ const select=document.getElementById('invoice-section-select'); if(!select.value) return alert("اختر قسم للحذف"); if(confirm("هل تريد الحذف؟")) db.collection('users').doc(auth.currentUser.uid).collection('sections').doc(select.value).delete();}
-function loadSections(){ 
-  const select=document.getElementById('invoice-section-select'); 
-  const filter=document.getElementById('filter-section');
-  db.collection('users').doc(auth.currentUser.uid).collection('sections').get().then(snapshot=>{
-    select.innerHTML="";
-    filter.innerHTML = '<option value="">كل الأقسام</option>';
-    snapshot.forEach(doc=>{
-      const name = doc.data().name;
-      const opt=document.createElement('option'); opt.value=doc.id; opt.textContent=name; select.appendChild(opt);
-      const fOpt=document.createElement('option'); fOpt.value=doc.id; fOpt.textContent=name; filter.appendChild(fOpt);
-    });
-  });
-}
-
-function getSectionName(id){
-  const select=document.getElementById('invoice-section-select');
-  const opt=Array.from(select.options).find(o=>o.value===id);
-  return opt ? opt.textContent : '';
-}
-
-// Export Excel
+// ===== Export Excel =====
 function exportExcel(){
-  const table=document.querySelector('#invoice-list').parentNode;
-  const wb=XLSX.utils.table_to_book(table,{sheet:"Invoices"});
+  const ws=XLSX.utils.json_to_sheet(allInvoices.map(inv=>{
+    return {
+      "رقم الفاتورة": inv.invoiceNumber,
+      "القسم": getSectionName(inv.section),
+      "المتجر": inv.store,
+      "الهاتف": inv.phone,
+      "التاريخ": inv.date,
+      "الخصم": inv.discount,
+      "الضريبة": inv.vat,
+      "الإجمالي": inv.total
+    };
+  }));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Invoices");
   XLSX.writeFile(wb,"Invoices.xlsx");
 }
 </script>
+
 </body>
 </html>
