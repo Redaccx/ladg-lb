@@ -31,7 +31,23 @@ form button:hover { background:#a81f25; }
   }
 }
 #search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align: center; }
-.cards { text-align: center; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:40px; }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 40px;
+  justify-content: center;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* فقط للشاشات الكبيرة (كمبيوتر/لابتوب) */
+@media screen and (min-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(2, 300px); /* صفين بالكارتين */
+    justify-content: center;    
+    text-align: center;/* تمركز الكروت بالوسط */
+  }
+}
 .card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
 .card h3 { margin:0 0 10px 0; color:#C1272D; }
 .card button {  padding:7px 10px; border:none; border-radius:5px; cursor:pointer; }
