@@ -32,7 +32,7 @@ form button:hover { background:#a81f25; }
 #itemField div { margin-bottom:5px; }
 .password-container { position:relative; }
 .password-container button { position:absolute; left:5px; top:50%; transform:translateY(-50%); padding:5px; cursor:pointer; background:none; border:none; font-size:1.2em; }
-#exportExcelBtn, #exportWordBtn { padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; }
+#exportExcelBtn, { text-align:center;padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; }
 #exportExcelBtn { background:#27ae60; }
 #exportExcelBtn:hover { background:#1e8449; }
 #exportWordBtn { background:#f39c12; }
@@ -87,10 +87,10 @@ form button:hover { background:#a81f25; }
 </div>
 
 <div id="appSection">
-  <button id="logout">🚪 تسجيل خروج</button>
+  <button id="logout">🚪Logout</button>
   <h2>Donations Records📒</h2>
 
-  <button id="exportExcelBtn">💾 Export Excel</button>
+
   
 
   <form id="donationForm">
@@ -143,6 +143,8 @@ form button:hover { background:#a81f25; }
     <label>📝 ملاحظات</label>
     <textarea id="notes"></textarea>
     <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
+    
+    <button id="exportExcelBtn">💾 Export Excel</button>
     
     <input type="text" id="search" placeholder="ابحث هنا...">
     
