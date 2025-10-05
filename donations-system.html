@@ -3,24 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📒Donations system</title>
+<title>📒Donations system </title>
 <style>
 body { font-family:"Cairo",sans-serif; background:#f4f4f4; margin:0; padding:20px; }
 h2 { text-align:center; color:#C1272D; margin-bottom:20px; }
-
 form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); margin-bottom:20px; }
+
+#loginSection form {
+  width: 90%;
+  max-width: 400px; 
+  margin: 20px auto; 
+  padding: 20px;
+}
 form label { font-weight:bold; }
 form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; }
 form button { padding:10px;background:#C1272D;color:#fff; border:none; border-radius:5px; cursor:pointer; }
 form button:hover { background:#a81f25; }
 
-/* Laptop & large screens */
+/* فقط لأجهزة اللابتوب والشاشات الكبيرة */
 @media screen and (min-width: 1024px) {
-  #donationForm { width:1000px; margin:30px auto; padding:25px; box-shadow:0 0 20px rgba(0,0,0,0.2); border-radius:10px; }
+  #donationForm {
+    width: 1000px;       /* حجم مناسب على اللابتوب */
+    margin: 30px auto;  /* يركّز النموذج بالوسط */
+    padding: 25px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    border-radius: 10px;
+  }
 }
-
-#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align:center; }
-
+#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align: center; }
 .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:15px; }
 .card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
 .card h3 { margin:0 0 10px 0; color:#C1272D; }
@@ -28,26 +38,20 @@ form button:hover { background:#a81f25; }
 .card button.delete { background:#e74c3c; color:#fff; }
 .card button.edit { background:#3498db; color:#fff; }
 .card button.viewItems { background:#8e44ad; color:#fff; margin-top:5px; }
-
-#logout { padding:10px 20px; background:#C1272D; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
-#logout:hover { background:#a81f25; }
-
+#logout { padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
+#logout:hover { background:#222; }
 #itemField div { margin-bottom:5px; }
 .password-container { position:relative; }
 .password-container button { position:absolute; left:5px; top:50%; transform:translateY(-50%); padding:5px; cursor:pointer; background:none; border:none; font-size:1.2em; }
-
-#exportExcelBtn, #exportWordBtn { text-align:center;padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; }
-#exportExcelBtn { background:#27ae60; }
+#exportExcelBtn { text-align:center;padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; background:#27ae60; }
 #exportExcelBtn:hover { background:#1e8449; }
 #exportWordBtn { background:#f39c12; }
 #exportWordBtn:hover { background:#d68910; }
-
-.items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; background:#f9f9f9; border-radius:5px; }
-.item-entry { display:flex; justify-content:space-between; margin-bottom:5px; padding:5px; border-bottom:1px solid #eee; }
-.card-buttons { display:flex; gap:10px; margin-top:10px; }
-
+.items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; }
+.item-entry { display:flex; justify-content:space-between; margin-bottom:5px; }
+.item-entry button { margin-left:5px; padding:2px 5px; font-size:12px; }
+.card-buttons { display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
 #loginSection, #appSection { display:none; }
-
 #loading {
   position: fixed;
   top:0; left:0;
@@ -93,7 +97,9 @@ form button:hover { background:#a81f25; }
 </div>
 
 <div id="appSection">
+
   <h2>Donations Records📒</h2>
+
   <form id="donationForm">
     <label>رقم فاتورة التبرع</label>
     <input type="text" id="invoiceNumber" required>
@@ -144,45 +150,24 @@ form button:hover { background:#a81f25; }
     <label>📝 ملاحظات</label>
     <textarea id="notes"></textarea>
     <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
-    <button type="button" id="exportExcelBtn">💾 Export Excel</button>
-    <button type="button" id="exportWordBtn" onclick="exportToWord()">📄 Export Word</button>
-    <button type="button" id="logout">🚪Logout</button>
-    <input type="text" id="search" placeholder="ابحث هنا...">
-    <div class="cards" id="donationCards"></div>
   </form>
+
+  <button type="button" id="exportExcelBtn">💾 Export Excel</button>
+  <button type="button" id="logout">🚪 Logout</button>    
+  
+  <input type="text" id="search" placeholder="ابحث هنا...">
+  <div class="cards" id="donationCards"></div>
+
 </div>
 
 <!-- XLSX library -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-<!-- docx library -->
-<script type="module">
-import { Document, Packer, Paragraph, TextRun } from "https://cdn.jsdelivr.net/npm/docx@7.4.1/build/index.js";
-window.exportToWord = async function(){
-  const container = document.getElementById('donationCards');
-  const cards = container.querySelectorAll('.card');
-  const doc = new Document();
-  cards.forEach(card => {
-    const paras = [];
-    card.querySelectorAll('h3, p').forEach(el=>{
-      paras.push(new Paragraph({children:[new TextRun(el.innerText)]}));
-    });
-    doc.addSection({children: paras});
-  });
-  const blob = await Packer.toBlob(doc);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "donations.docx";
-  a.click();
-}
-</script>
-
-<!-- Firebase & App Logic -->
+<!-- Firebase scripts -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
 const firebaseConfig = { apiKey:"AIzaSyBGiHaLE8lWuvJgVjDJjw0PXTjdBfTrzno", authDomain:"prizezone-app.firebaseapp.com", projectId:"prizezone-app", storageBucket:"prizezone-app.appspot.com", messagingSenderId:"244427738881", appId:"1:244427738881:web:4a666ce66f74f4994e5500" };
 const app = initializeApp(firebaseConfig);
@@ -208,7 +193,6 @@ document.getElementById('togglePassword').addEventListener('click', ()=>{
 
 // Auth state
 onAuthStateChanged(auth, user=>{
-  loading.style.display = 'flex';
   if(user){
     loginSection.style.display='none';
     appSection.style.display='block';
@@ -263,9 +247,12 @@ function renderTempItems(){
   itemsContainer.innerHTML='';
   itemsList.forEach((item,i)=>{
     const div=document.createElement('div'); div.className='item-entry';
-    div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} كغ
-      <button onclick="editTempItem(${i})">✏️</button>
-      <button onclick="deleteTempItem(${i})">❌</button>`;
+    const editBtn=document.createElement('button'); editBtn.textContent='✏️'; editBtn.type='button';
+    editBtn.addEventListener('click', ()=> editTempItem(i));
+    const delBtn=document.createElement('button'); delBtn.textContent='❌'; delBtn.type='button';
+    delBtn.addEventListener('click', ()=> deleteTempItem(i));
+    div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} كغ `;
+    div.appendChild(editBtn); div.appendChild(delBtn);
     itemsContainer.appendChild(div);
   });
 }
@@ -316,65 +303,47 @@ async function renderCards(filter=''){
   loading.style.display='flex';
   const q=query(collection(db,"donations"), orderBy("date","desc"));
   onSnapshot(q,snapshot=>{
-        container.innerHTML='';
+    container.innerHTML='';
     snapshot.forEach(docSnap=>{
       const donation=docSnap.data(); donation.id=docSnap.id;
       if(filter && !Object.values(donation).some(v=>v && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase()))) return;
-
       const card=document.createElement('div'); card.className='card';
-      let content=`<h3>التبرع: ${donation.type}</h3><p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
-      if(donation.type==='مالي'){ content += `<p>💵 المبلغ: ${donation.amount} ${donation.currency}</p>`; }
-      card.innerHTML=content;
-
-      if(donation.items){
-        const btn=document.createElement('button'); btn.textContent='👁️ عرض العناصر'; btn.className='viewItems';
-        const itemsDiv=document.createElement('div'); itemsDiv.className='items-list';
-        donation.items.forEach((item,i)=>{
-          const div=document.createElement('div'); div.className='item-entry';
-          div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} كغ
-            <button onclick="editExistingItem('${donation.id}',${i})">✏️</button>
-            <button onclick="deleteExistingItem('${donation.id}',${i})">❌</button>`;
-          itemsDiv.appendChild(div);
-        });
-        btn.addEventListener('click', ()=>{ itemsDiv.style.display=itemsDiv.style.display==='none'?'block':'none'; });
-        card.appendChild(btn); card.appendChild(itemsDiv);
+      let innerHTML=`<h3>فاتورة: ${donation.invoice}</h3><p>نوع: ${donation.type}</p><p>اسم: ${donation.name}</p><p>العنوان: ${donation.address}</p><p>هاتف: ${donation.phone}</p>`;
+      if(donation.type==='مالي'){ innerHTML+=`<p>💵 ${donation.amount} ${donation.currency}</p>`; }
+      else if(donation.items){ 
+          innerHTML+=`<div class="items-list">📦 ${donation.items.map(i=>`${i.name}-${i.quantity} ${i.unit}`).join(', ')}</div>`;
       }
 
-      const infoDiv=document.createElement('div');
-      infoDiv.innerHTML=`<p>👤 المتبرع: ${donation.name}</p>
-                         <p>📍 العنوان: ${donation.address}</p>
-                         <p>📞 الهاتف: ${donation.phone}</p>
-                         <p>📝 ملاحظات: ${donation.notes}</p>
-                         <p>⏰ التاريخ: ${new Date(donation.date).toLocaleString()}</p>`;
-      card.appendChild(infoDiv);
+      card.innerHTML=innerHTML;
 
-      const editBtn=document.createElement('button'); editBtn.className='edit'; editBtn.textContent='✏️ تعديل';
-      editBtn.addEventListener('click', ()=>{
-        editingDonationId = donation.id;
-        typeSelect.value = donation.type; typeSelect.dispatchEvent(new Event('change'));
-        document.getElementById('invoiceNumber').value = donation.invoice;
-        document.getElementById('name').value = donation.name;
-        document.getElementById('address').value = donation.address;
-        document.getElementById('phone').value = donation.phone;
-        document.getElementById('notes').value = donation.notes;
-        if(donation.type==='مالي'){
-          document.getElementById('amount').value = donation.amount;
-          document.getElementById('currency').value = donation.currency;
-        } else {
-          itemsList = donation.items || [];
-          renderTempItems();
-        }
-        submitDonationBtn.textContent = '💾 حفظ التعديلات';
-      });
+      // Buttons
+      const btnDiv=document.createElement('div'); btnDiv.className='card-buttons';
+      const editBtn=document.createElement('button'); editBtn.textContent='✏️ تعديل'; editBtn.className='edit'; editBtn.type='button';
+      editBtn.addEventListener('click', ()=> editExistingItem(donation.id, donation));
+      const delBtn=document.createElement('button'); delBtn.textContent='❌ حذف'; delBtn.className='delete'; delBtn.type='button';
+      delBtn.addEventListener('click', async ()=> { if(confirm('هل تريد الحذف؟')) await deleteDoc(doc(db,'donations',donation.id)); });
+      btnDiv.appendChild(editBtn); btnDiv.appendChild(delBtn);
+      card.appendChild(btnDiv);
 
-      const deleteBtn=document.createElement('button'); deleteBtn.className='delete'; deleteBtn.textContent='🗑 حذف';
-      deleteBtn.addEventListener('click', ()=>deleteDonation(donation.id));
-
-      const btnContainer = document.createElement('div');
-      btnContainer.className = 'card-buttons';
-      btnContainer.appendChild(editBtn);
-      btnContainer.appendChild(deleteBtn);
-      card.appendChild(btnContainer);
+      // زر عرض/اخفاء العناصر
+      if(donation.items){
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = '👁️ عرض العناصر';
+        toggleBtn.type = 'button';
+        toggleBtn.addEventListener('click', ()=>{
+          const itemsDiv = card.querySelector('.items-list');
+          if(itemsDiv.style.display === 'none' || itemsDiv.style.display === ''){
+              itemsDiv.style.display = 'block';
+              toggleBtn.textContent = '🙈 إخفاء العناصر';
+          } else {
+              itemsDiv.style.display = 'none';
+              toggleBtn.textContent = '👁️ عرض العناصر';
+          }
+        });
+        card.appendChild(toggleBtn);
+        const itemsDiv = card.querySelector('.items-list');
+        itemsDiv.style.display='none';
+      }
 
       container.appendChild(card);
     });
@@ -382,69 +351,46 @@ async function renderCards(filter=''){
   });
 }
 
-// Delete donation
-async function deleteDonation(id){
-  if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){
-    try{ await deleteDoc(doc(db,"donations",id)); }
-    catch(err){ alert(err.message); }
+// Edit existing
+window.editExistingItem = function(id, donation){
+  editingDonationId=id;
+  submitDonationBtn.textContent='💾 حفظ التعديلات';
+  document.getElementById('invoiceNumber').value = donation.invoice;
+  document.getElementById('name').value = donation.name;
+  document.getElementById('address').value = donation.address;
+  document.getElementById('phone').value = donation.phone;
+  document.getElementById('notes').value = donation.notes;
+  if(donation.type==='مالي'){
+    typeSelect.value='مالي';
+    moneyField.style.display='block'; itemField.style.display='none';
+    document.getElementById('amount').value = donation.amount || '';
+    document.getElementById('currency').value = donation.currency || 'دولار';
+  } else {
+    typeSelect.value = donation.type;
+    itemField.style.display='block'; moneyField.style.display='none';
+    itemsList = donation.items || [];
+    renderTempItems();
   }
 }
 
-// Search filter
-document.getElementById('search').addEventListener('input', e=>{ renderCards(e.target.value); });
-
-// Edit/delete existing items
-window.editExistingItem=async function(donationId,index){
-  const docRef = doc(db,"donations",donationId);
-  const docSnap = await getDoc(docRef);
-  if(docSnap.exists()){
-    const donation = docSnap.data();
-    const item = donation.items[index];
-    document.getElementById('itemName').value=item.name;
-    document.getElementById('itemQuantity').value=item.quantity;
-    document.getElementById('itemWeight').value=item.weight;
-    document.getElementById('itemUnit').value=item.unit;
-    itemsList=[item];
-    const itemsArr = donation.items.filter((_,i)=>i!==index);
-    await updateDoc(docRef,{items:itemsArr});
-  }
-}
-window.deleteExistingItem=async function(donationId,index){
-  if(confirm('هل أنت متأكد من حذف هذا العنصر؟')){
-    const docRef = doc(db,"donations",donationId);
-    const docSnap = await getDoc(docRef);
-    if(docSnap.exists()){
-      const donation = docSnap.data();
-      const itemsArr = donation.items.filter((_,i)=>i!==index);
-      await updateDoc(docRef,{items:itemsArr});
-    }
-  }
-}
+// Search
+document.getElementById('search').addEventListener('input', e=> renderCards(e.target.value));
 
 // Export Excel
-document.getElementById('exportExcelBtn').addEventListener('click', async ()=>{
-  const snapshot = await getDocs(collection(db,'donations'));
-  const data = snapshot.docs.map(d=>{
-    const dd = d.data();
-    return {
-      invoice: dd.invoice,
-      name: dd.name,
-      phone: dd.phone,
-      address: dd.address,
-      notes: dd.notes,
-      type: dd.type,
-      amount: dd.amount || '',
-      currency: dd.currency || '',
-      items: dd.items ? dd.items.map(i=>`${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight} كغ)`).join('; ') : '',
-      date: new Date(dd.date).toLocaleString()
-    };
+document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
+  const tableData=[];
+  document.querySelectorAll('#donationCards .card').forEach(card=>{
+    const row=[];
+    card.querySelectorAll('p,h3').forEach(p=>row.push(p.innerText));
+    tableData.push(row);
   });
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Donations");
-  XLSX.writeFile(wb, "donations.xlsx");
+  if(tableData.length===0){ alert('لا يوجد بيانات للتصدير'); return; }
+  const ws=XLSX.utils.aoa_to_sheet(tableData);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Donations");
+  XLSX.writeFile(wb,"Donations.xlsx");
 });
 </script>
+
 </body>
 </html>
-   
