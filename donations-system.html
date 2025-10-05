@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📒 نظام إدارة التبرعات</title>
+<title>📒Donations system </title>
 <style>
 body { font-family:"Cairo",sans-serif; background:#f4f4f4; margin:0; padding:20px; }
 h2 { text-align:center; color:#C1272D; margin-bottom:20px; }
@@ -55,7 +55,7 @@ form button:hover { background:#a81f25; }
 
 <div id="appSection" style="display:none;">
   <button id="logout">🚪 تسجيل خروج</button>
-  <h2>📒 سجل التبرعات</h2>
+  <h2>Donations Records📒</h2>
   <input type="text" id="search" placeholder="ابحث هنا...">
   <button id="exportExcelBtn">💾 Export Excel</button>
   <button id="exportWordBtn">📝 Export Word</button>
@@ -66,12 +66,12 @@ form button:hover { background:#a81f25; }
     <label>نوع التبرع</label>
     <select id="type" required>
       <option value="">اختر النوع</option>
-      <option value="مصاري">مصاري</option>
+      <option value="مالي">مالي</option>
       <option value="مواد غذائية">مواد غذائية</option>
       <option value="ملابس">ملابس</option>
       <option value="أحذية">أحذية</option>
       <option value="أدوية">أدوية</option>
-      <option value="أخرى">أخرى</option>
+      <option value="نوع آخر">نوع آخر</option>
     </select>
 
     <div id="moneyField" style="display:none;">
@@ -160,7 +160,7 @@ document.getElementById('resetPassword').addEventListener('click', async ()=>{
 document.getElementById('logout').addEventListener('click', ()=>signOut(auth));
 
 typeSelect.addEventListener('change', ()=>{
-  if(typeSelect.value==='مصاري'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
+  if(typeSelect.value==='مالي'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
   else if(typeSelect.value!==''){ moneyField.style.display='none'; itemField.style.display='block'; itemsList=[]; itemsContainer.innerHTML=''; }
   else{ moneyField.style.display='none'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
 });
@@ -208,7 +208,7 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
     notes: document.getElementById('notes').value,
     date: new Date().toISOString()
   };
-  if(typeSelect.value==='مصاري'){ donationData.amount=document.getElementById('amount').value; donationData.currency=document.getElementById('currency').value; }
+  if(typeSelect.value==='مالي'){ donationData.amount=document.getElementById('amount').value; donationData.currency=document.getElementById('currency').value; }
   else{ donationData.items=[...itemsList]; }
 
   try{
@@ -234,7 +234,7 @@ function renderCards(filter=''){
       if(filter && !Object.values(donation).some(v=>v && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase()))) return;
       const card=document.createElement('div'); card.className='card';
       let content=`<h3>التبرع: ${donation.type}</h3><p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
-      if(donation.type==='مصاري'){ content += `<p>💵 المبلغ: ${donation.amount} ${donation.currency}</p>`; }
+      if(donation.type==='مالي'){ content += `<p>💵 المبلغ: ${donation.amount} ${donation.currency}</p>`; }
       card.innerHTML=content;
 
       if(donation.items){
@@ -264,7 +264,7 @@ function renderCards(filter=''){
         document.getElementById('address').value = donation.address;
         document.getElementById('phone').value = donation.phone;
         document.getElementById('notes').value = donation.notes;
-        if(donation.type==='مصاري'){
+        if(donation.type==='مالي'){
           document.getElementById('amount').value = donation.amount;
           document.getElementById('currency').value = donation.currency;
         } else {
