@@ -277,13 +277,16 @@ document.getElementById('addItem').addEventListener('click', ()=>{
   document.getElementById('itemName').value=''; document.getElementById('itemQuantity').value=''; document.getElementById('itemWeight').value='';
 });
 
-function renderTempItems(){
-  itemsContainer.innerHTML='';
-  itemsList.forEach((item,i)=>{
-    const div=document.createElement('div'); div.className='item-entry';
-    div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} كغ
+function renderTempItems() {
+  itemsContainer.innerHTML = '';
+  itemsList.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'item-entry';
+    div.innerHTML = `
+      ${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} ${item.unit}
       <button onclick="editTempItem(${i})">✏️</button>
-      <button onclick="deleteTempItem(${i})">❌</button>`;
+      <button onclick="deleteTempItem(${i})">❌</button>
+    `;
     itemsContainer.appendChild(div);
   });
 }
@@ -348,7 +351,7 @@ async function renderCards(filter=''){
         const itemsDiv=document.createElement('div'); itemsDiv.className='items-list';
         donation.items.forEach((item,i)=>{
           const div=document.createElement('div'); div.className='item-entry';
-          div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} كغ
+         div.innerHTML=`${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} ${item.unit}
             <button onclick="editExistingItem('${donation.id}',${i})">✏️</button>
             <button onclick="deleteExistingItem('${donation.id}',${i})">❌</button>`;
           itemsDiv.appendChild(div);
