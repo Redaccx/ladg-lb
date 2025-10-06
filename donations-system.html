@@ -20,6 +20,17 @@ form input, form select, form textarea { width:95%; padding:8px; border:1px soli
 form button { padding:10px;background:#C1272D;color:#fff; border:none; border-radius:5px; cursor:pointer; }
 form button:hover { background:#a81f25; }
 
+
+
+/* جعل حقل التاريخ في منتصف الصفحة والنص داخله في الوسط */
+#donationDate {
+  display: block;
+  margin: 0 auto;
+  text-align: center;   /* النص داخل الحقل */
+  width: 50%;
+  text-align-last: center; /* لزيادة دعم التوسيط في المتصفحات */
+}
+
 /* فقط لأجهزة اللابتوب والشاشات الكبيرة */
 @media screen and (min-width: 1024px) {
   #donationForm {
