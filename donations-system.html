@@ -294,7 +294,7 @@ function renderTempItems() {
     const div = document.createElement('div');
     div.className = 'item-entry';
     div.innerHTML = `
-      ${item.name} - ${item.quantity} ${item.unit} - وزن: ${item.weight} ${item.unit}
+      ${item.name} - الكمية: ${item.quantity} - الوزن: ${item.weight} ${item.unit}
       <button onclick="editTempItem(${i})">✏️</button>
       <button onclick="deleteTempItem(${i})">❌</button>
     `;
