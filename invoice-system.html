@@ -18,7 +18,6 @@ body {
   padding: 0;
   font-family: 'Cairo', sans-serif;
   background: var(--bg);
-  visibility: hidden; 
 }
 main {
   padding-top: 0;
@@ -93,20 +92,27 @@ button:hover {opacity:0.8;}
   font-family:"Cairo",sans-serif;
   color:#C1272D;
 }
+#loginSection, #appSection { display:none; }
+#loading {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: #ffffff;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index:1000;
+  font-family:"Cairo", sans-serif;
+  color:#C1272D;
+}
 #loading p { margin-top:20px; font-size:18px; letter-spacing:1px; font-weight:600; }
 .loader { display: flex; gap:15px; }
-.loader div {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #C1272D;
-  box-shadow: 0 0 10px #C1272D, 0 0 20px #e74c3c, 0 0 30px #ff6f61;
-  animation: bounce 0.8s infinite alternate ease-in-out, glow 1.2s infinite alternate;
-}
+.loader div { width: 20px; height: 20px; border-radius: 50%; background: #C1272D; box-shadow: 0 0 10px #C1272D, 0 0 20px #e74c3c, 0 0 30px #ff6f61; animation: bounce 0.8s infinite alternate ease-in-out, glow 1.2s infinite alternate; }
 .loader div:nth-child(2) { animation-delay: 0.2s; background:#e74c3c; box-shadow: 0 0 10px #e74c3c, 0 0 20px #ff6f61, 0 0 30px #C1272D;}
 .loader div:nth-child(3) { animation-delay: 0.4s; background:#ff6f61; box-shadow: 0 0 10px #ff6f61, 0 0 20px #C1272D, 0 0 30px #e74c3c;}
 @keyframes bounce { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-25px) scale(1.2); } 100% { transform: translateY(0) scale(1); } }
-@keyframes glow { 0% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } 50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; } 100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } }
+@keyframes glow { 0% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } 50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; } 100% { box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor; } }}
 </style>
 </head>
 <body>
