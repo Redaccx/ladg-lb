@@ -364,10 +364,9 @@ async function renderCards(filter=''){
   const div = document.createElement('div');
   div.className = 'item-entry';
   div.innerHTML = `
-    ${item.name} - الكمية: ${item.quantity} - الوزن: ${item.weight} ${item.unit}
-    <button onclick="editExistingItem('${donation.id}', ${i})">✏️</button>
-    <button onclick="deleteExistingItem('${donation.id}', ${i})">❌</button>
-  `;
+  ${item.name} - الكمية: ${item.quantity} - الوزن: ${item.weight} ${item.unit}
+  <button onclick="deleteExistingItem('${donation.id}', ${i})">❌</button>
+`;
   itemsDiv.appendChild(div);
 });
         btn.addEventListener('click', ()=>{ itemsDiv.style.display=itemsDiv.style.display==='none'?'block':'none'; });
