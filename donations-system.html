@@ -129,6 +129,10 @@ form button:hover { background:#a81f25; }
   <form id="donationForm">
     <label>رقم فاتورة التبرع</label>
     <input type="text" id="invoiceNumber" required>
+    
+    <label>📅 التاريخ</label>
+<input type="datetime-local" id="donationDate">
+
     <label>نوع التبرع</label>
     <select id="type" required>
       <option value="">اختر النوع</option>
@@ -192,28 +196,6 @@ form button:hover { background:#a81f25; }
 <!-- XLSX library -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-<!-- docx library for Word -->
-<script type="module">
-import { Document, Packer, Paragraph, TextRun } from "https://cdn.jsdelivr.net/npm/docx@7.4.1/build/index.js";
-window.exportToWord = async function(){
-  const container = document.getElementById('donationCards');
-  const cards = container.querySelectorAll('.card');
-  const doc = new Document();
-  cards.forEach(card => {
-    const paras = [];
-    card.querySelectorAll('h3, p').forEach(el=>{
-      paras.push(new Paragraph({children:[new TextRun(el.innerText)]}));
-    });
-    doc.addSection({children: paras});
-  });
-  const blob = await Packer.toBlob(doc);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "donations.docx";
-  a.click();
-}
-</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
@@ -319,15 +301,15 @@ window.deleteTempItem = function(i){ itemsList.splice(i,1); renderTempItems(); }
 // Submit donation
 document.getElementById('donationForm').addEventListener('submit', async e=>{
   e.preventDefault();
-  const donationData={
-    invoice: document.getElementById('invoiceNumber').value,
-    type: typeSelect.value,
-    name: document.getElementById('name').value,
-    address: document.getElementById('address').value,
-    phone: document.getElementById('phone').value,
-    notes: document.getElementById('notes').value,
-    date: new Date().toISOString()
-  };
+const donationData = {
+  invoice: document.getElementById('invoiceNumber').value,
+  type: typeSelect.value,
+  name: document.getElementById('name').value,
+  address: document.getElementById('address').value,
+  phone: document.getElementById('phone').value,
+  notes: document.getElementById('notes').value,
+  date: document.getElementById('donationDate').value ? new Date(document.getElementById('donationDate').value).toISOString() : new Date().toISOString()
+};
   if(typeSelect.value==='مالي'){ donationData.amount=document.getElementById('amount').value; donationData.currency=document.getElementById('currency').value; }
   else{ donationData.items=[...itemsList]; }
 
