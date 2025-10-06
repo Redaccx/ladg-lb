@@ -6,14 +6,22 @@
 <title>Payroll and Pension System</title>
 <style>
 
+
+/* إخفاء الصفحة كلياً أثناء التحميل */
 body {
-  margin: 0;
-  padding: 10px;
-  font-family: 'Cairo', sans-serif;
-  background: #f6f7fb;
-  color:#222;
-  height:100%;
-  
+  visibility: hidden;
+  opacity: 0;
+  overflow: hidden;
+background: #f6f7fb;
+color:#222;
+}
+
+/* بعد انتهاء التحميل */
+body.visible {
+  visibility: visible;
+  opacity: 1;
+  overflow: auto;
+  transition: none; /* يمنع أي حركة أو تأثير */
 }
 main {
   padding-top: 0;
@@ -275,8 +283,8 @@ function showResult(r){
 
 // ===== Auth =====
 auth.onAuthStateChanged(user=>{
-  document.body.style.visibility='visible';
   hideLoading();
+document.body.classList.add('visible');
   if(user){
     loginBox.style.display='none';
     appContainer.style.display='block';
