@@ -65,16 +65,18 @@ th,td{padding:8px;border:1px solid #eee;text-align:center}
 #loginSection, #appSection { display:none; }
 #loading {
   position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background: #ffffff;
-  display:flex;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #ffffff; /* خلفية كاملة بيضاء */
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index:1000;
-  font-family:"Cairo", sans-serif;
-  color:#C1272D;
+  z-index: 99999; /* فوق كل العناصر */
+  font-family: "Cairo", sans-serif;
+  color: #C1272D;
 }
 #loading p { margin-top:20px; font-size:18px; letter-spacing:1px; font-weight:600; }
 .loader { display: flex; gap:15px; }
