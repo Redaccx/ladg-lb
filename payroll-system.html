@@ -275,23 +275,30 @@ function showResult(r){
 }
 
 // ===== Auth =====
+let authChecked = false;
+
 auth.onAuthStateChanged(user => {
-  // نعطي شوية وقت للرسم قبل التبديل
-  setTimeout(() => {
-    loadingDiv.style.opacity = '0';
+  // أول مرة فقط نعرض النتيجة بعد ما Firebase يتحقق فعلاً
+  if (!authChecked) {
+    authChecked = true;
+    
     setTimeout(() => {
-      hideLoading();
-      if (user) {
-        loginBox.style.display = 'none';
-        appContainer.style.display = 'block';
-        loadEmployees();
-        loadRecords();
-      } else {
-        loginBox.style.display = 'block';
-        appContainer.style.display = 'none';
-      }
-    }, 400);
-  }, 300);
+      loadingDiv.style.opacity = '0'; // تأثير اختفاء ناعم
+      setTimeout(() => {
+        hideLoading();
+        
+        if (user) {
+          loginBox.style.display = 'none';
+          appContainer.style.display = 'block';
+          loadEmployees();
+          loadRecords();
+        } else {
+          loginBox.style.display = 'block';
+          appContainer.style.display = 'none';
+        }
+      }, 400);
+    }, 300);
+  }
 });
 
 loginBtn.onclick=()=>{
