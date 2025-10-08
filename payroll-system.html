@@ -275,30 +275,33 @@ function showResult(r){
 }
 
 // ===== Auth =====
-let authChecked = false;
+// نعرض شاشة التحميل مباشرة
+showLoading();
+
+// نخفي كل شيء مبدئياً
+loginBox.style.display = 'none';
+appContainer.style.display = 'none';
 
 auth.onAuthStateChanged(user => {
-  // أول مرة فقط نعرض النتيجة بعد ما Firebase يتحقق فعلاً
-  if (!authChecked) {
-    authChecked = true;
+  // نخلي شاشة التحميل شوي لحد ما Firebase يتحقق تماماً
+  setTimeout(() => {
+    if (user) {
+      // المستخدم مسجل دخول ✅
+      loginBox.style.display = 'none';
+      appContainer.style.display = 'block';
+      loadEmployees();
+      loadRecords();
+    } else {
+      // ما في مستخدم 🔒
+      loginBox.style.display = 'block';
+      appContainer.style.display = 'none';
+    }
     
-    setTimeout(() => {
-      loadingDiv.style.opacity = '0'; // تأثير اختفاء ناعم
-      setTimeout(() => {
-        hideLoading();
-        
-        if (user) {
-          loginBox.style.display = 'none';
-          appContainer.style.display = 'block';
-          loadEmployees();
-          loadRecords();
-        } else {
-          loginBox.style.display = 'block';
-          appContainer.style.display = 'none';
-        }
-      }, 400);
-    }, 300);
-  }
+    // نخفي شاشة التحميل بعد التأكد
+    loadingDiv.style.opacity = '0';
+    setTimeout(() => hideLoading(), 400);
+    
+  }, 800); // هذا التأخير القصير يضمن إن Firebase رجّع النتيجة النهائية
 });
 
 loginBtn.onclick=()=>{
