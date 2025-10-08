@@ -194,6 +194,8 @@ const auth = firebase.auth();
 const loader = document.getElementById("loadingOverlay");
 
 // ===== Auth listener =====
+
+document.body.style.overflow = "hidden"; // منع تمرير الصفحة أثناء اللودر
 auth.onAuthStateChanged(user => {
   if(user){
     document.getElementById("loginPage").style.display = "none";
@@ -204,7 +206,11 @@ auth.onAuthStateChanged(user => {
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
-    loader.style.display = "none"; 
+    loader.classList.add("hide");
+setTimeout(() => {
+  loader.style.display = "none";
+  document.body.style.overflow = "auto"; // رجّع التمرير
+}, 600); 
   }
 });
 
