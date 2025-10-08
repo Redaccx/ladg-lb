@@ -275,18 +275,23 @@ function showResult(r){
 }
 
 // ===== Auth =====
-auth.onAuthStateChanged(user=>{
-  document.body.style.visibility='visible';
-  hideLoading();
-  if(user){
-    loginBox.style.display='none';
-    appContainer.style.display='block';
-    loadEmployees();
-    loadRecords();
-  } else {
-    loginBox.style.display='block';
-    appContainer.style.display='none';
-  }
+auth.onAuthStateChanged(user => {
+  // نعطي شوية وقت للرسم قبل التبديل
+  setTimeout(() => {
+    loadingDiv.style.opacity = '0';
+    setTimeout(() => {
+      hideLoading();
+      if (user) {
+        loginBox.style.display = 'none';
+        appContainer.style.display = 'block';
+        loadEmployees();
+        loadRecords();
+      } else {
+        loginBox.style.display = 'block';
+        appContainer.style.display = 'none';
+      }
+    }, 400);
+  }, 300);
 });
 
 loginBtn.onclick=()=>{
