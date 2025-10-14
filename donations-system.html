@@ -41,10 +41,9 @@ form button:hover { background:#a81f25; }
     border-radius: 10px;
   }
 }
-/* 🔍 تنسيق خانة البحث الجديدة */
 .search-container {
   text-align: center;
-  margin:auto;
+  margin: auto;
   display: block;
 }
 
@@ -58,7 +57,6 @@ form button:hover { background:#a81f25; }
   font-size: 16px;
   transition: all 0.3s ease;
 }
-
 #search:focus {
   border-color: #C1272D;
   box-shadow: 0 0 8px rgba(193, 39, 45, 0.4);
@@ -239,8 +237,12 @@ form button:hover { background:#a81f25; }
       <button type="button" id="exportExcelBtn">💾 Export Excel</button>
       <button id="logout" type="button">🚪Logout</button>
      
-      <input type="text" id="search" placeholder="ابحث هنا..." style="flex:1 1 240px;">
+    
     </div>
+    
+<div class="search-container">
+  <input type="text" id="search" placeholder="ابحث برقم الفاتورة..." />
+</div>
   </form>
 
   <div class="controls" aria-hidden="false">
