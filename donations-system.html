@@ -11,81 +11,66 @@ form { display:grid; gap:15px; background:#fff; padding:20px; border-radius:10px
 
 #loginSection form {
   width: 90%;
-  max-width: 400px; 
-  margin: 20px auto; 
+  max-width: 400px;
+  margin: 20px auto;
   padding: 20px;
 }
 form label { font-weight:bold; }
-form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; }
+form input, form select, form textarea { width:95%; padding:8px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box; }
 form button { padding:10px;background:#C1272D;color:#fff; border:none; border-radius:5px; cursor:pointer; }
 form button:hover { background:#a81f25; }
 
+/* donation form layout */
+#donationForm .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+#donationForm .row > * { flex:1 1 auto; }
 
+/* center date field */
+#donationDate { display:block; margin:0 auto; text-align:center; width:50%; text-align-last:center; }
 
-/* جعل حقل التاريخ في منتصف الصفحة والنص داخله في الوسط */
-#donationDate {
-  display: block;
-  margin: 0 auto;
-  text-align: center;   /* النص داخل الحقل */
-  width: 50%;
-  text-align-last: center; /* لزيادة دعم التوسيط في المتصفحات */
-}
+/* responsive cards */
+#search { margin-bottom:12px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align:center; box-sizing:border-box; }
+.controls { display:flex; gap:10px; justify-content:center; margin-bottom:12px; flex-wrap:wrap; }
+.control-btn { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; background:#eee; }
+.control-btn.active { background:#C1272D; color:#fff; }
 
-/* فقط لأجهزة اللابتوب والشاشات الكبيرة */
-@media screen and (min-width: 1024px) {
-  #donationForm {
-    width: 1000px;       /* حجم مناسب على اللابتوب */
-    margin: 30px auto;  /* يركّز النموذج بالوسط */
-    padding: 25px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    border-radius: 10px;
-  }
-}
-#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align: center; }
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 40px;
+  gap: 20px;
   justify-content: center;
   margin: 0 auto;
   text-align: center;
 }
 
-/* فقط للشاشات الكبيرة (كمبيوتر/لابتوب) */
 @media screen and (min-width: 1024px) {
   .cards {
-    grid-template-columns: repeat(3, 321px); /* صفين بالكارتين */
-    justify-content: center;    
-    text-align: center;/* تمركز الكروت بالوسط */
+    grid-template-columns: repeat(3, 321px);
+    justify-content: center;
+    text-align: center;
   }
 }
-.card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; }
+.card { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; 
+text-align: center;
+  
+}
+.card.spent { background: #f1f8f1; border:1px solid #cde8cd; opacity:0.95; }
 .card h3 { margin:0 0 10px 0; color:#C1272D; }
-.card button {  padding:7px 10px; border:none; border-radius:5px; cursor:pointer; }
-.card button {background:#e74c3c; color:#fff; }
-.card button.edit { background:#3498db; color:#fff; }
-.card button.viewItems { background:#8e44ad; color:#fff; margin-top:5px; }
+.card button { padding:7px 10px; border:none; border-radius:6px; cursor:pointer; color:#fff; margin:4px 4px 0 0; }
+.card button.edit { background:#3498db; }
+.card button.delete { background:#e74c3c; }
+.card button.viewItems { background:#8e44ad; margin-top:5px; }
+.card button.spend-inline { background:#c0392b; } /* red spend button inline */
+.card button.spend-inline.spent { background:#27ae60; } /* green when spent */
+
 #logout { padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; }
 #logout:hover { background:#222; }
-#itemField div { margin-bottom:5px; }
-.password-container { position:relative; }
-.password-container button { position:absolute; left:5px; top:50%; transform:translateY(-50%); padding:5px; cursor:pointer; background:none; border:none; font-size:1.2em; }
-#exportExcelBtn, { text-align:center;padding:10px; color:#fff; border:none; border-radius:5px; cursor:pointer; margin-bottom:20px; margin-right:5px; }
-#exportExcelBtn { background:#27ae60; }
-#exportExcelBtn:hover { background:#1e8449; }
-#exportWordBtn { background:#f39c12; }
-#exportWordBtn:hover { background:#d68910; }
-.items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; }
-.item-entry { display:flex; justify-content:space-between; margin-bottom:5px; }
-.item-entry button { margin-left:5px; padding:2px 5px; font-size:12px; }
-.card-buttons {
-  display: flex;
-  justify-content: center;
-  /* يصطفوا بالوسط */
-  gap: 10px;
-  margin-top: 10px;
- }
-#loginSection, #appSection { display:none; }
+
+.items-list { display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:5px; text-align:left; }
+.item-entry { display:flex; justify-content:space-between; margin-bottom:5px; gap:8px; align-items:center; }
+.item-entry button { margin-left:5px; padding:4px 6px; font-size:12px; border-radius:4px; border:none; cursor:pointer; }
+
+#spendBtnForm { display:none; background:#c0392b; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+#spendBtnForm.hidden { display:none; }
 #loading {
   position: fixed;
   top:0; left:0;
@@ -121,12 +106,14 @@ form button:hover { background:#a81f25; }
     <label>📧 البريد الإلكتروني</label>
     <input type="email" id="email" required>
     <label>🔑 كلمة المرور</label>
-    <div class="password-container">
-      <input type="password" id="password" required>
-      <button type="button" id="togglePassword">👁️</button>
+    <div class="password-container" style="position:relative;">
+      <input type="password" id="password" required style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;">
+      <button type="button" id="togglePassword" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:18px;">👁️</button>
     </div>
-    <button type="submit">تسجيل الدخول</button>
-    <button type="button" id="resetPassword">نسيت كلمة المرور؟</button>
+    <div style="display:flex; gap:8px; justify-content:space-between; flex-wrap:wrap;">
+      <button type="submit">تسجيل الدخول</button>
+      <button type="button" id="resetPassword" style="background:#777;">نسيت كلمة المرور؟</button>
+    </div>
   </form>
 </div>
 
@@ -134,15 +121,17 @@ form button:hover { background:#a81f25; }
 
   <h2>Donations Records📒</h2>
 
-
-  
-
   <form id="donationForm">
-    <label>رقم فاتورة التبرع</label>
-    <input type="text" id="invoiceNumber" required>
-    
-    <label>📅 التاريخ</label>
-<input type="datetime-local" id="donationDate">
+    <div class="row">
+      <div style="flex:1 1 200px;">
+        <label>رقم فاتورة التبرع</label>
+        <input type="text" id="invoiceNumber" required>
+      </div>
+      <div style="flex:1 1 200px;">
+        <label>📅 التاريخ</label>
+        <input type="datetime-local" id="donationDate">
+      </div>
+    </div>
 
     <label>نوع التبرع</label>
     <select id="type" required>
@@ -155,10 +144,11 @@ form button:hover { background:#a81f25; }
       <option value="نوع آخر">نوع آخر</option>
     </select>
 
- <div id="moneyField" style="display:none;">
-    <label>💵 المبلغ</label>
-    <input type="text" id="amount" placeholder="مثلاً: 100 دولار أو مئة ألف ليرة">
-</div>
+    <div id="moneyField" style="display:none;">
+      <label>💵 المبلغ</label>
+      <input type="text" id="amount" placeholder="مثلاً: 100 دولار أو مئة ألف ليرة">
+    </div>
+
     <div id="itemField" style="display:none;">
       <label>📦 العناصر</label>
       <div id="itemsContainer"></div>
@@ -184,34 +174,44 @@ form button:hover { background:#a81f25; }
     <input type="text" id="phone" required>
     <label>📝 ملاحظات</label>
     <textarea id="notes"></textarea>
-    <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
-    
-    <button id="exportExcelBtn">💾 Export Excel</button>
-    
-<button id="logout">🚪Logout</button>    
-    <input type="text" id="search" placeholder="ابحث هنا...">
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <button type="submit" id="submitDonationBtn">➕ إضافة التبرع</button>
+      <button type="button" id="spendBtnForm" class="hidden">💰 صرف التبرع</button>
+      <button type="button" id="exportExcelBtn">💾 Export Excel</button>
+      <button id="logout" type="button">🚪Logout</button>
+      <input type="text" id="search" placeholder="ابحث هنا..." style="flex:1 1 240px;">
+    </div>
   </form>
-  
-<div class="cards" id="donationCards"></div>
 
+  <div class="controls" aria-hidden="false">
+    <button class="control-btn active" data-mode="unspent" id="filterUnspent">العرض: الغير مصروفة</button>
+    <button class="control-btn" data-mode="all" id="filterAll">العرض: الكل</button>
+    <button class="control-btn" data-mode="spent" id="filterSpent">العرض: المصروفة</button>
+  </div>
 
+  <div class="cards" id="donationCards"></div>
 
 </div>
 
 <!-- XLSX library -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
 const firebaseConfig = { apiKey:"AIzaSyBGiHaLE8lWuvJgVjDJjw0PXTjdBfTrzno", authDomain:"prizezone-app.firebaseapp.com", projectId:"prizezone-app", storageBucket:"prizezone-app.appspot.com", messagingSenderId:"244427738881", appId:"1:244427738881:web:4a666ce66f74f4994e5500" };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ---- Configurable codes ----
+const SPEND_CODE = "9630";    // كود لتأكيد عملية الصرف
+const ADMIN_CODE = "12345";   // كود للسماح بالتعديل/حذف بعد الصرف (إن أردت)
+
+// ---- DOM ----
 const loginSection = document.getElementById('loginSection');
 const appSection = document.getElementById('appSection');
 const loading = document.getElementById('loading');
@@ -220,261 +220,348 @@ const moneyField = document.getElementById('moneyField');
 const itemField = document.getElementById('itemField');
 const itemsContainer = document.getElementById('itemsContainer');
 const submitDonationBtn = document.getElementById('submitDonationBtn');
+const spendBtnForm = document.getElementById('spendBtnForm');
+const exportExcelBtn = document.getElementById('exportExcelBtn');
+const searchInput = document.getElementById('search');
+const donationCards = document.getElementById('donationCards');
+const filterButtons = document.querySelectorAll('.control-btn');
+
 let itemsList = [];
 let editingDonationId = null;
+let currentFilterMode = 'unspent'; // default: hide spent
 
-// Toggle password
+// toggle password button
 document.getElementById('togglePassword').addEventListener('click', ()=>{
-  const pass=document.getElementById('password');
-  pass.type = pass.type==='password' ? 'text':'password';
+  const pass = document.getElementById('password');
+  pass.type = pass.type === 'password' ? 'text' : 'password';
 });
 
 // Auth state
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth, user => {
   loading.style.display = 'flex';
   if(user){
-    loginSection.style.display='none';
-    appSection.style.display='block';
-    renderCards().then(()=>{ loading.style.display='none'; });
+    loginSection.style.display = 'none';
+    appSection.style.display = 'block';
+    renderCards().then(()=> loading.style.display = 'none');
   } else {
-    loginSection.style.display='block';
-    appSection.style.display='none';
-    loading.style.display='none';
+    loginSection.style.display = 'block';
+    appSection.style.display = 'none';
+    loading.style.display = 'none';
   }
 });
 
 // Login
 document.getElementById('loginForm').addEventListener('submit', async e=>{
   e.preventDefault();
-  try{ 
-    loading.style.display='flex';
-    await signInWithEmailAndPassword(auth,document.getElementById('email').value,document.getElementById('password').value);
+  try{
+    loading.style.display = 'flex';
+    await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
     e.target.reset();
-  } catch(err){ alert(err.message); loading.style.display='none'; }
+  } catch(err){
+    alert(err.message);
+    loading.style.display = 'none';
+  }
 });
 
 // Reset password
 document.getElementById('resetPassword').addEventListener('click', async ()=>{
-  const email=document.getElementById('email').value;
-  if(email){ try{ await sendPasswordResetEmail(auth,email); alert('📩 تم إرسال رابط إعادة التعيين'); } catch(err){ alert(err.message); } }
-  else alert('⚠️ أدخل البريد الإلكتروني أولاً');
+  const email = document.getElementById('email').value;
+  if(!email){ alert('⚠️ أدخل البريد الإلكتروني أولاً'); return; }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    alert('📩 تم إرسال رابط إعادة التعيين');
+  } catch(err){ alert(err.message); }
 });
 
 // Logout
-document.getElementById('logout').addEventListener('click', ()=>signOut(auth));
+document.getElementById('logout').addEventListener('click', ()=> signOut(auth));
 
-// Type change
+// type change
 typeSelect.addEventListener('change', ()=>{
-  if(typeSelect.value==='مالي'){ moneyField.style.display='block'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
-  else if(typeSelect.value!==''){ moneyField.style.display='none'; itemField.style.display='block'; itemsList=[]; itemsContainer.innerHTML=''; }
-  else{ moneyField.style.display='none'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML=''; }
+  if(typeSelect.value === 'مالي'){ moneyField.style.display = 'block'; itemField.style.display = 'none'; itemsList = []; itemsContainer.innerHTML = ''; }
+  else if(typeSelect.value !== ''){ moneyField.style.display = 'none'; itemField.style.display = 'block'; itemsList = []; itemsContainer.innerHTML = ''; }
+  else { moneyField.style.display = 'none'; itemField.style.display = 'none'; itemsList = []; itemsContainer.innerHTML = ''; }
 });
 
-// Add temp item
+// add temp item
 document.getElementById('addItem').addEventListener('click', ()=>{
-  const name=document.getElementById('itemName').value.trim();
-  const quantity=Number(document.getElementById('itemQuantity').value);
-  const weight=Number(document.getElementById('itemWeight').value);
-  const unit=document.getElementById('itemUnit').value;
-  if(!name||isNaN(quantity)||isNaN(weight)||!unit){ alert('⚠️ املأ جميع الحقول بشكل صحيح'); return; }
-  itemsList.push({name,quantity,weight,unit});
+  const name = document.getElementById('itemName').value.trim();
+  const quantity = Number(document.getElementById('itemQuantity').value);
+  const weight = Number(document.getElementById('itemWeight').value);
+  const unit = document.getElementById('itemUnit').value;
+  if(!name || isNaN(quantity) || isNaN(weight) || !unit){ alert('⚠️ املأ جميع الحقول بشكل صحيح'); return; }
+  itemsList.push({name, quantity, weight, unit});
   renderTempItems();
-  document.getElementById('itemName').value=''; document.getElementById('itemQuantity').value=''; document.getElementById('itemWeight').value='';
+  document.getElementById('itemName').value = ''; document.getElementById('itemQuantity').value = ''; document.getElementById('itemWeight').value = '';
 });
 
-function renderTempItems() {
+function renderTempItems(){
   itemsContainer.innerHTML = '';
-  itemsList.forEach((item, i) => {
+  itemsList.forEach((it, i) => {
     const div = document.createElement('div');
     div.className = 'item-entry';
     div.innerHTML = `
-      ${item.name} - الكمية: ${item.quantity} - الوزن: ${item.weight} ${item.unit}
-      <button onclick="editTempItem(${i})">✏️</button>
-      <button onclick="deleteTempItem(${i})">❌</button>
+      <div style="flex:1 1 auto;">${it.name} - الكمية: ${it.quantity} - الوزن: ${it.weight} ${it.unit}</div>
+      <div style="display:flex; gap:6px;">
+        <button onclick="editTempItem(${i})" style="background:#3498db;color:#fff;border:none;padding:4px 6px;border-radius:4px;cursor:pointer;">✏️</button>
+        <button onclick="deleteTempItem(${i})" style="background:#e74c3c;color:#fff;border:none;padding:4px 6px;border-radius:4px;cursor:pointer;">❌</button>
+      </div>
     `;
     itemsContainer.appendChild(div);
   });
 }
 window.editTempItem = function(i){
-  const item=itemsList[i];
-  document.getElementById('itemName').value=item.name;
-  document.getElementById('itemQuantity').value=item.quantity;
-  document.getElementById('itemWeight').value=item.weight;
-  document.getElementById('itemUnit').value=item.unit;
+  const item = itemsList[i];
+  document.getElementById('itemName').value = item.name;
+  document.getElementById('itemQuantity').value = item.quantity;
+  document.getElementById('itemWeight').value = item.weight;
+  document.getElementById('itemUnit').value = item.unit;
   itemsList.splice(i,1);
   renderTempItems();
 }
 window.deleteTempItem = function(i){ itemsList.splice(i,1); renderTempItems(); }
 
-// Submit donation
+// submit donation (create or update)
 document.getElementById('donationForm').addEventListener('submit', async e=>{
   e.preventDefault();
-const donationData = {
-  invoice: document.getElementById('invoiceNumber').value,
-  type: typeSelect.value,
-  name: document.getElementById('name').value,
-  address: document.getElementById('address').value,
-  phone: document.getElementById('phone').value,
-  notes: document.getElementById('notes').value,
-  date: document.getElementById('donationDate').value ? new Date(document.getElementById('donationDate').value).toISOString() : new Date().toISOString()
-};
-if (typeSelect.value === 'مالي') {
-    donationData.amount = document.getElementById('amount').value;
-}
-else {
-    donationData.items = [...itemsList];
- }
+  const donationData = {
+    invoice: document.getElementById('invoiceNumber').value,
+    type: typeSelect.value,
+    name: document.getElementById('name').value,
+    address: document.getElementById('address').value,
+    phone: document.getElementById('phone').value,
+    notes: document.getElementById('notes').value,
+    date: document.getElementById('donationDate').value ? new Date(document.getElementById('donationDate').value).toISOString() : new Date().toISOString()
+  };
+  if(typeSelect.value === 'مالي') donationData.amount = document.getElementById('amount').value;
+  else donationData.items = [...itemsList];
 
+  loading.style.display = 'flex';
   try{
-    loading.style.display='flex';
     if(editingDonationId){
-      await updateDoc(doc(db,'donations',editingDonationId), donationData);
-      editingDonationId = null;
-      submitDonationBtn.textContent = '➕ إضافة التبرع';
+      // if editing a spent donation require admin code
+      const docRef = doc(db, 'donations', editingDonationId);
+      const snapAll = await getDocs(query(collection(db,'donations'))); // small extra read avoided by onSnapshot but acceptable
+      // update (we'll assume on front-end we check spent state before allowing edit)
+      await updateDoc(docRef, donationData);
       alert('✅ تم حفظ التعديلات بنجاح');
+      editingDonationId = null;
+      spendBtnForm.style.display = 'none';
+      submitDonationBtn.textContent = '➕ إضافة التبرع';
     } else {
-      await addDoc(collection(db,"donations"), donationData);
+      await addDoc(collection(db, "donations"), {...donationData, spent: false});
+      alert('✅ تم إضافة التبرع');
     }
-    e.target.reset(); moneyField.style.display='none'; itemField.style.display='none'; itemsList=[]; itemsContainer.innerHTML='';
-    loading.style.display='none';
-  } catch(err){ alert(err.message); loading.style.display='none'; }
+    e.target.reset();
+    moneyField.style.display = 'none';
+    itemField.style.display = 'none';
+    itemsList = [];
+    itemsContainer.innerHTML = '';
+    renderCards();
+  } catch(err){
+    alert(err.message);
+  } finally {
+    loading.style.display = 'none';
+  }
 });
 
-// Render cards
+// spend button inside form (visible only during edit)
+spendBtnForm.addEventListener('click', async ()=>{
+  if(!editingDonationId) return alert('⚠️ لا يوجد تبرع محدد حالياً للتعديل');
+  const code = prompt('🔒 أدخل الكود السري لتأكيد الصرف:');
+  if(code !== SPEND_CODE){ alert('❌ كود غير صحيح'); return; }
+  if(!confirm('هل تريد تأكيد وضع حالة "تم الصرف" على هذا التبرع؟')) return;
+  try{
+    await updateDoc(doc(db, 'donations', editingDonationId), { spent: true });
+    alert('✅ تم وضع علامة "تم الصرف"');
+    // reset form state
+    editingDonationId = null;
+    spendBtnForm.style.display = 'none';
+    document.getElementById('donationForm').reset();
+    submitDonationBtn.textContent = '➕ إضافة التبرع';
+    renderCards();
+  } catch(err){
+    alert(err.message);
+  }
+});
+
+// filter buttons
+filterButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    filterButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilterMode = btn.dataset.mode; // 'unspent' | 'all' | 'spent'
+    renderCards(searchInput.value || '');
+  });
+});
+
+// search input
+searchInput.addEventListener('input', e => renderCards(e.target.value || ''));
+
+// renderCards with filter mode and search
 async function renderCards(filter=''){
-  const container=document.getElementById('donationCards');
-  loading.style.display='flex';
-  const q=query(collection(db,"donations"), orderBy("date","desc"));
-  onSnapshot(q,snapshot=>{
-    container.innerHTML='';
-    snapshot.forEach(docSnap=>{
-      const donation=docSnap.data(); donation.id=docSnap.id;
-      if(filter && !Object.values(donation).some(v=>v && JSON.stringify(v).toLowerCase().includes(filter.toLowerCase()))) return;
-      const card=document.createElement('div'); card.className='card';
-      let content=`<h3>التبرع: ${donation.type}</h3><p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
-      if (donation.type === 'مالي') {
-    content += `<p>💵 المبلغ: ${donation.amount}</p>`;
-}
-      card.innerHTML=content;
+  donationCards.innerHTML = '';
+  loading.style.display = 'flex';
+  const q = query(collection(db, "donations"), orderBy("date", "desc"));
+  onSnapshot(q, snapshot => {
+    donationCards.innerHTML = '';
+    snapshot.forEach(docSnap => {
+      const donation = docSnap.data(); donation.id = docSnap.id;
 
-      if(donation.items){
-        const btn=document.createElement('button'); btn.textContent='👁️ عرض العناصر'; btn.className='viewItems';
-        const itemsDiv=document.createElement('div'); itemsDiv.className='items-list';
-   donation.items.forEach((item, i) => {
-  const div = document.createElement('div');
-  div.className = 'item-entry';
-  div.innerHTML = `
-  ${item.name} - الكمية: ${item.quantity} - الوزن: ${item.weight} ${item.unit}
-  <button onclick="deleteExistingItem('${donation.id}', ${i})">❌</button>
-`;
-  itemsDiv.appendChild(div);
-});
-        btn.addEventListener('click', ()=>{ itemsDiv.style.display=itemsDiv.style.display==='none'?'block':'none'; });
-        card.appendChild(btn); card.appendChild(itemsDiv);
+      // apply filter mode: default show only unspent
+      if(currentFilterMode === 'unspent' && donation.spent) return;
+      if(currentFilterMode === 'spent' && !donation.spent) return;
+
+      // apply search filter if provided
+      if(filter){
+        const hay = JSON.stringify(donation).toLowerCase();
+        if(!hay.includes(filter.toLowerCase())) return;
       }
 
-      const infoDiv=document.createElement('div');
-      infoDiv.innerHTML=`<p>👤 المتبرع: ${donation.name}</p><p>📍 العنوان: ${donation.address}</p><p>📞 الهاتف: ${donation.phone}</p><p>📝 ملاحظات: ${donation.notes}</p><p>⏰ التاريخ: ${new Date(donation.date).toLocaleString()}</p>`;
-      card.appendChild(infoDiv);
+      const card = document.createElement('div');
+      card.className = 'card';
+      if(donation.spent) card.classList.add('spent');
 
-      const editBtn=document.createElement('button'); editBtn.className='edit'; editBtn.textContent='✏️ تعديل';
-      editBtn.addEventListener('click', ()=>{
-        editingDonationId = donation.id;
-        typeSelect.value = donation.type; typeSelect.dispatchEvent(new Event('change'));
-        document.getElementById('invoiceNumber').value = donation.invoice;
-        document.getElementById('name').value = donation.name;
-        document.getElementById('address').value = donation.address;
-        document.getElementById('phone').value = donation.phone;
-        document.getElementById('notes').value = donation.notes;
-        if(donation.type==='مالي'){
-          document.getElementById('amount').value = donation.amount;
-          document.getElementById('currency').value = donation.currency;
-        } else {
-          itemsList = donation.items || [];
-          renderTempItems();
+      let content = `<h3>التبرع: ${donation.type}</h3>
+        <p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
+      if(donation.type === 'مالي') content += `<p>💵 المبلغ: ${donation.amount}</p>`;
+      if(donation.spent) content += `<p style="color:green;font-weight:bold;">✅ تم الصرف</p>`;
+
+      content += `<div style="text-align:center;margin-top:8px;">
+        <p>👤 المتبرع: ${donation.name}</p>
+        <p>📍 العنوان: ${donation.address}</p>
+        <p>📞 الهاتف: ${donation.phone}</p>
+        <p>📝 ملاحظات: ${donation.notes || ''}</p>
+        <p>⏰ ${new Date(donation.date).toLocaleString()}</p>
+      </div>`;
+
+      card.innerHTML = content;
+
+      // items (if exist)
+      if(donation.items && donation.items.length){
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'viewItems';
+        viewBtn.textContent = '👁️ عرض العناصر';
+        const itemsDiv = document.createElement('div');
+        itemsDiv.className = 'items-list';
+        donation.items.forEach((it, idx) => {
+          const div = document.createElement('div');
+          div.className = 'item-entry';
+          div.innerHTML = `<div>${it.name} — الكمية: ${it.quantity} — الوزن: ${it.weight} ${it.unit}</div>`;
+          itemsDiv.appendChild(div);
+        });
+        viewBtn.addEventListener('click', ()=> itemsDiv.style.display = itemsDiv.style.display === 'block' ? 'none' : 'block');
+        card.appendChild(viewBtn);
+        card.appendChild(itemsDiv);
+      }
+
+      // edit button
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit';
+      editBtn.textContent = '✏️ تعديل';
+      editBtn.addEventListener('click', async ()=>{
+        // if donation is spent — require admin code to edit
+        if(donation.spent){
+          const code = prompt('🔒 هذا التبرع تم صرفه. أدخل كود المسؤول للتعديل:');
+          if(code !== ADMIN_CODE){ alert('❌ كود غير صحيح'); return; }
         }
+        editingDonationId = donation.id;
+        // fill form
+        typeSelect.value = donation.type; typeSelect.dispatchEvent(new Event('change'));
+        document.getElementById('invoiceNumber').value = donation.invoice || '';
+        document.getElementById('name').value = donation.name || '';
+        document.getElementById('address').value = donation.address || '';
+        document.getElementById('phone').value = donation.phone || '';
+        document.getElementById('notes').value = donation.notes || '';
+        document.getElementById('donationDate').value = donation.date ? new Date(donation.date).toISOString().slice(0,16) : '';
+        if(donation.type === 'مالي') document.getElementById('amount').value = donation.amount || '';
+        else { itemsList = donation.items || []; renderTempItems(); }
         submitDonationBtn.textContent = '💾 حفظ التعديلات';
+        // show spend button only during editing and only if not already spent
+        spendBtnForm.style.display = donation.spent ? 'none' : 'inline-block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
-      const deleteBtn=document.createElement('button'); deleteBtn.className='delete'; deleteBtn.textContent='🗑 حذف';
-      deleteBtn.addEventListener('click', ()=>deleteDonation(donation.id));
+      // inline spend button (optional) — visible on card only if you want (kept hidden to avoid accidental press)
+      const spendInline = document.createElement('button');
+      spendInline.className = 'spend-inline';
+      spendInline.textContent = donation.spent ? '✅ تم الصرف' : '💰 صرف';
+      if(donation.spent){ spendInline.disabled = true; spendInline.classList.add('spent'); }
+      spendInline.addEventListener('click', async ()=>{
+        // if already spent do nothing
+        if(donation.spent) return;
+        const code = prompt('🔒 أدخل كود الصرف لتأكيد العملية:');
+        if(code !== SPEND_CODE){ alert('❌ كود غير صحيح'); return; }
+        if(!confirm('هل تريد تأكيد الصرف الآن؟')) return;
+        try{
+          await updateDoc(doc(db, 'donations', donation.id), { spent: true });
+          alert('✅ تم الصرف');
+        } catch(err){ alert(err.message); }
+      });
+
+      // delete button
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete';
+      delBtn.textContent = '🗑 حذف';
+      delBtn.addEventListener('click', async ()=>{
+        // if spent require admin code
+        if(donation.spent){
+          const code = prompt('🔒 هذا التبرع تم صرفه. أدخل كود المسؤول للحذف:');
+          if(code !== ADMIN_CODE){ alert('❌ كود غير صحيح'); return; }
+        }
+        if(!confirm('هل أنت متأكد من حذف هذا التبرع؟')) return;
+        try{
+          await deleteDoc(doc(db, 'donations', donation.id));
+          alert('✅ تم الحذف');
+        } catch(err){ alert(err.message); }
+      });
 
       const btnContainer = document.createElement('div');
       btnContainer.className = 'card-buttons';
       btnContainer.appendChild(editBtn);
-      btnContainer.appendChild(deleteBtn);
+      // we intentionally do not append spendInline if you want only form-based spend,
+      // but keep option — append it for convenience:
+      // btnContainer.appendChild(spendInline);
+      btnContainer.appendChild(delBtn);
       card.appendChild(btnContainer);
 
-      container.appendChild(card);
+      donationCards.appendChild(card);
     });
-    loading.style.display='none';
+    loading.style.display = 'none';
+  }, err=>{
+    console.error(err);
+    loading.style.display = 'none';
   });
 }
 
-// Delete donation
-async function deleteDonation(id){
-  if(confirm('هل أنت متأكد من حذف هذا التبرع؟')){
-    try{ await deleteDoc(doc(db,"donations",id)); }
-    catch(err){ alert(err.message); }
-  }
-}
-
-// Search filter
-document.getElementById('search').addEventListener('input', e=>{ renderCards(e.target.value); });
-
-// Edit/delete existing items
-window.editExistingItem=async function(donationId,index){
-  const docRef = doc(db,"donations",donationId);
-  const docSnap = await getDoc(docRef);
-  if(docSnap.exists()){
-    const donation = docSnap.data();
-    const item = donation.items[index];
-    document.getElementById('itemName').value=item.name;
-    document.getElementById('itemQuantity').value=item.quantity;
-    document.getElementById('itemWeight').value=item.weight;
-    document.getElementById('itemUnit').value=item.unit;
-    itemsList=[item];
-    const itemsArr = donation.items.filter((_,i)=>i!==index);
-    await updateDoc(docRef,{items:itemsArr});
-  }
-}
-window.deleteExistingItem=async function(donationId,index){
-  if(confirm('هل أنت متأكد من حذف هذا العنصر؟')){
-    const docRef = doc(db,"donations",donationId);
-    const docSnap = await getDoc(docRef);
-    if(docSnap.exists()){
-      const donation = docSnap.data();
-      const itemsArr = donation.items.filter((_,i)=>i!==index);
-      await updateDoc(docRef,{items:itemsArr});
-    }
-  }
-}
-
-// Export Excel
-document.getElementById('exportExcelBtn').addEventListener('click', async ()=>{
-  const snapshot = await getDocs(collection(db,'donations'));
-  const data = snapshot.docs.map(d=>{
-    const dd = d.data();
-    return {
-      invoice: dd.invoice,
-      name: dd.name,
-      phone: dd.phone,
-      address: dd.address,
-      notes: dd.notes,
-      type: dd.type,
-      amount: dd.amount || '',
-      currency: dd.currency || '',
-      items: dd.items ? dd.items.map(i=>`${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight} كغ)`).join('; ') : '',
-      date: new Date(dd.date).toLocaleString()
-    };
-  });
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Donations");
-  XLSX.writeFile(wb, "donations.xlsx");
+// export Excel
+exportExcelBtn.addEventListener('click', async ()=>{
+  try{
+    const snapshot = await getDocs(collection(db,'donations'));
+    const data = snapshot.docs.map(d=>{
+      const dd = d.data();
+      return {
+        invoice: dd.invoice,
+        name: dd.name,
+        phone: dd.phone,
+        address: dd.address,
+        notes: dd.notes,
+        type: dd.type,
+        amount: dd.amount || '',
+        items: dd.items ? dd.items.map(i=>`${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight})`).join('; ') : '',
+        spent: dd.spent ? 'نعم' : 'لا',
+        date: dd.date ? new Date(dd.date).toLocaleString() : ''
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Donations");
+    XLSX.writeFile(wb, "donations.xlsx");
+  } catch(err){ alert(err.message); }
 });
 
-
+// initialize: set default filter active
+document.getElementById('filterUnspent').classList.add('active');
 
 </script>
 </body>
