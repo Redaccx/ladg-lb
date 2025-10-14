@@ -596,32 +596,72 @@ if (filter) {
   });
 }
 
-// export Excel
-exportExcelBtn.addEventListener('click', async ()=>{
-  try{
-    const snapshot = await getDocs(collection(db,'donations'));
-    const data = snapshot.docs.map(d=>{
-      const dd = d.data();
+// ✅ Export Excel - منسّق ومرتب بالعربية
+exportExcelBtn.addEventListener('click', async () => {
+  try {
+    const snapshot = await getDocs(collection(db, 'donations'));
+    
+    // تجهيز البيانات بشكل منسق ومرتب
+    const data = snapshot.docs.map((docSnap, index) => {
+      const d = docSnap.data();
       return {
-        invoice: dd.invoice,
-        name: dd.name,
-        phone: dd.phone,
-        address: dd.address,
-        notes: dd.notes,
-        type: dd.type,
-        amount: dd.amount || '',
-        items: dd.items ? dd.items.map(i=>`${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight})`).join('; ') : '',
-        spent: dd.spent ? 'نعم' : 'لا',
-        date: dd.date ? new Date(dd.date).toLocaleString() : ''
+        "🔢 رقم الفاتورة": d.invoice || "",
+        "👤 اسم المتبرع": d.name || "",
+        "📞 الهاتف": d.phone || "",
+        "📍 العنوان": d.address || "",
+        "📝 الملاحظات": d.notes || "",
+        "📦 نوع التبرع": d.type || "",
+        "💵 المبلغ": d.amount || "",
+        "📋 العناصر (إن وجدت)": d.items ?
+          d.items.map(i => `${i.name} (${i.quantity} ${i.unit}, وزن ${i.weight})`).join(" ؛ ") :
+          "",
+        "💰 حالة الصرف": d.spent ? "✅ تم الصرف" : "❌ لم تُصرف بعد",
+        "⏰ التاريخ": d.date ? new Date(d.date).toLocaleString("ar-LB") : "",
       };
     });
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Donations");
-    XLSX.writeFile(wb, "donations.xlsx");
-  } catch(err){ alert(err.message); }
+    
+    // إنشاء ورقة Excel
+    const worksheet = XLSX.utils.json_to_sheet(data, {
+      header: [
+        "🔢 رقم الفاتورة",
+        "👤 اسم المتبرع",
+        "📞 الهاتف",
+        "📍 العنوان",
+        "📝 الملاحظات",
+        "📦 نوع التبرع",
+        "💵 المبلغ",
+        "📋 العناصر (إن وجدت)",
+        "💰 حالة الصرف",
+        "⏰ التاريخ"
+      ]
+    });
+    
+    // ✅ تنسيقات الأعمدة: عرض مناسب لكل عمود
+    const colWidths = [
+      { wch: 15 }, // رقم الفاتورة
+      { wch: 20 }, // الاسم
+      { wch: 15 }, // الهاتف
+      { wch: 25 }, // العنوان
+      { wch: 25 }, // الملاحظات
+      { wch: 15 }, // النوع
+      { wch: 15 }, // المبلغ
+      { wch: 40 }, // العناصر
+      { wch: 15 }, // حالة الصرف
+      { wch: 25 } // التاريخ
+    ];
+    worksheet['!cols'] = colWidths;
+    
+    // إنشاء الملف
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "سجل التبرعات");
+    
+    // حفظ الملف
+    XLSX.writeFile(workbook, `سجل_التبرعات_${new Date().toLocaleDateString("ar-LB")}.xlsx`);
+    
+  } catch (err) {
+    alert("حدث خطأ أثناء التصدير: " + err.message);
+  }
 });
-
 // initialize: set default filter active
 document.getElementById('filterUnspent').classList.add('active');
 
