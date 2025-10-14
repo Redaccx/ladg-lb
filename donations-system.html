@@ -41,7 +41,7 @@ form button:hover { background:#a81f25; }
     border-radius: 10px;
   }
 }
-#/* 🔍 تنسيق خانة البحث الجديدة */
+/* 🔍 تنسيق خانة البحث الجديدة */
 .search-container {
   text-align: center;
   margin:auto;
@@ -455,10 +455,11 @@ async function renderCards(filter=''){
       if(currentFilterMode === 'spent' && !donation.spent) return;
 
       // apply search filter if provided
-      if(filter){
-        const hay = JSON.stringify(donation).toLowerCase();
-        if(!hay.includes(filter.toLowerCase())) return;
-      }
+  // ✅ البحث فقط برقم الفاتورة
+if (filter) {
+  const invoice = (donation.invoice || '').toLowerCase();
+  if (!invoice.includes(filter.toLowerCase())) return;
+}
 
       const card = document.createElement('div');
       card.className = 'card';
