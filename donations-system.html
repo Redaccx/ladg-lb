@@ -41,8 +41,27 @@ form button:hover { background:#a81f25; }
     border-radius: 10px;
   }
 }
-#search { margin-bottom:20px; padding:10px; width:94%; border-radius:5px; border:1px solid #ccc; text-align: center; 
-  display:block; margin:auto;
+#/* 🔍 تنسيق خانة البحث الجديدة */
+.search-container {
+  text-align: center;
+  margin: 10px auto 30px auto;
+}
+
+#search {
+  width: 60%;
+  max-width: 400px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+#search:focus {
+  border-color: #C1272D;
+  box-shadow: 0 0 8px rgba(193, 39, 45, 0.4);
+  outline: none;
 }
 
 .controls { display:flex; gap:10px; justify-content:center; margin-bottom:12px; flex-wrap:wrap; }
@@ -583,6 +602,10 @@ exportExcelBtn.addEventListener('click', async ()=>{
 
 // initialize: set default filter active
 document.getElementById('filterUnspent').classList.add('active');
+
+
+
+
 
 </script>
 </body>
