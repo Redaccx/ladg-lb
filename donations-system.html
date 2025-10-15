@@ -650,10 +650,10 @@ if (filter) {
 }
 
 // export Excel
-exportExcelBtn.addEventListener('click', async ()=>{
-  try{
-    const snapshot = await getDocs(collection(db,'donations'));
-    const data = snapshot.docs.map(d=>{
+exportExcelBtn.addEventListener('click', async () => {
+  try {
+    const snapshot = await getDocs(collection(db, 'donations'));
+    let data = snapshot.docs.map(d => {
       const dd = d.data();
       return {
         invoice: dd.invoice,
@@ -663,16 +663,28 @@ exportExcelBtn.addEventListener('click', async ()=>{
         notes: dd.notes,
         type: dd.type,
         amount: dd.amount || '',
-        items: dd.items ? dd.items.map(i=>`${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight})`).join('; ') : '',
+        items: dd.items ? dd.items.map(i => `${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight})`).join('; ') : '',
         spent: dd.spent ? 'نعم' : 'لا',
         date: dd.date ? new Date(dd.date).toLocaleString() : ''
       };
     });
+    
+    // ==== فلترة حسب القسم ====
+    // currentFilterMode = 'unspent' | 'spent' | 'all'
+    if (currentFilterMode === 'unspent') data = data.filter(d => d.spent === 'لا');
+    else if (currentFilterMode === 'spent') data = data.filter(d => d.spent === 'نعم');
+    
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Donations");
-    XLSX.writeFile(wb, "donations.xlsx");
-  } catch(err){ alert(err.message); }
+    
+    // اسم الملف حسب القسم
+    let fileName = "donations.xlsx";
+    if (currentFilterMode === 'unspent') fileName = "donations_unspent.xlsx";
+    else if (currentFilterMode === 'spent') fileName = "donations_spent.xlsx";
+    
+    XLSX.writeFile(wb, fileName);
+  } catch (err) { alert(err.message); }
 });
 
 // initialize: set default filter active
