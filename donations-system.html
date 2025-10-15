@@ -186,6 +186,10 @@ form button:hover { background:#a81f25; }
       <div style="flex:1 1 200px;">
         <label>📅 التاريخ</label>
         <input type="datetime-local" id="donationDate">
+<div id="spendDateField" class="hidden">
+  <label>📅 تاريخ الصرف</label>
+  <input type="datetime-local" id="spendDate">
+</div>
       </div>
     </div>
 
@@ -459,21 +463,15 @@ async function verifySpendCode(userInput) {
 
 // 🔹 زر الصرف
 spendBtnForm.addEventListener('click', async () => {
-  if (!editingDonationId)
-    return alert('⚠️ لا يوجد تبرع محدد حالياً للتعديل');
+  if (!editingDonationId) return alert('⚠️ لا يوجد تبرع محدد للتعديل');
   
   const code = prompt('🔒 أدخل الكود السري لتأكيد الصرف:');
   const valid = await verifySpendCode(code);
-  if (!valid) {
-    alert('❌ كود غير صحيح');
-    return;
-  }
+  if (!valid) return alert('❌ كود غير صحيح');
   
-  // ✅ طلب تاريخ صرف إلزامي (يدوي فقط)
-  const spendDateInput = prompt('📅 أدخل تاريخ الصرف (إلزامي بصيغة YYYY-MM-DD HH:MM):\nمثلاً: 2025-10-15 14:30');
-  if (!spendDateInput || isNaN(Date.parse(spendDateInput))) {
-    alert('⚠️ يجب إدخال تاريخ صرف صالح بصيغة صحيحة!');
-    return;
+  const spendDateValue = document.getElementById('spendDate').value;
+  if (!spendDateValue || isNaN(Date.parse(spendDateValue))) {
+    return alert('⚠️ يجب إدخال تاريخ صرف صالح!');
   }
   
   if (!confirm('هل تريد تأكيد وضع حالة "تم الصرف" على هذا التبرع؟')) return;
@@ -481,20 +479,19 @@ spendBtnForm.addEventListener('click', async () => {
   try {
     await updateDoc(doc(db, 'donations', editingDonationId), {
       spent: true,
-      spendDate: new Date(spendDateInput).toISOString()
+      spendDate: new Date(spendDateValue).toISOString()
     });
-    
-    alert('✅ تم وضع علامة "تم الصرف" مع حفظ التاريخ اليدوي');
+    alert('✅ تم وضع علامة "تم الصرف" مع حفظ التاريخ');
     editingDonationId = null;
     spendBtnForm.style.display = 'none';
+    document.getElementById('spendDateField').classList.add('hidden');
     document.getElementById('donationForm').reset();
     submitDonationBtn.textContent = '➕ إضافة التبرع';
     renderCards();
   } catch (err) {
-    alert('❌ حدث خطأ أثناء تحديث الحالة:\n' + err.message);
+    alert('❌ حدث خطأ: ' + err.message);
   }
 });
-
 // filter buttons
 filterButtons.forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -531,7 +528,13 @@ if (filter) {
 
       const card = document.createElement('div');
       card.className = 'card';
-      if(donation.spent) card.classList.add('spent');
+      if (!donation.spent) {
+  spendBtnForm.style.display = 'inline-block';
+  document.getElementById('spendDateField').classList.remove('hidden');
+} else {
+  spendBtnForm.style.display = 'none';
+  document.getElementById('spendDateField').classList.add('hidden');
+}
 
       let content = `<h3>التبرع: ${donation.type}</h3>
         <p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
