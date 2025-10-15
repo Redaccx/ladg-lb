@@ -256,22 +256,43 @@ form button:hover { background:#a81f25; }
 </div>
 
 <!-- XLSX library -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, deleteDoc, query, orderBy, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
-const firebaseConfig = { apiKey:"AIzaSyBGiHaLE8lWuvJgVjDJjw0PXTjdBfTrzno", authDomain:"prizezone-app.firebaseapp.com", projectId:"prizezone-app", storageBucket:"prizezone-app.appspot.com", messagingSenderId:"244427738881", appId:"1:244427738881:web:4a666ce66f74f4994e5500" };
+const firebaseConfig = {
+  apiKey:"AIzaSyBGiHaLE8lWuvJgVjDJjw0PXTjdBfTrzno",
+  authDomain:"prizezone-app.firebaseapp.com",
+  projectId:"prizezone-app",
+  storageBucket:"prizezone-app.appspot.com",
+  messagingSenderId:"244427738881",
+  appId:"1:244427738881:web:4a666ce66f74f4994e5500"
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ---- Configurable codes ----
-const SPEND_CODE = "2025";    // كود لتأكيد عملية الصرف
-const ADMIN_CODE = "2003";   // كود للسماح بالتعديل/حذف بعد الصرف (إن أردت)
+let SPEND_CODE = null;
+let ADMIN_CODE = null;
 
+// ===== جلب الكود السري من Firestore =====
+async function fetchCodes(){
+  const snap = await getDoc(doc(db, "settings", "config"));
+  if(snap.exists()){
+    SPEND_CODE = snap.data().SPEND_CODE;
+    ADMIN_CODE = snap.data().ADMIN_CODE;
+  }
+}
+
+// ===== عند فتح الصفحة =====
+onAuthStateChanged(auth, async user => {
+  if(user){
+    await fetchCodes(); // نجهز الأكواد السريّة
+    renderCards();
+  }
+});
 // ---- DOM ----
 const loginSection = document.getElementById('loginSection');
 const appSection = document.getElementById('appSection');
@@ -427,12 +448,23 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
 });
 
 // spend button inside form (visible only during edit)
+
+
+async function verifySpendCode(userInput) {
+  const snap = await getDoc(doc(db, "settings", "config"));
+  if (!snap.exists()) return false;
+  const data = snap.data();
+  return userInput === data.SPEND_CODE; // مقارنة مباشرة مع القيمة داخل Firestore
+}
+
+// 🔹 زر الصرف
 spendBtnForm.addEventListener('click', async () => {
   if (!editingDonationId)
     return alert('⚠️ لا يوجد تبرع محدد حالياً للتعديل');
   
   const code = prompt('🔒 أدخل الكود السري لتأكيد الصرف:');
-  if (code !== SPEND_CODE) {
+  const valid = await verifySpendCode(code);
+  if (!valid) {
     alert('❌ كود غير صحيح');
     return;
   }
@@ -449,7 +481,7 @@ spendBtnForm.addEventListener('click', async () => {
   try {
     await updateDoc(doc(db, 'donations', editingDonationId), {
       spent: true,
-      spendDate: new Date(spendDateInput).toISOString() // حفظ التاريخ المدخل فقط
+      spendDate: new Date(spendDateInput).toISOString()
     });
     
     alert('✅ تم وضع علامة "تم الصرف" مع حفظ التاريخ اليدوي');
@@ -459,7 +491,7 @@ spendBtnForm.addEventListener('click', async () => {
     submitDonationBtn.textContent = '➕ إضافة التبرع';
     renderCards();
   } catch (err) {
-    alert(err.message);
+    alert('❌ حدث خطأ أثناء تحديث الحالة:\n' + err.message);
   }
 });
 
@@ -569,9 +601,10 @@ if (filter) {
       if(donation.spent){ spendInline.disabled = true; spendInline.classList.add('spent'); }
       spendInline.addEventListener('click', async ()=>{
         // if already spent do nothing
-        if(donation.spent) return;
-        const code = prompt('🔒 أدخل كود الصرف لتأكيد العملية:');
-        if(code !== SPEND_CODE){ alert('❌ كود غير صحيح'); return; }
+        if (donation.spent) {
+  const code = prompt('🔒 أدخل كود المسؤول:');
+  if (code !== ADMIN_CODE) { alert('❌ كود غير صحيح'); return; }
+}
         if(!confirm('هل تريد تأكيد الصرف الآن؟')) return;
         try{
           await updateDoc(doc(db, 'donations', donation.id), { spent: true });
