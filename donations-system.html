@@ -269,8 +269,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ---- Configurable codes ----
-const SPEND_CODE = "9630";    // كود لتأكيد عملية الصرف
-const ADMIN_CODE = "12345";   // كود للسماح بالتعديل/حذف بعد الصرف (إن أردت)
+const SPEND_CODE = "2025";    // كود لتأكيد عملية الصرف
+const ADMIN_CODE = "2003";   // كود للسماح بالتعديل/حذف بعد الصرف (إن أردت)
 
 // ---- DOM ----
 const loginSection = document.getElementById('loginSection');
@@ -428,16 +428,20 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
 
 // spend button inside form (visible only during edit)
 spendBtnForm.addEventListener('click', async () => {
-  if (!editingDonationId) return alert('⚠️ لا يوجد تبرع محدد حالياً للتعديل');
+  if (!editingDonationId)
+    return alert('⚠️ لا يوجد تبرع محدد حالياً للتعديل');
   
   const code = prompt('🔒 أدخل الكود السري لتأكيد الصرف:');
-  if (code !== SPEND_CODE) { alert('❌ كود غير صحيح'); return; }
+  if (code !== SPEND_CODE) {
+    alert('❌ كود غير صحيح');
+    return;
+  }
   
-  // ✅ طلب تاريخ صرف اختياري
-  const spendDateInput = prompt('📅 أدخل تاريخ الصرف (اختياري بصيغة YYYY-MM-DD HH:MM):\nمثلاً: 2025-10-15 14:30\nأو اتركه فارغاً ليُستخدم التاريخ الحالي.');
-  let spendDate = new Date();
-  if (spendDateInput && !isNaN(Date.parse(spendDateInput))) {
-    spendDate = new Date(spendDateInput);
+  // ✅ طلب تاريخ صرف إلزامي (يدوي فقط)
+  const spendDateInput = prompt('📅 أدخل تاريخ الصرف (إلزامي بصيغة YYYY-MM-DD HH:MM):\nمثلاً: 2025-10-15 14:30');
+  if (!spendDateInput || isNaN(Date.parse(spendDateInput))) {
+    alert('⚠️ يجب إدخال تاريخ صرف صالح بصيغة صحيحة!');
+    return;
   }
   
   if (!confirm('هل تريد تأكيد وضع حالة "تم الصرف" على هذا التبرع؟')) return;
@@ -445,11 +449,10 @@ spendBtnForm.addEventListener('click', async () => {
   try {
     await updateDoc(doc(db, 'donations', editingDonationId), {
       spent: true,
-      spendDate: spendDate.toISOString() // ✅ حفظ تاريخ الصرف داخل قاعدة البيانات
+      spendDate: new Date(spendDateInput).toISOString() // حفظ التاريخ المدخل فقط
     });
     
-    alert('✅ تم وضع علامة "تم الصرف" مع تسجيل التاريخ');
-    // reset form state
+    alert('✅ تم وضع علامة "تم الصرف" مع حفظ التاريخ اليدوي');
     editingDonationId = null;
     spendBtnForm.style.display = 'none';
     document.getElementById('donationForm').reset();
@@ -502,7 +505,8 @@ if (filter) {
         <p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
       if(donation.type === 'مالي') content += `<p>💵 المبلغ: ${donation.amount}</p>`;
       if(donation.spent) content += `<p style="color:green;font-weight:bold;">✅ تم الصرف</p>`;
-      if(donation.spendDate) content += `<p>📅 تاريخ الصرف: ${new Date(donation.spendDate).toLocaleString()}</p>`;
+      if (donation.spendDate)
+  content += `<p>📅 تاريخ الصرف: ${new Date(donation.spendDate).toLocaleString('ar-LB')}</p>`;
       content += `<div style="text-align:center;margin-top:8px;">
         <p>👤 المتبرع: ${donation.name}</p>
         <p>📍 العنوان: ${donation.address}</p>
