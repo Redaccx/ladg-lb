@@ -427,21 +427,35 @@ document.getElementById('donationForm').addEventListener('submit', async e=>{
 });
 
 // spend button inside form (visible only during edit)
-spendBtnForm.addEventListener('click', async ()=>{
-  if(!editingDonationId) return alert('⚠️ لا يوجد تبرع محدد حالياً للتعديل');
+spendBtnForm.addEventListener('click', async () => {
+  if (!editingDonationId) return alert('⚠️ لا يوجد تبرع محدد حالياً للتعديل');
+  
   const code = prompt('🔒 أدخل الكود السري لتأكيد الصرف:');
-  if(code !== SPEND_CODE){ alert('❌ كود غير صحيح'); return; }
-  if(!confirm('هل تريد تأكيد وضع حالة "تم الصرف" على هذا التبرع؟')) return;
-  try{
-    await updateDoc(doc(db, 'donations', editingDonationId), { spent: true });
-    alert('✅ تم وضع علامة "تم الصرف"');
+  if (code !== SPEND_CODE) { alert('❌ كود غير صحيح'); return; }
+  
+  // ✅ طلب تاريخ صرف اختياري
+  const spendDateInput = prompt('📅 أدخل تاريخ الصرف (اختياري بصيغة YYYY-MM-DD HH:MM):\nمثلاً: 2025-10-15 14:30\nأو اتركه فارغاً ليُستخدم التاريخ الحالي.');
+  let spendDate = new Date();
+  if (spendDateInput && !isNaN(Date.parse(spendDateInput))) {
+    spendDate = new Date(spendDateInput);
+  }
+  
+  if (!confirm('هل تريد تأكيد وضع حالة "تم الصرف" على هذا التبرع؟')) return;
+  
+  try {
+    await updateDoc(doc(db, 'donations', editingDonationId), {
+      spent: true,
+      spendDate: spendDate.toISOString() // ✅ حفظ تاريخ الصرف داخل قاعدة البيانات
+    });
+    
+    alert('✅ تم وضع علامة "تم الصرف" مع تسجيل التاريخ');
     // reset form state
     editingDonationId = null;
     spendBtnForm.style.display = 'none';
     document.getElementById('donationForm').reset();
     submitDonationBtn.textContent = '➕ إضافة التبرع';
     renderCards();
-  } catch(err){
+  } catch (err) {
     alert(err.message);
   }
 });
@@ -488,7 +502,7 @@ if (filter) {
         <p>رقم فاتورة التبرع: ${donation.invoice}</p>`;
       if(donation.type === 'مالي') content += `<p>💵 المبلغ: ${donation.amount}</p>`;
       if(donation.spent) content += `<p style="color:green;font-weight:bold;">✅ تم الصرف</p>`;
-
+      if(donation.spendDate) content += `<p>📅 تاريخ الصرف: ${new Date(donation.spendDate).toLocaleString()}</p>`;
       content += `<div style="text-align:center;margin-top:8px;">
         <p>👤 المتبرع: ${donation.name}</p>
         <p>📍 العنوان: ${donation.address}</p>
@@ -596,72 +610,32 @@ if (filter) {
   });
 }
 
-// ✅ Export Excel - منسّق ومرتب بالعربية
-exportExcelBtn.addEventListener('click', async () => {
-  try {
-    const snapshot = await getDocs(collection(db, 'donations'));
-    
-    // تجهيز البيانات بشكل منسق ومرتب
-    const data = snapshot.docs.map((docSnap, index) => {
-      const d = docSnap.data();
+// export Excel
+exportExcelBtn.addEventListener('click', async ()=>{
+  try{
+    const snapshot = await getDocs(collection(db,'donations'));
+    const data = snapshot.docs.map(d=>{
+      const dd = d.data();
       return {
-        "🔢 رقم الفاتورة": d.invoice || "",
-        "👤 اسم المتبرع": d.name || "",
-        "📞 الهاتف": d.phone || "",
-        "📍 العنوان": d.address || "",
-        "📝 الملاحظات": d.notes || "",
-        "📦 نوع التبرع": d.type || "",
-        "💵 المبلغ": d.amount || "",
-        "📋 العناصر (إن وجدت)": d.items ?
-          d.items.map(i => `${i.name} (${i.quantity} ${i.unit}, وزن ${i.weight})`).join(" ؛ ") :
-          "",
-        "💰 حالة الصرف": d.spent ? "✅ تم الصرف" : "❌ لم تُصرف بعد",
-        "⏰ التاريخ": d.date ? new Date(d.date).toLocaleString("ar-LB") : "",
+        invoice: dd.invoice,
+        name: dd.name,
+        phone: dd.phone,
+        address: dd.address,
+        notes: dd.notes,
+        type: dd.type,
+        amount: dd.amount || '',
+        items: dd.items ? dd.items.map(i=>`${i.name}(${i.quantity} ${i.unit}, وزن:${i.weight})`).join('; ') : '',
+        spent: dd.spent ? 'نعم' : 'لا',
+        date: dd.date ? new Date(dd.date).toLocaleString() : ''
       };
     });
-    
-    // إنشاء ورقة Excel
-    const worksheet = XLSX.utils.json_to_sheet(data, {
-      header: [
-        "🔢 رقم الفاتورة",
-        "👤 اسم المتبرع",
-        "📞 الهاتف",
-        "📍 العنوان",
-        "📝 الملاحظات",
-        "📦 نوع التبرع",
-        "💵 المبلغ",
-        "📋 العناصر (إن وجدت)",
-        "💰 حالة الصرف",
-        "⏰ التاريخ"
-      ]
-    });
-    
-    // ✅ تنسيقات الأعمدة: عرض مناسب لكل عمود
-    const colWidths = [
-      { wch: 15 }, // رقم الفاتورة
-      { wch: 20 }, // الاسم
-      { wch: 15 }, // الهاتف
-      { wch: 25 }, // العنوان
-      { wch: 25 }, // الملاحظات
-      { wch: 15 }, // النوع
-      { wch: 15 }, // المبلغ
-      { wch: 40 }, // العناصر
-      { wch: 15 }, // حالة الصرف
-      { wch: 25 } // التاريخ
-    ];
-    worksheet['!cols'] = colWidths;
-    
-    // إنشاء الملف
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "سجل التبرعات");
-    
-    // حفظ الملف
-    XLSX.writeFile(workbook, `سجل_التبرعات_${new Date().toLocaleDateString("ar-LB")}.xlsx`);
-    
-  } catch (err) {
-    alert("حدث خطأ أثناء التصدير: " + err.message);
-  }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Donations");
+    XLSX.writeFile(wb, "donations.xlsx");
+  } catch(err){ alert(err.message); }
 });
+
 // initialize: set default filter active
 document.getElementById('filterUnspent').classList.add('active');
 
