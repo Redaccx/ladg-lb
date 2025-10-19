@@ -3,26 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CV Hiring Analyzer</title>
+<title>CV Hiring Analyzer with Job Selection</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background: #f4f4f9; color: #333; padding: 15px; margin:0;}
-.container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius:10px;}
+.container { max-width: 900px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius:10px;}
 h1 { color: #1e88e5; text-align:center; margin-bottom:20px;}
-input[type=file] { margin-bottom: 15px; width:100%; }
+input[type=file], select { margin-bottom: 15px; width:100%; padding:8px; font-size:1em; }
 button { padding: 10px 15px; background: #1e88e5; color: #fff; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; display:inline-block; }
 button:disabled { background: #999; cursor: not-allowed; }
 .cards { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top:20px;}
 .card { background: #e0f7fa; padding:15px; border-radius:10px; flex: 1 1 300px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
 .card h3 { margin: 0 0 10px 0; color: #1e88e5;}
-.card p { margin:5px 0; }
-.skills, .experience, .education { margin-top:10px; font-size:0.9em; line-height:1.3; }
-.phone, .email { font-weight:bold; margin-top:5px; color:#0d47a1; }
-.section-title { font-weight:bold; margin-top:10px; color:#1565c0; }
-.status { font-weight:bold; margin-top:10px; color: green; }
+.phone { font-weight:bold; color:#0d47a1; margin-top:5px; }
+.status { font-weight:bold; margin-top:10px; }
+.status.accept { color:green; }
 .status.reject { color:red; }
+.strongSkill { font-weight:bold; color:#1565c0; }
+.score { font-weight:bold; margin-top:5px; color:#ff6f00; }
 @media(max-width:600px){.cards{flex-direction:column;align-items:center;}}
 </style>
 </head>
@@ -30,7 +30,14 @@ button:disabled { background: #999; cursor: not-allowed; }
 
 <div class="container">
 <h1>CV Hiring Analyzer</h1>
-<p>Upload multiple CV PDFs to extract real data, categorize skills, and determine hiring decision.</p>
+<p>Select the job role, then upload CV PDFs. Each CV will show a card with Name, Phone, Strongest Skill, Status, Reason, and Score.</p>
+
+<select id="jobRole">
+    <option value="IT Developer">IT Developer</option>
+    <option value="Project Manager">Project Manager</option>
+    <option value="Customer Support">Customer Support</option>
+    <option value="Data Analyst">Data Analyst</option>
+</select>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
@@ -42,16 +49,13 @@ button:disabled { background: #999; cursor: not-allowed; }
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// تعريف الأقسام والمهارات الأولية
-const categories = {
-    "IT Skills": ["it","information technology","network","website","html","css","javascript","ms office","excel","troubleshooting","database","sql","python","java"],
-    "Leadership / Management": ["management","leader","team lead","coordinator","manager","organize","project","planning","supervision"],
-    "Customer Service": ["customer service","communication","problem solving","teamwork","support","helpdesk","service","client","sales"],
-    "Languages": ["english","arabic","french","spanish","german"]
+// مهارات لكل وظيفة
+const jobRoles = {
+    "IT Developer": ["html","css","javascript","python","sql"],
+    "Project Manager": ["management","planning","project","team lead"],
+    "Customer Support": ["communication","customer service","problem solving","teamwork"],
+    "Data Analyst": ["excel","sql","python","database"]
 };
-
-// مثال: متطلبات الوظيفة (يمكن تعديلها حسب الوظيفة)
-const requiredSkills = ["html","css","javascript"]; // للوظائف IT مثلاً
 
 let results = [];
 
@@ -60,6 +64,9 @@ async function analyzeBatch() {
     const resultsCards = document.getElementById('resultsCards');
     const downloadBtn = document.getElementById('downloadExcel');
     const analyzeBtn = document.getElementById('analyzeBtn');
+    const jobRole = document.getElementById('jobRole').value;
+    const requiredSkills = jobRoles[jobRole];
+
     resultsCards.innerHTML = "Processing PDFs, please wait... ⏳";
     downloadBtn.style.display = "none";
     analyzeBtn.disabled = true;
@@ -74,43 +81,37 @@ async function analyzeBatch() {
     for (let file of filesInput.files) {
         const text = await extractTextFromPDF(file);
         const info = extractInfo(text);
-        const skillData = analyzeCategories(text);
-        const status = evaluateCV(skillData.skillsList, info); // تقييم القبول/رفض
-        results.push({ name: file.name, status, ...info, ...skillData });
+        const skillData = analyzeSkills(text);
+        const strongSkill = getStrongestSkill(skillData.skillsList);
+        const statusScore = evaluateCV(skillData.skillsList, info, requiredSkills);
+
+        results.push({ 
+            name: info.name || file.name, 
+            phone: info.phone, 
+            strongSkill, 
+            status: statusScore.status, 
+            reason: statusScore.reason, 
+            score: statusScore.score,
+            skillsList: skillData.skillsList,
+            experience: info.experience,
+            education: info.education,
+            email: info.email
+        });
     }
 
     resultsCards.innerHTML = "";
-    results.sort((a,b)=>a.name.localeCompare(b.name));
+    results.sort((a,b)=>b.score-a.score);
 
-    // عرض النتائج
     let cardsHTML = "";
     results.forEach(res=>{
-        let skillsHTML = "";
-        for(let cat in res.skillMatches){
-            let skillsArr = Object.entries(res.skillMatches[cat]).map(([w,c])=>`${w}(${c})`);
-            if(skillsArr.length>0){
-                skillsHTML += `<div class="section-title">${cat}:</div><div class="skills">${skillsArr.join(", ")}</div>`;
-            }
-        }
-
-        let expHTML="", eduHTML="";
-        if(res.experience.length>0){
-            expHTML = `<div class="section-title">Experience:</div><div class="experience">${res.experience.join("<br>")}</div>`;
-        }
-        if(res.education.length>0){
-            eduHTML = `<div class="section-title">Education:</div><div class="education">${res.education.join("<br>")}</div>`;
-        }
-
         cardsHTML += `
         <div class="card">
             <h3>${res.name}</h3>
-            ${res.email?`<p class="email">Email: ${res.email}</p>`:''}
             ${res.phone?`<p class="phone">Phone: ${res.phone}</p>`:''}
-            ${expHTML}
-            ${eduHTML}
-            ${skillsHTML}
-            <p class="status ${res.status.accepted?'':'reject'}">Status: ${res.status.accepted?"Accepted ✅":"Rejected ❌"}</p>
-            ${res.status.reason?`<p>Reason: ${res.status.reason}</p>`:''}
+            <p>Strongest Skill: <span class="strongSkill">${res.strongSkill}</span></p>
+            <p class="status ${res.status?'accept':'reject'}">Status: ${res.status?"Accepted ✅":"Rejected ❌"}</p>
+            <p class="score">Score: ${res.score}/10</p>
+            ${res.reason?`<p>Reason: ${res.reason}</p>`:''}
         </div>`;
     });
 
@@ -119,7 +120,7 @@ async function analyzeBatch() {
     analyzeBtn.disabled = false;
 }
 
-// استخراج النص
+// استخراج نص PDF + OCR عند الحاجة
 async function extractTextFromPDF(file){
     const fileReader = new FileReader();
     return new Promise((resolve)=>{
@@ -151,63 +152,45 @@ async function extractTextFromPDF(file){
     });
 }
 
-// استخراج البريد، الهاتف، الخبرات، والتعليم
+// استخراج المعلومات الأساسية
 function extractInfo(text){
     const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
     const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)?[\d\s-]{5,15}/);
 
     let experience=[], education=[];
     const lines = text.split(/\r?\n/);
+    let name = '';
     lines.forEach(line=>{
         line = line.trim();
-        if(line.length>5){
-            if(/(company|position|worked at|experience|role|internship)/i.test(line)){
-                experience.push(line);
-            }
-            if(/(university|institute|bachelor|master|degree|diploma)/i.test(line)){
-                education.push(line);
-            }
-        }
+        if(!name && line.length>2 && /^[a-zA-Z ]+$/.test(line)) name = line;
+        if(/(company|position|worked at|experience|role|internship)/i.test(line)) experience.push(line);
+        if(/(university|institute|bachelor|master|degree|diploma)/i.test(line)) education.push(line);
     });
 
-    return {
-        email: emailMatch?emailMatch[0]:'',
-        phone: phoneMatch?phoneMatch[0]:'',
-        experience,
-        education
-    };
+    return { email: emailMatch?emailMatch[0]:'', phone: phoneMatch?phoneMatch[0]:'', experience, education, name };
 }
 
-// تحليل المهارات وتصنيفها
-function analyzeCategories(text){
-    let skillMatches = {};
+// تحليل المهارات
+function analyzeSkills(text){
     let skillsList = [];
-    for(let cat in categories) skillMatches[cat] = {};
-    skillMatches["Other Skills"] = {};
-
     const words = text.split(/\W+/);
     words.forEach(word=>{
-        if(word.length>2){
-            let matched=false;
-            for(let cat in categories){
-                if(categories[cat].includes(word)){
-                    skillMatches[cat][word] = (skillMatches[cat][word]||0)+1;
-                    skillsList.push(word);
-                    matched=true;
-                }
-            }
-            if(!matched){
-                skillMatches["Other Skills"][word] = (skillMatches["Other Skills"][word]||0)+1;
-                skillsList.push(word);
-            }
-        }
+        if(word.length>2) skillsList.push(word);
     });
-
-    return {skillMatches, skillsList};
+    return { skillsList };
 }
 
-// تقييم CV: قبول أو رفض
-function evaluateCV(skillsList, info){
+// أقوى مهارة
+function getStrongestSkill(skillsList){
+    if(skillsList.length===0) return "N/A";
+    const freq = {};
+    skillsList.forEach(skill => { freq[skill]=(freq[skill]||0)+1; });
+    let sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+    return sorted[0][0];
+}
+
+// تقييم CV + score 1-10 حسب الوظيفة
+function evaluateCV(skillsList, info, requiredSkills){
     let missingSkills = [];
     requiredSkills.forEach(skill=>{
         if(!skillsList.includes(skill.toLowerCase())){
@@ -215,44 +198,46 @@ function evaluateCV(skillsList, info){
         }
     });
 
+    let score = 5; // نقطة أساسية
+    if(info.experience.length>0) score += 2;
+    if(info.education.length>0) score += 1;
+    let matchedSkills = requiredSkills.filter(s=>skillsList.includes(s.toLowerCase())).length;
+    score += matchedSkills * 1.5;
+    if(score>10) score=10;
+    if(score<1) score=1;
+
     if(missingSkills.length>0){
-        return {accepted:false, reason:"Missing required skills: " + missingSkills.join(", ")};
+        return {status:false, reason:"Missing required skills: "+missingSkills.join(", "), score};
     }
-
     if(info.experience.length===0){
-        return {accepted:false, reason:"No experience listed"};
+        return {status:false, reason:"No experience listed", score};
     }
 
-    return {accepted:true, reason:"All requirements met"};
+    return {status:true, reason:"All requirements met", score};
 }
 
-// تصدير Excel
+// تصدير Excel مفصل
 function downloadExcel(){
     const wb = XLSX.utils.book_new();
-    const ws_data=[["CV Name","Email","Phone","Experience","Education","Category","Skill","Count","Status","Reason"]];
+    const ws_data=[["CV Name","Email","Phone","Experience","Education","Skills","Status","Reason","Score"]];
 
     results.forEach(res=>{
-        for(let cat in res.skillMatches){
-            for(let [skill,count] of Object.entries(res.skillMatches[cat])){
-                ws_data.push([
-                    res.name,
-                    res.email,
-                    res.phone,
-                    res.experience.join(" | "),
-                    res.education.join(" | "),
-                    cat,
-                    skill,
-                    count,
-                    res.status.accepted?"Accepted":"Rejected",
-                    res.status.reason
-                ]);
-            }
-        }
+        ws_data.push([
+            res.name,
+            res.email,
+            res.phone,
+            res.experience.join(" | "),
+            res.education.join(" | "),
+            res.skillsList.join(" | "),
+            res.status?"Accepted":"Rejected",
+            res.reason,
+            res.score
+        ]);
     });
 
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    XLSX.utils.book_append_sheet(wb,ws,"CV Hiring Data");
-    XLSX.writeFile(wb,"CV_Hiring_Analysis.xlsx");
+    XLSX.utils.book_append_sheet(wb,ws,"CV Data");
+    XLSX.writeFile(wb,"CV_Hiring_Analysis_Job.xlsx");
 }
 </script>
 
