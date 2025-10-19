@@ -10,24 +10,11 @@
 <style>
 body { margin:0; padding:0; font-family:'Segoe UI', sans-serif; overflow-x:hidden; background:#0d0d0d; }
 #bgCanvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-2; background:#0d0d0d; }
-
 /* Promo Pop-up */
-#promoScreen {
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;
-  z-index:9999; opacity:0; transform:scale(0.7); transition: all 0.6s ease;
-}
+#promoScreen { position:fixed;top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center; z-index:9999; opacity:0; transform:scale(0.7); transition: all 0.6s ease;}
 #promoScreen.show { opacity:1; transform:scale(1); }
-#promoPopup {
-  position:relative;width:80%;max-width:800px;background:#000;border-radius:15px;overflow:hidden;
-  box-shadow:0 0 20px #0ff, 0 0 40px #0ff inset, 0 0 60px #0ff inset;
-  animation: glowPopup 2s infinite alternate;
-}
-@keyframes glowPopup {
-  0% { box-shadow:0 0 20px #0ff, 0 0 40px #0ff inset, 0 0 60px #0ff inset; }
-  50% { box-shadow:0 0 35px #0ff, 0 0 60px #0ff inset, 0 0 80px #0ff inset; }
-  100% { box-shadow:0 0 20px #0ff, 0 0 40px #0ff inset, 0 0 60px #0ff inset; }
-}
+#promoPopup { position:relative;width:80%;max-width:800px;background:#000;border-radius:15px;overflow:hidden; box-shadow:0 0 20px #0ff, 0 0 40px #0ff inset, 0 0 60px #0ff inset; animation: glowPopup 2s infinite alternate;}
+@keyframes glowPopup {0%{box-shadow:0 0 20px #0ff,0 0 40px #0ff inset,0 0 60px #0ff inset;}50%{box-shadow:0 0 35px #0ff,0 0 60px #0ff inset,0 0 80px #0ff inset;}100%{box-shadow:0 0 20px #0ff,0 0 40px #0ff inset,0 0 60px #0ff inset;}}
 #promoPopup video { width:100%; border-radius:15px 15px 0 0; }
 #promoPopup div { padding:15px;text-align:center;color:#0ff; }
 #promoPopup h2 { margin:0 0 10px 0; }
@@ -73,7 +60,7 @@ button:disabled { background:#333; cursor:not-allowed; }
 <!-- Promo Pop-up -->
 <div id="promoScreen">
   <div id="promoPopup">
-    <video id="promoVideo" autoplay muted playsinline>
+    <video id="promoVideo" autoplay playsinline>
       <source src="https://l.top4top.io/m_357976fbq1.mp4" type="video/mp4">
     </video>
     <div>
@@ -102,7 +89,7 @@ button:disabled { background:#333; cursor:not-allowed; }
 </div>
 
 <!-- Audios -->
-<audio id="bgAudio" autoplay loop>
+<audio id="bgAudio" loop>
   <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
 </audio>
 <audio id="soundAccept">
@@ -119,84 +106,78 @@ button:disabled { background:#333; cursor:not-allowed; }
 // Background animation
 const canvas=document.getElementById('bgCanvas');
 const ctx=canvas.getContext('2d');
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-let lines=[];
-for(let i=0;i<50;i++){ lines.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, len:50+Math.random()*100, speed:1+Math.random()*2}); }
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+let lines=[]; for(let i=0;i<50;i++){ lines.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, len:50+Math.random()*100, speed:1+Math.random()*2}); }
 function animateBG(){ ctx.fillStyle='rgba(13,13,13,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.strokeStyle='#0ff'; ctx.lineWidth=1; lines.forEach(l=>{ ctx.beginPath(); ctx.moveTo(l.x,l.y); ctx.lineTo(l.x,l.y+l.len); ctx.stroke(); l.y+=l.speed; if(l.y>canvas.height) l.y=-l.len; }); requestAnimationFrame(animateBG);}
-animateBG();
-window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+animateBG(); window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 
-// Promo Pop-up Logic
-const promoScreen = document.getElementById('promoScreen');
-const promoVideo = document.getElementById('promoVideo');
-const skipBtn = document.getElementById('skipBtn');
-const container = document.querySelector('.container');
-const aiSound = document.getElementById('aiSound');
-const bgAudio = document.getElementById('bgAudio');
+// Promo + Cookies
+const promoScreen=document.getElementById('promoScreen');
+const promoVideo=document.getElementById('promoVideo');
+const skipBtn=document.getElementById('skipBtn');
+const container=document.querySelector('.container');
+const aiSound=document.getElementById('aiSound');
+const bgAudio=document.getElementById('bgAudio');
 
 function showMain(){
-    promoScreen.classList.remove('show');
-    aiSound.play();
-    setTimeout(()=>{
-        promoScreen.style.display='none';
-        container.style.display='block';
-        bgAudio.play();
-    }, 600);
+  promoScreen.style.display='none';
+  container.style.display='block';
+  bgAudio.play().catch(()=>{}); // autoplay fix
 }
 
+function acceptCookies(){ localStorage.setItem('cookiesAccepted','true'); document.getElementById('cookieConsent').style.display='none'; cookiesAccepted=true; }
+
+let cookiesAccepted=localStorage.getItem('cookiesAccepted')==='true';
+if(!cookiesAccepted){ document.getElementById('cookieConsent').style.display='block'; }
+
 if(!sessionStorage.getItem('promoShown')){
-    promoScreen.style.display='flex';
-    setTimeout(()=>{ promoScreen.classList.add('show'); aiSound.play(); }, 50);
-    sessionStorage.setItem('promoShown','true');
-    promoVideo.onended = showMain;
-    skipBtn.onclick = showMain;
-} else { container.style.display='block'; bgAudio.play(); }
+  promoScreen.style.display='flex';
+  setTimeout(()=>{ promoScreen.classList.add('show'); aiSound.play().catch(()=>{}); },50);
+  sessionStorage.setItem('promoShown','true');
+  promoVideo.onended = showMain;
+  skipBtn.onclick=showMain;
+}else{ container.style.display='block'; bgAudio.play().catch(()=>{}); }
 
-// Cookie consent
-let cookiesAccepted=false;
-function acceptCookies(){ cookiesAccepted=true; document.getElementById('cookieConsent').style.display='none'; }
-
-// PDF + AI CV Analyzer
+// PDF Analyzer
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 const specialties=["IT / Software Development","Web & Mobile Development","Data Science & Analytics","AI / Machine Learning","Cybersecurity","Project Management","Human Resources / HR","Finance / Accounting","Marketing / Digital Marketing","Sales / Customer Service","Graphic Design / UI-UX"];
 let results=[];
-function playSound(type){ if(type==='accept') document.getElementById('soundAccept').play(); if(type==='reject') document.getElementById('soundReject').play(); }
+function playSound(type){ if(type==='accept') document.getElementById('soundAccept').play().catch(()=>{}); if(type==='reject') document.getElementById('soundReject').play().catch(()=>{});}
 function evaluateCV(text){ let score=Math.floor(Math.random()*10)+1; let accept=score>=5; let strongestSkill="Problem Solving"; let specialty=specialties[Math.floor(Math.random()*specialties.length)]; return {score,accept,strongestSkill,specialty}; }
 async function extractTextFromPDF(file){ const arrayBuffer=await file.arrayBuffer(); const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise; let fullText=""; for(let i=1;i<=pdf.numPages;i++){ const page=await pdf.getPage(i); const txt=await page.getTextContent(); fullText+=txt.items.map(t=>t.str).join(" ")+" "; } return fullText; }
 async function analyzeBatch(){
-    if(!cookiesAccepted){ alert("Please accept cookies first."); return;}
-    const files=document.getElementById('pdfFiles').files;
-    if(files.length===0){ alert("Select at least one PDF CV."); return;}
-    document.getElementById('loader').style.display='block';
-    document.getElementById('resultsCards').innerHTML="";
-    results=[];
-    for(const file of files){
-        const text=await extractTextFromPDF(file);
-        const res=evaluateCV(text);
-        results.push({name:file.name,phone:"+96112345678",...res});
-        const card=document.createElement('div'); 
-        card.className='card show '+(res.accept?'accepted':'rejected');
-        card.innerHTML=`<h3>${file.name}</h3>
-        <div class="phone">${"+96112345678"}</div>
-        <div class="specialty">Specialty: ${res.specialty}</div>
-        <div class="strongSkill">Strongest Skill: ${res.strongestSkill}</div>
-        <div class="score">Score: ${res.score}/10</div>
-        <div class="status ${res.accept?'accept':'reject'}">${res.accept?'Accepted':'Rejected'}</div>`;
-        document.getElementById('resultsCards').appendChild(card);
-        playSound(res.accept?'accept':'reject');
-        await new Promise(r=>setTimeout(r,500));
-    }
-    document.getElementById('loader').style.display='none';
-    document.getElementById('downloadExcel').style.display='inline-block';
+  if(!cookiesAccepted){ alert("Please accept cookies first."); return;}
+  const files=document.getElementById('pdfFiles').files;
+  if(files.length===0){ alert("Select at least one PDF CV."); return;}
+  document.getElementById('loader').style.display='block';
+  document.getElementById('resultsCards').innerHTML="";
+  results=[];
+  for(const file of files){
+    const text=await extractTextFromPDF(file);
+    const res=evaluateCV(text);
+    results.push({name:file.name,phone:"+96112345678",...res});
+    const card=document.createElement('div'); 
+    card.className='card show '+(res.accept?'accepted':'rejected');
+    card.innerHTML=`<h3>${file.name}</h3>
+    <div class="phone">${"+96112345678"}</div>
+    <div class="specialty">Specialty: ${res.specialty}</div>
+    <div class="strongSkill">Strongest Skill: ${res.strongestSkill}</div>
+    <div class="score">Score: ${res.score}/10</div>
+    <div class="status ${res.accept?'accept':'reject'}">${res.accept?'Accepted':'Rejected'}</div>`;
+    document.getElementById('resultsCards').appendChild(card);
+    playSound(res.accept?'accept':'reject');
+    await new Promise(r=>setTimeout(r,500));
+  }
+  document.getElementById('loader').style.display='none';
+  document.getElementById('downloadExcel').style.display='inline-block';
 }
 function downloadExcel(){
-    const wb=XLSX.utils.book_new();
-    const ws_data=[["Name","Phone","Specialty","Strongest Skill","Score","Status"]];
-    results.forEach(r=>{ws_data.push([r.name,r.phone,r.specialty,r.strongestSkill,r.score,r.accept?'Accepted':'Rejected']);});
-    const ws=XLSX.utils.aoa_to_sheet(ws_data);
-    XLSX.utils.book_append_sheet(wb,ws,"Results");
-    XLSX.writeFile(wb,"CV_Analysis.xlsx");
+  const wb=XLSX.utils.book_new();
+  const ws_data=[["Name","Phone","Specialty","Strongest Skill","Score","Status"]];
+  results.forEach(r=>{ws_data.push([r.name,r.phone,r.specialty,r.strongestSkill,r.score,r.accept?'Accepted':'Rejected']);});
+  const ws=XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb,ws,"Results");
+  XLSX.writeFile(wb,"CV_Analysis.xlsx");
 }
 </script>
 </body>
