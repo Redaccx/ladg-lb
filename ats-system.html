@@ -9,7 +9,6 @@
 <style>
 body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;overflow-x:hidden;background:#0d0d0d;color:#fff;}
 #bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:#0d0d0d;}
-
 /* Promo Pop-up */
 #promoScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:9999;opacity:0;transform:scale(0.7);transition:all 0.5s ease;}
 #promoScreen.show{opacity:1;transform:scale(1);}
@@ -19,23 +18,15 @@ body{margin:0;padding:0;font-family:'Segoe UI',sans-serif;overflow-x:hidden;back
 #promoPopup h2{margin:0 0 8px 0;}
 #promoPopup p{margin:0 0 8px 0;color:#f55;}
 #skipBtn{padding:8px 15px;background:#0ff;color:#000;border:none;border-radius:5px;cursor:pointer;font-weight:bold;}
-
 /* Footer animation */
 #footerText{position:fixed;bottom:10px;left:50%;transform:translateX(-50%) scale(0);color:#0ff;font-size:0.9em;text-shadow:0 0 5px #0ff;animation:footerAnim 3s forwards 1s;}
 @keyframes footerAnim{0%{transform:translateX(-50%) scale(0);opacity:0;}50%{transform:translateX(-50%) scale(1.2);opacity:1;}100%{transform:translateX(-50%) scale(1);opacity:0;}}
-
-/* Cookie Consent */
-#cookieConsent{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;padding:12px 20px;border-radius:8px;color:#0ff;box-shadow:0 0 10px #0ff;z-index:10000;display:none;}
-#cookieConsent p{margin:0;font-size:0.9em;}
-#cookieConsent button{margin-top:8px;padding:6px 12px;background:#0ff;color:#000;border:none;border-radius:5px;cursor:pointer;}
-
 /* Container */
 .container{position:relative;max-width:900px;margin:auto;background:rgba(17,17,17,0.9);padding:20px;box-shadow:0 0 20px rgba(0,255,255,0.2);border-radius:12px;margin-top:30px;display:none;}
 h1{color:#00f5ff;text-align:center;margin-bottom:20px;text-shadow:0 0 10px #00f5ff;}
 input[type=file]{margin-bottom:15px;width:100%;padding:8px;font-size:1em;border-radius:5px;border:1px solid #00f5ff;background:#222;color:#fff;}
 button{padding:10px 15px;background:#00f5ff;color:#000;border:none;cursor:pointer;border-radius:5px;margin-bottom:10px;font-weight:bold;}
 button:disabled{background:#333;cursor:not-allowed;}
-
 /* Cards */
 .cards{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:20px;}
 .card{background:#111;padding:12px;border-radius:8px;flex:1 1 280px;box-shadow:0 0 15px rgba(0,255,255,0.3);opacity:0;transform:translateY(40px);transition:all 0.6s ease;position:relative;overflow:hidden;}
@@ -75,12 +66,6 @@ button:disabled{background:#333;cursor:not-allowed;}
 
 <div id="footerText">Website programmed in English by Rida Jomaa</div>
 
-<!-- Cookie Consent -->
-<div id="cookieConsent">
-  <p>This website uses cookies to ensure full functionality. Please accept to continue.</p>
-  <button onclick="acceptCookies()">Accept</button>
-</div>
-
 <!-- Main Container -->
 <div class="container">
 <h1>🤖 AI CV Analyzer v15</h1>
@@ -93,7 +78,7 @@ button:disabled{background:#333;cursor:not-allowed;}
 </div>
 
 <!-- Audios -->
-<audio id="bgAudio" loop>
+<audio id="bgAudio" autoplay loop>
   <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
 </audio>
 <audio id="soundAccept">
@@ -109,27 +94,16 @@ button:disabled{background:#333;cursor:not-allowed;}
 <script>
 // Background animation
 const canvas=document.getElementById('bgCanvas'); const ctx=canvas.getContext('2d'); canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-let lines=[]; for(let i=0;i<50;i++){ lines.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, len:50+Math.random()*100, speed:1+Math.random()*2}); }
-function animateBG(){ ctx.fillStyle='rgba(13,13,13,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.strokeStyle='#0ff'; ctx.lineWidth=1; lines.forEach(l=>{ ctx.beginPath(); ctx.moveTo(l.x,l.y); ctx.lineTo(l.x,l.y+l.len); ctx.stroke(); l.y+=l.speed; if(l.y>canvas.height) l.y=-l.len; }); requestAnimationFrame(animateBG);}
+let lines=[]; for(let i=0;i<50;i++){ lines.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,len:50+Math.random()*100,speed:1+Math.random()*2});}
+function animateBG(){ctx.fillStyle='rgba(13,13,13,0.3)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#0ff';ctx.lineWidth=1;lines.forEach(l=>{ctx.beginPath();ctx.moveTo(l.x,l.y);ctx.lineTo(l.x,l.y+l.len);ctx.stroke();l.y+=l.speed;if(l.y>canvas.height) l.y=-l.len;});requestAnimationFrame(animateBG);}
 animateBG(); window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 
 // Promo Pop-up
 const promoScreen=document.getElementById('promoScreen'); const promoVideo=document.getElementById('promoVideo'); const skipBtn=document.getElementById('skipBtn');
 const container=document.querySelector('.container'); const aiSound=document.getElementById('aiSound'); const bgAudio=document.getElementById('bgAudio');
 
-function showMain(){
-    promoScreen.classList.remove('show'); aiSound.play().catch(()=>{});
-    setTimeout(()=>{ promoScreen.style.display='none'; container.style.display='block'; bgAudio.play().catch(()=>{}); },600);
-}
-
-if(!sessionStorage.getItem('promoShown')){
-    promoScreen.style.display='flex'; setTimeout(()=>{ promoScreen.classList.add('show'); aiSound.play().catch(()=>{}); },50);
-    sessionStorage.setItem('promoShown','true'); promoVideo.onended=showMain; skipBtn.onclick=showMain;
-}else{ showMain(); }
-
-// Cookie consent
-let cookiesAccepted=false;
-function acceptCookies(){ cookiesAccepted=true; document.getElementById('cookieConsent').style.display='none'; }
+function showMain(){ promoScreen.classList.remove('show'); aiSound.play().catch(()=>{}); setTimeout(()=>{ promoScreen.style.display='none'; container.style.display='block'; bgAudio.play().catch(()=>{}); },600);}
+promoScreen.style.display='flex'; setTimeout(()=>{ promoScreen.classList.add('show'); aiSound.play().catch(()=>{}); },50); promoVideo.onended=showMain; skipBtn.onclick=showMain;
 
 // PDF + AI CV Analyzer
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -139,7 +113,6 @@ function playSound(type){ if(type==='accept') document.getElementById('soundAcce
 function evaluateCV(text){ let score=Math.floor(Math.random()*10)+1; let accept=score>=5; let strongestSkill="Problem Solving"; let specialty=specialties[Math.floor(Math.random()*specialties.length)]; return {score,accept,strongestSkill,specialty};}
 async function extractTextFromPDF(file){ const arrayBuffer=await file.arrayBuffer(); const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise; let fullText=""; for(let i=1;i<=pdf.numPages;i++){ const page=await pdf.getPage(i); const txt=await page.getTextContent(); fullText+=txt.items.map(t=>t.str).join(" ")+" "; } return fullText;}
 async function analyzeBatch(){ 
-  if(!cookiesAccepted){ alert("Please accept cookies first."); return;}
   const files=document.getElementById('pdfFiles').files; if(files.length===0){ alert("Select at least one PDF CV."); return;}
   document.getElementById('loader').style.display='block'; document.getElementById('resultsCards').innerHTML=""; results=[];
   for(const file of files){ const text=await extractTextFromPDF(file); const res=evaluateCV(text); results.push({name:file.name,phone:"+96112345678",...res});
