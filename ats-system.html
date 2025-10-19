@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CV Hiring Analyzer with Job Selection</title>
+<title>Automatic Smart CV Analyzer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background: #f4f4f9; color: #333; padding: 15px; margin:0;}
-.container { max-width: 900px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius:10px;}
+.container { max-width: 950px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius:10px;}
 h1 { color: #1e88e5; text-align:center; margin-bottom:20px;}
-input[type=file], select { margin-bottom: 15px; width:100%; padding:8px; font-size:1em; }
+input[type=file] { margin-bottom: 15px; width:100%; padding:8px; font-size:1em; }
 button { padding: 10px 15px; background: #1e88e5; color: #fff; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; display:inline-block; }
 button:disabled { background: #999; cursor: not-allowed; }
 .cards { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top:20px;}
@@ -22,6 +22,7 @@ button:disabled { background: #999; cursor: not-allowed; }
 .status.accept { color:green; }
 .status.reject { color:red; }
 .strongSkill { font-weight:bold; color:#1565c0; }
+.specialty { font-weight:bold; margin-top:5px; color:#004d40; }
 .score { font-weight:bold; margin-top:5px; color:#ff6f00; }
 @media(max-width:600px){.cards{flex-direction:column;align-items:center;}}
 </style>
@@ -29,15 +30,8 @@ button:disabled { background: #999; cursor: not-allowed; }
 <body>
 
 <div class="container">
-<h1>CV Hiring Analyzer</h1>
-<p>Select the job role, then upload CV PDFs. Each CV will show a card with Name, Phone, Strongest Skill, Status, Reason, and Score.</p>
-
-<select id="jobRole">
-    <option value="IT Developer">IT Developer</option>
-    <option value="Project Manager">Project Manager</option>
-    <option value="Customer Support">Customer Support</option>
-    <option value="Data Analyst">Data Analyst</option>
-</select>
+<h1>Automatic Smart CV Analyzer</h1>
+<p>Upload CV PDFs. System will automatically detect the best matching specialty, score 1-10, and accept/reject each CV.</p>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
@@ -49,12 +43,16 @@ button:disabled { background: #999; cursor: not-allowed; }
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// مهارات لكل وظيفة
-const jobRoles = {
-    "IT Developer": ["html","css","javascript","python","sql"],
-    "Project Manager": ["management","planning","project","team lead"],
-    "Customer Support": ["communication","customer service","problem solving","teamwork"],
-    "Data Analyst": ["excel","sql","python","database"]
+// قاعدة بيانات للاختصاصات والمهارات المطلوبة
+const specialties = {
+    "IT Developer": ["html","css","javascript","python","sql","database","react","nodejs","java","c++"],
+    "Project Manager": ["management","planning","project","team lead","organization","budget","schedule"],
+    "Customer Support": ["communication","customer service","problem solving","teamwork","helpdesk","support","sales"],
+    "Data Analyst": ["excel","sql","python","database","statistics","reporting","analytics","powerbi","tableau"],
+    "Graphic Designer": ["photoshop","illustrator","design","creativity","indesign","figma"],
+    "Marketing Specialist": ["marketing","seo","content","social media","ads","strategy","digital marketing"],
+    "HR Specialist": ["recruitment","hr","interview","employee","training","policy"],
+    "Finance / Accounting": ["accounting","finance","excel","budget","reporting","tax","audit"]
 };
 
 let results = [];
@@ -64,9 +62,6 @@ async function analyzeBatch() {
     const resultsCards = document.getElementById('resultsCards');
     const downloadBtn = document.getElementById('downloadExcel');
     const analyzeBtn = document.getElementById('analyzeBtn');
-    const jobRole = document.getElementById('jobRole').value;
-    const requiredSkills = jobRoles[jobRole];
-
     resultsCards.innerHTML = "Processing PDFs, please wait... ⏳";
     downloadBtn.style.display = "none";
     analyzeBtn.disabled = true;
@@ -81,14 +76,16 @@ async function analyzeBatch() {
     for (let file of filesInput.files) {
         const text = await extractTextFromPDF(file);
         const info = extractInfo(text);
-        const skillData = analyzeSkills(text);
-        const strongSkill = getStrongestSkill(skillData.skillsList);
-        const statusScore = evaluateCV(skillData.skillsList, info, requiredSkills);
+        const skillData = analyzeSkills(text, info.experience);
+        const strongSkill = getStrongestSkillAI(skillData.skillsList, info.experience);
+        const detectedSpecialty = detectSpecialty(skillData.skillsList);
+        const statusScore = evaluateCVAI(skillData.skillsList, info, specialties[detectedSpecialty]);
 
         results.push({ 
             name: info.name || file.name, 
             phone: info.phone, 
             strongSkill, 
+            specialty: detectedSpecialty, 
             status: statusScore.status, 
             reason: statusScore.reason, 
             score: statusScore.score,
@@ -108,9 +105,10 @@ async function analyzeBatch() {
         <div class="card">
             <h3>${res.name}</h3>
             ${res.phone?`<p class="phone">Phone: ${res.phone}</p>`:''}
+            <p class="specialty">Detected Specialty: ${res.specialty}</p>
             <p>Strongest Skill: <span class="strongSkill">${res.strongSkill}</span></p>
             <p class="status ${res.status?'accept':'reject'}">Status: ${res.status?"Accepted ✅":"Rejected ❌"}</p>
-            <p class="score">Score: ${res.score}/10</p>
+            <p class="score">Smart Score: ${res.score}/10</p>
             ${res.reason?`<p>Reason: ${res.reason}</p>`:''}
         </div>`;
     });
@@ -170,27 +168,52 @@ function extractInfo(text){
     return { email: emailMatch?emailMatch[0]:'', phone: phoneMatch?phoneMatch[0]:'', experience, education, name };
 }
 
-// تحليل المهارات
-function analyzeSkills(text){
+// تحليل المهارات + وزن أكبر للخبرة العملية
+function analyzeSkills(text, experience){
     let skillsList = [];
     const words = text.split(/\W+/);
     words.forEach(word=>{
         if(word.length>2) skillsList.push(word);
     });
+    experience.forEach(exp=>{
+        exp.split(/\W+/).forEach(w=>{
+            if(w.length>2 && !skillsList.includes(w.toLowerCase())) skillsList.push(w.toLowerCase());
+        });
+    });
     return { skillsList };
 }
 
-// أقوى مهارة
-function getStrongestSkill(skillsList){
+// أقوى مهارة مع AI (وزن الخبرة)
+function getStrongestSkillAI(skillsList, experience){
     if(skillsList.length===0) return "N/A";
     const freq = {};
     skillsList.forEach(skill => { freq[skill]=(freq[skill]||0)+1; });
+    experience.forEach(exp=>{
+        exp.split(/\W+/).forEach(word=>{
+            if(freq[word]) freq[word]+=2;
+        });
+    });
     let sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]);
     return sorted[0][0];
 }
 
-// تقييم CV + score 1-10 حسب الوظيفة
-function evaluateCV(skillsList, info, requiredSkills){
+// اكتشاف الاختصاص الأنسب بناءً على المهارات
+function detectSpecialty(skillsList){
+    let bestMatch = "General";
+    let maxMatches = 0;
+    for(let spec in specialties){
+        const reqSkills = specialties[spec];
+        let matches = reqSkills.filter(s=>skillsList.includes(s.toLowerCase())).length;
+        if(matches > maxMatches){
+            maxMatches = matches;
+            bestMatch = spec;
+        }
+    }
+    return bestMatch;
+}
+
+// تقييم CV ذكي + score 1-10 حسب الاختصاص
+function evaluateCVAI(skillsList, info, requiredSkills){
     let missingSkills = [];
     requiredSkills.forEach(skill=>{
         if(!skillsList.includes(skill.toLowerCase())){
@@ -198,7 +221,7 @@ function evaluateCV(skillsList, info, requiredSkills){
         }
     });
 
-    let score = 5; // نقطة أساسية
+    let score = 5; 
     if(info.experience.length>0) score += 2;
     if(info.education.length>0) score += 1;
     let matchedSkills = requiredSkills.filter(s=>skillsList.includes(s.toLowerCase())).length;
@@ -219,7 +242,7 @@ function evaluateCV(skillsList, info, requiredSkills){
 // تصدير Excel مفصل
 function downloadExcel(){
     const wb = XLSX.utils.book_new();
-    const ws_data=[["CV Name","Email","Phone","Experience","Education","Skills","Status","Reason","Score"]];
+    const ws_data=[["CV Name","Email","Phone","Experience","Education","Skills","Detected Specialty","Status","Reason","Smart Score"]];
 
     results.forEach(res=>{
         ws_data.push([
@@ -229,6 +252,7 @@ function downloadExcel(){
             res.experience.join(" | "),
             res.education.join(" | "),
             res.skillsList.join(" | "),
+            res.specialty,
             res.status?"Accepted":"Rejected",
             res.reason,
             res.score
@@ -237,7 +261,7 @@ function downloadExcel(){
 
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     XLSX.utils.book_append_sheet(wb,ws,"CV Data");
-    XLSX.writeFile(wb,"CV_Hiring_Analysis_Job.xlsx");
+    XLSX.writeFile(wb,"Smart_CV_Analysis_Auto.xlsx");
 }
 </script>
 
