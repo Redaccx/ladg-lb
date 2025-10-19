@@ -3,55 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI CV Analyzer v4</title>
+<title>AI CV Analyzer v6</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body { font-family: 'Segoe UI', sans-serif; background: #0d0d0d; color: #fff; padding: 15px; margin:0;}
-.container { max-width: 1000px; margin: auto; background: #111; padding: 20px; box-shadow: 0 0 20px rgba(0,255,255,0.2); border-radius:12px;}
-h1 { color: #00f5ff; text-align:center; margin-bottom:20px; text-shadow: 0 0 10px #00f5ff;}
-input[type=file] { margin-bottom: 15px; width:100%; padding:8px; font-size:1em; border-radius:5px; border:1px solid #00f5ff; background:#222; color:#fff;}
-button { padding: 10px 15px; background: #00f5ff; color: #000; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; display:inline-block; font-weight:bold;}
-button:disabled { background: #333; cursor: not-allowed; }
-.cards { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top:20px;}
-.card { background: #111; padding:15px; border-radius:10px; flex: 1 1 300px; box-shadow:0 0 15px rgba(0,255,255,0.3); opacity:0; transform:translateY(50px); transition: all 0.8s ease, box-shadow 1s ease-in-out; }
+body { font-family: 'Segoe UI', sans-serif; margin:0; padding:0; overflow-x:hidden; }
+#bgCanvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; background:#0d0d0d; }
+.container { position:relative; max-width:1000px; margin:auto; background: rgba(17,17,17,0.9); padding:20px; box-shadow:0 0 20px rgba(0,255,255,0.2); border-radius:12px; margin-top:30px; }
+h1 { color:#00f5ff; text-align:center; margin-bottom:20px; text-shadow:0 0 10px #00f5ff; }
+input[type=file] { margin-bottom:15px; width:100%; padding:8px; font-size:1em; border-radius:5px; border:1px solid #00f5ff; background:#222; color:#fff; }
+button { padding:10px 15px; background:#00f5ff; color:#000; border:none; cursor:pointer; border-radius:5px; margin-bottom:10px; font-weight:bold; }
+button:disabled { background:#333; cursor:not-allowed; }
+.cards { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-top:20px; }
+.card { background:#111; padding:15px; border-radius:10px; flex:1 1 300px; box-shadow:0 0 15px rgba(0,255,255,0.3); opacity:0; transform:translateY(50px); transition: all 0.8s ease, box-shadow 1s ease-in-out; }
 .card.show {opacity:1; transform:translateY(0); animation: glow 2s infinite alternate;}
 @keyframes glow {
-  0% { box-shadow: 0 0 15px rgba(0,255,255,0.3);}
-  50% { box-shadow: 0 0 25px rgba(0,255,255,0.7);}
-  100% { box-shadow: 0 0 15px rgba(0,255,255,0.3);}
+  0% { box-shadow:0 0 15px rgba(0,255,255,0.3);}
+  50% { box-shadow:0 0 25px rgba(0,255,255,0.7);}
+  100% { box-shadow:0 0 15px rgba(0,255,255,0.3);}
 }
-.card h3 { margin: 0 0 10px 0; color: #00f5ff;}
+.card h3 { margin:0 0 10px 0; color:#00f5ff;}
 .phone { font-weight:bold; color:#0ff; margin-top:5px; }
-.status { font-weight:bold; margin-top:5px; }
-.status.accept { color: #0f0; }
-.status.reject { color: #f00; }
-.strongSkill { font-weight:bold; color:#0ff; }
-.specialty { font-weight:bold; margin-top:5px; color:#0ff;}
-.score { font-weight:bold; margin-top:5px; color:#ff0; }
-.reason { font-style: italic; margin-top:5px; color:#f55;}
+.status { font-weight:bold; margin-top:5px; animation: pulse 2s infinite; }
+.status.accept { color:#0f0; }
+.status.reject { color:#f00; }
+.strongSkill { font-weight:bold; color:#0ff; animation: pulse 2s infinite alternate; }
+.specialty { font-weight:bold; margin-top:5px; color:#0ff; animation: pulse 2s infinite alternate; }
+.score { font-weight:bold; margin-top:5px; color:#ff0; animation: pulse 2s infinite alternate; }
+.reason { font-style:italic; margin-top:5px; color:#f55; animation: pulse 2s infinite alternate; }
+@keyframes pulse {
+  0% { text-shadow: 0 0 5px #0ff, 0 0 10px #0ff; }
+  50% { text-shadow: 0 0 15px #0ff, 0 0 25px #0ff; }
+  100% { text-shadow: 0 0 5px #0ff, 0 0 10px #0ff; }
+}
 .loader {display:none; text-align:center; margin:20px; font-size:1.2em; color:#00f5ff; text-shadow:0 0 10px #00f5ff; animation: blink 1.2s infinite;}
 @keyframes blink {0%,50%,100%{opacity:1;}25%,75%{opacity:0.2;}}
 @media(max-width:600px){.cards{flex-direction:column;align-items:center;}}
 </style>
 </head>
 <body>
+<canvas id="bgCanvas"></canvas>
 <div class="container">
-<h1>🤖 AI CV Analyzer v4</h1>
-<p>Upload PDF CVs. The AI scans multiple specialties with realistic evaluation and dynamic glow effect.</p>
-
+<h1>🤖 AI CV Analyzer v6</h1>
+<p>Upload PDF CVs. The AI scans multiple specialties with realistic evaluation.</p>
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
 <button id="downloadExcel" style="display:none;" onclick="downloadExcel()">Download Excel</button>
-
-<div id="loader" class="loader">🤖 AI is analyzing your CVs... Scanning & Learning...</div>
+<div id="loader" class="loader">🤖 AI is analyzing your CVs... Processing...</div>
+<audio id="bgAudio" loop>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+<button onclick="toggleAudio()">🎵 Toggle Music</button>
 <div class="cards" id="resultsCards"></div>
 </div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+// Background animation
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let lines = [];
+for(let i=0;i<50;i++){ lines.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, len:50+Math.random()*100, speed:1+Math.random()*2}); }
+function animateBG(){
+    ctx.fillStyle='rgba(13,13,13,0.3)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle='#0ff';
+    ctx.lineWidth=1;
+    lines.forEach(l=>{
+        ctx.beginPath();
+        ctx.moveTo(l.x,l.y);
+        ctx.lineTo(l.x, l.y+l.len);
+        ctx.stroke();
+        l.y+=l.speed;
+        if(l.y>canvas.height) l.y=-l.len;
+    });
+    requestAnimationFrame(animateBG);
+}
+animateBG();
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+
+// Audio
+function toggleAudio(){
+    const audio = document.getElementById('bgAudio');
+    if(audio.paused) audio.play();
+    else audio.pause();
+}
+
+// specialties
 const specialties = [
 "IT / Software Development","Web & Mobile Development","Data Science & Analytics","AI / Machine Learning",
 "Cybersecurity","Project Management","Human Resources / HR","Finance / Accounting","Marketing / Digital Marketing",
@@ -101,7 +143,6 @@ async function analyzeBatch() {
 function displayResults(){
     const resultsCards = document.getElementById('resultsCards');
     resultsCards.innerHTML = "";
-
     results.forEach(res=>{
         const card = document.createElement("div");
         card.className="card";
@@ -117,7 +158,6 @@ function displayResults(){
         resultsCards.appendChild(card);
         setTimeout(()=>card.classList.add("show"),100);
     });
-
     document.getElementById('downloadExcel').style.display = "inline-block";
     document.getElementById('analyzeBtn').disabled = false;
 }
@@ -195,7 +235,7 @@ function downloadExcel(){
     });
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     XLSX.utils.book_append_sheet(wb,ws,"CV Data");
-    XLSX.writeFile(wb,"AI_CV_Report_v4.xlsx");
+    XLSX.writeFile(wb,"AI_CV_Report_v6.xlsx");
 }
 </script>
 </body>
