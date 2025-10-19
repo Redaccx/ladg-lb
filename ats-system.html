@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Realistic CV Analyzer</title>
+<title>CV Hiring Analyzer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -21,14 +21,16 @@ button:disabled { background: #999; cursor: not-allowed; }
 .skills, .experience, .education { margin-top:10px; font-size:0.9em; line-height:1.3; }
 .phone, .email { font-weight:bold; margin-top:5px; color:#0d47a1; }
 .section-title { font-weight:bold; margin-top:10px; color:#1565c0; }
+.status { font-weight:bold; margin-top:10px; color: green; }
+.status.reject { color:red; }
 @media(max-width:600px){.cards{flex-direction:column;align-items:center;}}
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1>Realistic CV Analyzer</h1>
-<p>Upload multiple CV PDFs to extract real information, skills, experiences, education, and contacts.</p>
+<h1>CV Hiring Analyzer</h1>
+<p>Upload multiple CV PDFs to extract real data, categorize skills, and determine hiring decision.</p>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
@@ -40,13 +42,16 @@ button:disabled { background: #999; cursor: not-allowed; }
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// الأقسام والمهارات الأولية
+// تعريف الأقسام والمهارات الأولية
 const categories = {
     "IT Skills": ["it","information technology","network","website","html","css","javascript","ms office","excel","troubleshooting","database","sql","python","java"],
     "Leadership / Management": ["management","leader","team lead","coordinator","manager","organize","project","planning","supervision"],
     "Customer Service": ["customer service","communication","problem solving","teamwork","support","helpdesk","service","client","sales"],
     "Languages": ["english","arabic","french","spanish","german"]
 };
+
+// مثال: متطلبات الوظيفة (يمكن تعديلها حسب الوظيفة)
+const requiredSkills = ["html","css","javascript"]; // للوظائف IT مثلاً
 
 let results = [];
 
@@ -70,11 +75,12 @@ async function analyzeBatch() {
         const text = await extractTextFromPDF(file);
         const info = extractInfo(text);
         const skillData = analyzeCategories(text);
-        results.push({ name: file.name, ...info, ...skillData });
+        const status = evaluateCV(skillData.skillsList, info); // تقييم القبول/رفض
+        results.push({ name: file.name, status, ...info, ...skillData });
     }
 
     resultsCards.innerHTML = "";
-    results.sort((a,b)=>b.score-a.score);
+    results.sort((a,b)=>a.name.localeCompare(b.name));
 
     // عرض النتائج
     let cardsHTML = "";
@@ -103,6 +109,8 @@ async function analyzeBatch() {
             ${expHTML}
             ${eduHTML}
             ${skillsHTML}
+            <p class="status ${res.status.accepted?'':'reject'}">Status: ${res.status.accepted?"Accepted ✅":"Rejected ❌"}</p>
+            ${res.status.reason?`<p>Reason: ${res.status.reason}</p>`:''}
         </div>`;
     });
 
@@ -148,17 +156,14 @@ function extractInfo(text){
     const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
     const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)?[\d\s-]{5,15}/);
 
-    // استخراج الخبرات: البحث عن كلمات common position/company
     let experience=[], education=[];
     const lines = text.split(/\r?\n/);
     lines.forEach(line=>{
         line = line.trim();
         if(line.length>5){
-            // كلمات مفتاحية للتجربة العملية
             if(/(company|position|worked at|experience|role|internship)/i.test(line)){
                 experience.push(line);
             }
-            // كلمات مفتاحية للتعليم
             if(/(university|institute|bachelor|master|degree|diploma)/i.test(line)){
                 education.push(line);
             }
@@ -176,6 +181,7 @@ function extractInfo(text){
 // تحليل المهارات وتصنيفها
 function analyzeCategories(text){
     let skillMatches = {};
+    let skillsList = [];
     for(let cat in categories) skillMatches[cat] = {};
     skillMatches["Other Skills"] = {};
 
@@ -186,28 +192,44 @@ function analyzeCategories(text){
             for(let cat in categories){
                 if(categories[cat].includes(word)){
                     skillMatches[cat][word] = (skillMatches[cat][word]||0)+1;
+                    skillsList.push(word);
                     matched=true;
                 }
             }
             if(!matched){
                 skillMatches["Other Skills"][word] = (skillMatches["Other Skills"][word]||0)+1;
+                skillsList.push(word);
             }
         }
     });
 
-    let totalMatched = Object.values(skillMatches).reduce((sum,catObj)=>{
-        return sum + Object.values(catObj).reduce((a,b)=>a+b,0);
-    },0);
-    let score = Math.round((totalMatched/words.length)*100);
-    if(score>100) score=100;
+    return {skillMatches, skillsList};
+}
 
-    return {skillMatches,score};
+// تقييم CV: قبول أو رفض
+function evaluateCV(skillsList, info){
+    let missingSkills = [];
+    requiredSkills.forEach(skill=>{
+        if(!skillsList.includes(skill.toLowerCase())){
+            missingSkills.push(skill);
+        }
+    });
+
+    if(missingSkills.length>0){
+        return {accepted:false, reason:"Missing required skills: " + missingSkills.join(", ")};
+    }
+
+    if(info.experience.length===0){
+        return {accepted:false, reason:"No experience listed"};
+    }
+
+    return {accepted:true, reason:"All requirements met"};
 }
 
 // تصدير Excel
 function downloadExcel(){
     const wb = XLSX.utils.book_new();
-    const ws_data=[["CV Name","Email","Phone","Experience","Education","Category","Skill","Count"]];
+    const ws_data=[["CV Name","Email","Phone","Experience","Education","Category","Skill","Count","Status","Reason"]];
 
     results.forEach(res=>{
         for(let cat in res.skillMatches){
@@ -220,15 +242,17 @@ function downloadExcel(){
                     res.education.join(" | "),
                     cat,
                     skill,
-                    count
+                    count,
+                    res.status.accepted?"Accepted":"Rejected",
+                    res.status.reason
                 ]);
             }
         }
     });
 
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    XLSX.utils.book_append_sheet(wb,ws,"CV Realistic Data");
-    XLSX.writeFile(wb,"CV_Analysis_Realistic.xlsx");
+    XLSX.utils.book_append_sheet(wb,ws,"CV Hiring Data");
+    XLSX.writeFile(wb,"CV_Hiring_Analysis.xlsx");
 }
 </script>
 
