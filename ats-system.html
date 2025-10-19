@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Automatic Smart CV Analyzer</title>
+<title>Smart CV Analyzer - Realistic Version</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background: #f4f4f9; color: #333; padding: 15px; margin:0;}
-.container { max-width: 950px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius:10px;}
+.container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius:10px;}
 h1 { color: #1e88e5; text-align:center; margin-bottom:20px;}
 input[type=file] { margin-bottom: 15px; width:100%; padding:8px; font-size:1em; }
 button { padding: 10px 15px; background: #1e88e5; color: #fff; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; display:inline-block; }
@@ -30,8 +30,8 @@ button:disabled { background: #999; cursor: not-allowed; }
 <body>
 
 <div class="container">
-<h1>Automatic Smart CV Analyzer</h1>
-<p>Upload CV PDFs. System will automatically detect the best matching specialty, score 1-10, and accept/reject each CV.</p>
+<h1>Smart CV Analyzer - Realistic Version</h1>
+<p>Upload CV PDFs. System will detect the best specialty, give a realistic score 1-10, and accept/reject each CV.</p>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
@@ -43,20 +43,50 @@ button:disabled { background: #999; cursor: not-allowed; }
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// قاعدة بيانات للاختصاصات والمهارات المطلوبة
+// قاعدة بيانات موسعة لكل الاختصاصات مع المهارات الأساسية (يمكن توسيعها لاحقاً)
 const specialties = {
-    "IT Developer": ["html","css","javascript","python","sql","database","react","nodejs","java","c++"],
-    "Project Manager": ["management","planning","project","team lead","organization","budget","schedule"],
-    "Customer Support": ["communication","customer service","problem solving","teamwork","helpdesk","support","sales"],
-    "Data Analyst": ["excel","sql","python","database","statistics","reporting","analytics","powerbi","tableau"],
-    "Graphic Designer": ["photoshop","illustrator","design","creativity","indesign","figma"],
-    "Marketing Specialist": ["marketing","seo","content","social media","ads","strategy","digital marketing"],
-    "HR Specialist": ["recruitment","hr","interview","employee","training","policy"],
-    "Finance / Accounting": ["accounting","finance","excel","budget","reporting","tax","audit"]
+    "IT / Software Development": ["html","css","javascript","python","java","c++","c#","sql","react","nodejs","git","apis","cloud","devops"],
+    "Web & Mobile Development": ["html","css","javascript","react","angular","vue","flutter","kotlin","swift","ux","ui"],
+    "Data Science & Analytics": ["python","r","sql","excel","statistics","machine learning","tableau","powerbi","big data","data visualization"],
+    "AI / Machine Learning": ["python","tensorflow","pytorch","deep learning","neural networks","data analysis"],
+    "Cybersecurity": ["network security","ethical hacking","penetration testing","firewall","encryption","risk assessment"],
+    "Cloud Computing / DevOps": ["aws","azure","gcp","docker","kubernetes","ci/cd","infrastructure"],
+    "Project Management": ["project planning","risk management","budgeting","team leadership","agile","scrum","jira"],
+    "Human Resources / HR": ["recruitment","employee relations","training","hr policies","payroll","performance management"],
+    "Finance / Accounting": ["accounting","finance","excel","tax","budgeting","auditing","reporting","sap","quickbooks"],
+    "Marketing / Digital Marketing": ["seo","sem","social media","content marketing","ads","google analytics","strategy"],
+    "Sales / Customer Service": ["communication","negotiation","crm","customer support","problem solving","lead generation"],
+    "Graphic Design / UI-UX": ["photoshop","illustrator","figma","sketch","indesign","creativity","branding","ux research"],
+    "Mechanical / Electrical / Civil Engineering": ["cad","autocad","solidworks","matlab","engineering design","project management"],
+    "Healthcare / Medical": ["patient care","medical knowledge","diagnostics","lab work","nursing skills"],
+    "Education / Teaching": ["lesson planning","classroom management","curriculum development","communication"],
+    "Law / Legal": ["legal research","contract drafting","compliance","litigation","communication"],
+    "Research / Science": ["data analysis","laboratory","report writing","experiment design","critical thinking"],
+    "Environment / Sustainability / Agriculture": ["environmental science","sustainability","agriculture","data analysis"],
+    "Arts / Media / Entertainment": ["video editing","photography","sound editing","social media","creativity"],
+    "Content Writing / Copywriting": ["writing","editing","blogging","seo","storytelling","social media"],
+    "Video Production / Animation": ["premiere","after effects","final cut","storyboarding","motion graphics"],
+    "Social Media Management": ["content creation","analytics","instagram","facebook","twitter","scheduling tools"],
+    "Product Management": ["product roadmap","market research","agile","scrum","user stories","strategy"],
+    "Event Management": ["planning","coordination","communication","budgeting","marketing","vendor management"],
+    "QA / Testing / Compliance": ["manual testing","automation testing","bug tracking","regulatory compliance","iso standards"],
+    "Psychology / Counseling / Social Work": ["counseling","therapy","case study","communication","research","assessment"],
+    "Sports / Fitness / Coaching": ["physical training","coaching","fitness planning","motivation","team management"],
+    "Public Relations / Communications": ["media relations","writing","public speaking","branding","social media","strategy"],
+    "Energy / Renewable Energy": ["solar","wind","electrical systems","energy analysis","sustainability"],
+    "E-commerce / Online Business": ["shopify","seo","digital marketing","analytics","customer service","product management"],
+    "Entrepreneurship / Startups": ["business planning","fundraising","marketing","strategy","leadership","innovation"],
+    "Translation / Interpretation / Languages": ["multilingual","translation","proofreading","cultural knowledge","interpretation"],
+    "Veterinary / Animal Care": ["animal health","surgery","diagnostics","veterinary science","care management"],
+    "Robotics / Automation": ["plc","arduino","robotics","python","sensors","automation systems"],
+    "Aerospace / Space Science": ["aerodynamics","space systems","research","navigation","technical reporting"],
+    "Journalism / Reporting": ["writing","research","interviewing","editing","investigative reporting"]
 };
 
+// مصفوفة لتخزين نتائج التحليل
 let results = [];
 
+// معالجة عدة ملفات CV
 async function analyzeBatch() {
     const filesInput = document.getElementById('pdfFiles');
     const resultsCards = document.getElementById('resultsCards');
@@ -96,6 +126,12 @@ async function analyzeBatch() {
         });
     }
 
+    displayResults();
+}
+
+// عرض النتائج على الصفحة
+function displayResults(){
+    const resultsCards = document.getElementById('resultsCards');
     resultsCards.innerHTML = "";
     results.sort((a,b)=>b.score-a.score);
 
@@ -114,8 +150,8 @@ async function analyzeBatch() {
     });
 
     resultsCards.innerHTML = cardsHTML;
-    downloadBtn.style.display = "inline-block";
-    analyzeBtn.disabled = false;
+    document.getElementById('downloadExcel').style.display = "inline-block";
+    document.getElementById('analyzeBtn').disabled = false;
 }
 
 // استخراج نص PDF + OCR عند الحاجة
@@ -150,7 +186,7 @@ async function extractTextFromPDF(file){
     });
 }
 
-// استخراج المعلومات الأساسية
+// استخراج معلومات أساسية
 function extractInfo(text){
     const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
     const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)?[\d\s-]{5,15}/);
@@ -168,43 +204,38 @@ function extractInfo(text){
     return { email: emailMatch?emailMatch[0]:'', phone: phoneMatch?phoneMatch[0]:'', experience, education, name };
 }
 
-// تحليل المهارات + وزن أكبر للخبرة العملية
+// تحليل المهارات + وزن أكبر للخبرة
 function analyzeSkills(text, experience){
     let skillsList = [];
-    const words = text.split(/\W+/);
-    words.forEach(word=>{
-        if(word.length>2) skillsList.push(word);
+    const allSkills = [].concat(...Object.values(specialties));
+    allSkills.forEach(skill=>{
+        if(text.includes(skill.toLowerCase())){
+            skillsList.push(skill);
+        }
     });
     experience.forEach(exp=>{
-        exp.split(/\W+/).forEach(w=>{
-            if(w.length>2 && !skillsList.includes(w.toLowerCase())) skillsList.push(w.toLowerCase());
+        allSkills.forEach(skill=>{
+            if(exp.toLowerCase().includes(skill.toLowerCase()) && !skillsList.includes(skill)){
+                skillsList.push(skill);
+            }
         });
     });
-    return { skillsList };
+    return {skillsList};
 }
 
-// أقوى مهارة مع AI (وزن الخبرة)
-function getStrongestSkillAI(skillsList, experience){
-    if(skillsList.length===0) return "N/A";
-    const freq = {};
-    skillsList.forEach(skill => { freq[skill]=(freq[skill]||0)+1; });
-    experience.forEach(exp=>{
-        exp.split(/\W+/).forEach(word=>{
-            if(freq[word]) freq[word]+=2;
-        });
-    });
-    let sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]);
-    return sorted[0][0];
+// اكتشاف أقوى مهارة
+function getStrongestSkillAI(skillsList){
+    if(skillsList.length===0) return "Not Detected";
+    return skillsList[0];
 }
 
-// اكتشاف الاختصاص الأنسب بناءً على المهارات
+// اكتشاف الاختصاص الأفضل
 function detectSpecialty(skillsList){
-    let bestMatch = "General";
-    let maxMatches = 0;
+    let maxMatches=0, bestMatch="General";
     for(let spec in specialties){
         const reqSkills = specialties[spec];
         let matches = reqSkills.filter(s=>skillsList.includes(s.toLowerCase())).length;
-        if(matches > maxMatches){
+        if(matches>maxMatches){
             maxMatches = matches;
             bestMatch = spec;
         }
@@ -229,21 +260,20 @@ function evaluateCVAI(skillsList, info, requiredSkills){
     if(score>10) score=10;
     if(score<1) score=1;
 
-    if(missingSkills.length>0){
-        return {status:false, reason:"Missing required skills: "+missingSkills.join(", "), score};
+    if(missingSkills.length>3){
+        return {status:false, reason:"Missing essential skills: "+missingSkills.join(", "), score};
     }
     if(info.experience.length===0){
         return {status:false, reason:"No experience listed", score};
     }
 
-    return {status:true, reason:"All requirements met", score};
+    return {status:true, reason:"All essential requirements met", score};
 }
 
 // تصدير Excel مفصل
 function downloadExcel(){
     const wb = XLSX.utils.book_new();
     const ws_data=[["CV Name","Email","Phone","Experience","Education","Skills","Detected Specialty","Status","Reason","Smart Score"]];
-
     results.forEach(res=>{
         ws_data.push([
             res.name,
@@ -258,12 +288,10 @@ function downloadExcel(){
             res.score
         ]);
     });
-
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     XLSX.utils.book_append_sheet(wb,ws,"CV Data");
-    XLSX.writeFile(wb,"Smart_CV_Analysis_Auto.xlsx");
+    XLSX.writeFile(wb,"Smart_CV_Analysis_Realistic.xlsx");
 }
 </script>
-
 </body>
 </html>
