@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart CV Analyzer - Realistic Version</title>
+<title>CV Analyzer - Simplified & Realistic</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -24,14 +24,15 @@ button:disabled { background: #999; cursor: not-allowed; }
 .strongSkill { font-weight:bold; color:#1565c0; }
 .specialty { font-weight:bold; margin-top:5px; color:#004d40; }
 .score { font-weight:bold; margin-top:5px; color:#ff6f00; }
+.reason { font-style: italic; margin-top:5px; color:#d84315;}
 @media(max-width:600px){.cards{flex-direction:column;align-items:center;}}
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1>Smart CV Analyzer - Realistic Version</h1>
-<p>Upload CV PDFs. System will detect the best specialty, give a realistic score 1-10, and accept/reject each CV.</p>
+<h1>CV Analyzer - Simplified & Realistic</h1>
+<p>Upload CV PDFs. System detects best specialty, evaluates CV realistically, and decides Accept/Reject.</p>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
@@ -43,47 +44,66 @@ button:disabled { background: #999; cursor: not-allowed; }
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// قاعدة بيانات موسعة لكل الاختصاصات مع المهارات الأساسية (يمكن توسيعها لاحقاً)
-const specialties = {
-    "IT / Software Development": ["html","css","javascript","python","java","c++","c#","sql","react","nodejs","git","apis","cloud","devops"],
-    "Web & Mobile Development": ["html","css","javascript","react","angular","vue","flutter","kotlin","swift","ux","ui"],
-    "Data Science & Analytics": ["python","r","sql","excel","statistics","machine learning","tableau","powerbi","big data","data visualization"],
-    "AI / Machine Learning": ["python","tensorflow","pytorch","deep learning","neural networks","data analysis"],
-    "Cybersecurity": ["network security","ethical hacking","penetration testing","firewall","encryption","risk assessment"],
-    "Cloud Computing / DevOps": ["aws","azure","gcp","docker","kubernetes","ci/cd","infrastructure"],
-    "Project Management": ["project planning","risk management","budgeting","team leadership","agile","scrum","jira"],
-    "Human Resources / HR": ["recruitment","employee relations","training","hr policies","payroll","performance management"],
-    "Finance / Accounting": ["accounting","finance","excel","tax","budgeting","auditing","reporting","sap","quickbooks"],
-    "Marketing / Digital Marketing": ["seo","sem","social media","content marketing","ads","google analytics","strategy"],
-    "Sales / Customer Service": ["communication","negotiation","crm","customer support","problem solving","lead generation"],
-    "Graphic Design / UI-UX": ["photoshop","illustrator","figma","sketch","indesign","creativity","branding","ux research"],
-    "Mechanical / Electrical / Civil Engineering": ["cad","autocad","solidworks","matlab","engineering design","project management"],
-    "Healthcare / Medical": ["patient care","medical knowledge","diagnostics","lab work","nursing skills"],
-    "Education / Teaching": ["lesson planning","classroom management","curriculum development","communication"],
-    "Law / Legal": ["legal research","contract drafting","compliance","litigation","communication"],
-    "Research / Science": ["data analysis","laboratory","report writing","experiment design","critical thinking"],
-    "Environment / Sustainability / Agriculture": ["environmental science","sustainability","agriculture","data analysis"],
-    "Arts / Media / Entertainment": ["video editing","photography","sound editing","social media","creativity"],
-    "Content Writing / Copywriting": ["writing","editing","blogging","seo","storytelling","social media"],
-    "Video Production / Animation": ["premiere","after effects","final cut","storyboarding","motion graphics"],
-    "Social Media Management": ["content creation","analytics","instagram","facebook","twitter","scheduling tools"],
-    "Product Management": ["product roadmap","market research","agile","scrum","user stories","strategy"],
-    "Event Management": ["planning","coordination","communication","budgeting","marketing","vendor management"],
-    "QA / Testing / Compliance": ["manual testing","automation testing","bug tracking","regulatory compliance","iso standards"],
-    "Psychology / Counseling / Social Work": ["counseling","therapy","case study","communication","research","assessment"],
-    "Sports / Fitness / Coaching": ["physical training","coaching","fitness planning","motivation","team management"],
-    "Public Relations / Communications": ["media relations","writing","public speaking","branding","social media","strategy"],
-    "Energy / Renewable Energy": ["solar","wind","electrical systems","energy analysis","sustainability"],
-    "E-commerce / Online Business": ["shopify","seo","digital marketing","analytics","customer service","product management"],
-    "Entrepreneurship / Startups": ["business planning","fundraising","marketing","strategy","leadership","innovation"],
-    "Translation / Interpretation / Languages": ["multilingual","translation","proofreading","cultural knowledge","interpretation"],
-    "Veterinary / Animal Care": ["animal health","surgery","diagnostics","veterinary science","care management"],
-    "Robotics / Automation": ["plc","arduino","robotics","python","sensors","automation systems"],
-    "Aerospace / Space Science": ["aerodynamics","space systems","research","navigation","technical reporting"],
-    "Journalism / Reporting": ["writing","research","interviewing","editing","investigative reporting"]
-};
+// قائمة الاختصاصات فقط
+const specialties = [
+    "IT / Software Development",
+    "Web & Mobile Development",
+    "Data Science & Analytics",
+    "AI / Machine Learning",
+    "Cybersecurity",
+    "Project Management",
+    "Human Resources / HR",
+    "Finance / Accounting",
+    "Marketing / Digital Marketing",
+    "Sales / Customer Service",
+    "Graphic Design / UI-UX",
+    "Mechanical / Electrical / Civil Engineering",
+    "Healthcare / Medical",
+    "Education / Teaching",
+    "Legal / Law",
+    "Supply Chain / Logistics",
+    "Hospitality / Tourism",
+    "Media / Journalism",
+    "Art / Music / Entertainment",
+    "Research / Academia",
+    "Consulting / Strategy",
+    "Environmental / Sustainability",
+    "Blockchain / Crypto",
+    "Engineering Management",
+    "Data Engineering",
+    "Cloud Computing",
+    "DevOps",
+    "Customer Success",
+    "Quality Assurance / Testing",
+    "Product Management",
+    "Social Work / NGOs",
+    "Psychology / Counseling",
+    "Sports / Fitness",
+    "E-commerce / Retail",
+    "Public Relations",
+    "Advertising",
+    "Real Estate",
+    "Construction",
+    "Automotive Engineering",
+    "Telecommunications",
+    "Pharmaceutical / Biotech",
+    "Nutrition / Dietetics",
+    "Fashion / Design",
+    "Animation / Visual Effects",
+    "Photography / Videography",
+    "Translation / Linguistics",
+    "Event Management",
+    "Entrepreneurship / Startups",
+    "Blockchain Development",
+    "Robotics / AI Hardware",
+    "Nanotechnology",
+    "Renewable Energy",
+    "Geology / Earth Sciences",
+    "Marine / Oceanography",
+    "Aerospace Engineering",
+    "Gaming / Game Development"
+];
 
-// مصفوفة لتخزين نتائج التحليل
 let results = [];
 
 // معالجة عدة ملفات CV
@@ -106,10 +126,9 @@ async function analyzeBatch() {
     for (let file of filesInput.files) {
         const text = await extractTextFromPDF(file);
         const info = extractInfo(text);
-        const skillData = analyzeSkills(text, info.experience);
-        const strongSkill = getStrongestSkillAI(skillData.skillsList, info.experience);
-        const detectedSpecialty = detectSpecialty(skillData.skillsList);
-        const statusScore = evaluateCVAI(skillData.skillsList, info, specialties[detectedSpecialty]);
+        const strongSkill = getStrongestSkill(text);
+        const detectedSpecialty = detectSpecialty(text);
+        const statusScore = evaluateCV(text, info);
 
         results.push({ 
             name: info.name || file.name, 
@@ -118,18 +137,14 @@ async function analyzeBatch() {
             specialty: detectedSpecialty, 
             status: statusScore.status, 
             reason: statusScore.reason, 
-            score: statusScore.score,
-            skillsList: skillData.skillsList,
-            experience: info.experience,
-            education: info.education,
-            email: info.email
+            score: statusScore.score
         });
     }
 
     displayResults();
 }
 
-// عرض النتائج على الصفحة
+// عرض النتائج
 function displayResults(){
     const resultsCards = document.getElementById('resultsCards');
     resultsCards.innerHTML = "";
@@ -144,8 +159,8 @@ function displayResults(){
             <p class="specialty">Detected Specialty: ${res.specialty}</p>
             <p>Strongest Skill: <span class="strongSkill">${res.strongSkill}</span></p>
             <p class="status ${res.status?'accept':'reject'}">Status: ${res.status?"Accepted ✅":"Rejected ❌"}</p>
-            <p class="score">Smart Score: ${res.score}/10</p>
-            ${res.reason?`<p>Reason: ${res.reason}</p>`:''}
+            <p class="score">Score: ${res.score}/10</p>
+            ${res.reason?`<p class="reason">${res.reason}</p>`:''}
         </div>`;
     });
 
@@ -188,100 +203,52 @@ async function extractTextFromPDF(file){
 
 // استخراج معلومات أساسية
 function extractInfo(text){
-    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
     const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)?[\d\s-]{5,15}/);
-
-    let experience=[], education=[];
-    const lines = text.split(/\r?\n/);
-    let name = '';
-    lines.forEach(line=>{
-        line = line.trim();
-        if(!name && line.length>2 && /^[a-zA-Z ]+$/.test(line)) name = line;
-        if(/(company|position|worked at|experience|role|internship)/i.test(line)) experience.push(line);
-        if(/(university|institute|bachelor|master|degree|diploma)/i.test(line)) education.push(line);
-    });
-
-    return { email: emailMatch?emailMatch[0]:'', phone: phoneMatch?phoneMatch[0]:'', experience, education, name };
+    let name = text.split(/\r?\n/).find(line=>line.length>2 && /^[a-zA-Z ]+$/.test(line))||"";
+    return { name, phone: phoneMatch?phoneMatch[0]:'' };
 }
 
-// تحليل المهارات + وزن أكبر للخبرة
-function analyzeSkills(text, experience){
-    let skillsList = [];
-    const allSkills = [].concat(...Object.values(specialties));
-    allSkills.forEach(skill=>{
-        if(text.includes(skill.toLowerCase())){
-            skillsList.push(skill);
-        }
-    });
-    experience.forEach(exp=>{
-        allSkills.forEach(skill=>{
-            if(exp.toLowerCase().includes(skill.toLowerCase()) && !skillsList.includes(skill)){
-                skillsList.push(skill);
-            }
-        });
-    });
-    return {skillsList};
+// أقوى كلمة كمؤشر مهارة
+function getStrongestSkill(text){
+    const words = text.split(/\s+/);
+    if(words.length===0) return "Not Detected";
+    return words[0].substring(0,15);
 }
 
-// اكتشاف أقوى مهارة
-function getStrongestSkillAI(skillsList){
-    if(skillsList.length===0) return "Not Detected";
-    return skillsList[0];
-}
-
-// اكتشاف الاختصاص الأفضل
-function detectSpecialty(skillsList){
-    let maxMatches=0, bestMatch="General";
-    for(let spec in specialties){
-        const reqSkills = specialties[spec];
-        let matches = reqSkills.filter(s=>skillsList.includes(s.toLowerCase())).length;
-        if(matches>maxMatches){
-            maxMatches = matches;
-            bestMatch = spec;
-        }
+// اكتشاف الاختصاص الأنسب (أقرب اسم)
+function detectSpecialty(text){
+    for(let spec of specialties){
+        if(text.includes(spec.toLowerCase())) return spec;
     }
-    return bestMatch;
+    return "General";
 }
 
-// تقييم CV ذكي + score 1-10 حسب الاختصاص
-function evaluateCVAI(skillsList, info, requiredSkills){
-    let missingSkills = [];
-    requiredSkills.forEach(skill=>{
-        if(!skillsList.includes(skill.toLowerCase())){
-            missingSkills.push(skill);
-        }
-    });
-
-    let score = 5; 
-    if(info.experience.length>0) score += 2;
-    if(info.education.length>0) score += 1;
-    let matchedSkills = requiredSkills.filter(s=>skillsList.includes(s.toLowerCase())).length;
-    score += matchedSkills * 1.5;
+// تقييم واقعي بدون نقاط محددة
+function evaluateCV(text, info){
+    let score = 5;
+    if(text.length>500) score+=3;
+    if(info.name) score+=1;
     if(score>10) score=10;
     if(score<1) score=1;
 
-    if(missingSkills.length>3){
-        return {status:false, reason:"Missing essential skills: "+missingSkills.join(", "), score};
-    }
-    if(info.experience.length===0){
-        return {status:false, reason:"No experience listed", score};
+    let status = true, reason = "All essential requirements met";
+    if(text.length<100) {
+        status=false;
+        reason="Insufficient content or experience";
     }
 
-    return {status:true, reason:"All essential requirements met", score};
+    return {status, reason, score};
 }
 
-// تصدير Excel مفصل
+// تصدير Excel
 function downloadExcel(){
     const wb = XLSX.utils.book_new();
-    const ws_data=[["CV Name","Email","Phone","Experience","Education","Skills","Detected Specialty","Status","Reason","Smart Score"]];
+    const ws_data=[["CV Name","Phone","Strongest Skill","Detected Specialty","Status","Reason","Score"]];
     results.forEach(res=>{
         ws_data.push([
             res.name,
-            res.email,
             res.phone,
-            res.experience.join(" | "),
-            res.education.join(" | "),
-            res.skillsList.join(" | "),
+            res.strongSkill,
             res.specialty,
             res.status?"Accepted":"Rejected",
             res.reason,
@@ -290,7 +257,7 @@ function downloadExcel(){
     });
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     XLSX.utils.book_append_sheet(wb,ws,"CV Data");
-    XLSX.writeFile(wb,"Smart_CV_Analysis_Realistic.xlsx");
+    XLSX.writeFile(wb,"Simplified_Realistic_CV_Report.xlsx");
 }
 </script>
 </body>
