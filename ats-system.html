@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Batch CV PDF Analyzer</title>
+<title>Batch CV PDF Analyzer with Excel Export</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background: #f4f4f9; color: #333; padding: 20px; }
 .container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -21,11 +22,12 @@ th { background: #1e88e5; color: #fff; }
 <body>
 
 <div class="container">
-<h1>Batch CV PDF Analyzer</h1>
-<p>Upload multiple CV PDFs (text or scanned) to get a full report and sorted ranking.</p>
+<h1>Batch CV PDF Analyzer with Excel Export</h1>
+<p>Upload multiple CV PDFs (text or scanned) to get a full report and sorted ranking. You can download the results as Excel.</p>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button onclick="analyzeBatch()">Analyze CVs</button>
+<button id="downloadExcel" style="display:none;" onclick="downloadExcel()">Download Excel</button>
 
 <div class="result" id="result">Results will appear here...</div>
 </div>
@@ -42,18 +44,21 @@ const keywords = {
     "Languages": ["english", "arabic", "french"]
 };
 
+let results = []; // لتخزين النتائج للـ Excel
+
 async function analyzeBatch() {
     const filesInput = document.getElementById('pdfFiles');
     const resultDiv = document.getElementById('result');
+    const downloadBtn = document.getElementById('downloadExcel');
     resultDiv.innerHTML = "Processing PDFs, please wait... ⏳";
+    downloadBtn.style.display = "none";
 
     if(filesInput.files.length === 0){
         alert("Please select at least one PDF file.");
         return;
     }
 
-    const results = [];
-
+    results = []; // إعادة تعيين النتائج
     for (let file of filesInput.files) {
         const text = await extractTextFromPDF(file);
         const analysis = analyzeText(text);
@@ -84,9 +89,10 @@ async function analyzeBatch() {
     tableHTML += `</table>`;
 
     resultDiv.innerHTML = tableHTML;
+    downloadBtn.style.display = "inline-block"; // إظهار زر Excel
 }
 
-// استخراج النص من PDF باستخدام OCR
+// استخراج النص من PDF أولًا ثم OCR عند الحاجة
 async function extractTextFromPDF(file){
     const fileReader = new FileReader();
     return new Promise((resolve) => {
@@ -97,17 +103,26 @@ async function extractTextFromPDF(file){
 
             for(let i = 1; i <= pdf.numPages; i++){
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 2 });
-                const canvas = document.createElement("canvas");
-                const context = canvas.getContext("2d");
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
 
-                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                // محاولة استخراج النص مباشرة
+                const textContent = await page.getTextContent();
+                let pageText = textContent.items.map(item => item.str).join(" ").trim();
 
-                const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
-                fullText += text + " ";
+                // إذا النص قليل أو فارغ، استخدم OCR
+                if(pageText.length < 10){
+                    const viewport = page.getViewport({ scale: 2 });
+                    const canvas = document.createElement("canvas");
+                    const context = canvas.getContext("2d");
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+                    pageText = text;
+                }
+
+                fullText += pageText + " ";
             }
+
             resolve(fullText.toLowerCase());
         };
         fileReader.readAsArrayBuffer(file);
@@ -139,6 +154,26 @@ function analyzeText(text){
     else message = "Weak Match ❌";
 
     return { score, message, skillMatches };
+}
+
+// تصدير النتائج إلى Excel
+function downloadExcel(){
+    const wb = XLSX.utils.book_new();
+    const ws_data = [["CV Name","Score %","Evaluation","Top Skills"]];
+
+    results.forEach(res => {
+        let topSkills = [];
+        for (let cat in res.skillMatches){
+            for (let skill in res.skillMatches[cat]){
+                topSkills.push(`${skill}(${res.skillMatches[cat][skill]})`);
+            }
+        }
+        ws_data.push([res.name, res.score, res.message, topSkills.join(", ")]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    XLSX.utils.book_append_sheet(wb, ws, "CV Results");
+    XLSX.writeFile(wb, "CV_Analysis_Results.xlsx");
 }
 </script>
 
