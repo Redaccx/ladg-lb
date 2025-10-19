@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate CV Analyzer</title>
+<title>Realistic CV Analyzer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -15,19 +15,20 @@ input[type=file] { margin-bottom: 15px; width:100%; }
 button { padding: 10px 15px; background: #1e88e5; color: #fff; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; display:inline-block; }
 button:disabled { background: #999; cursor: not-allowed; }
 .cards { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top:20px;}
-.card { background: #e0f7fa; padding:15px; border-radius:10px; flex: 1 1 280px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
+.card { background: #e0f7fa; padding:15px; border-radius:10px; flex: 1 1 300px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
 .card h3 { margin: 0 0 10px 0; color: #1e88e5;}
 .card p { margin:5px 0; }
-.skills { margin-top:10px; font-size:0.9em; line-height:1.3; }
-.phone { font-weight:bold; margin-top:5px; color:#0d47a1; }
+.skills, .experience, .education { margin-top:10px; font-size:0.9em; line-height:1.3; }
+.phone, .email { font-weight:bold; margin-top:5px; color:#0d47a1; }
+.section-title { font-weight:bold; margin-top:10px; color:#1565c0; }
 @media(max-width:600px){.cards{flex-direction:column;align-items:center;}}
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1>Ultimate CV Analyzer</h1>
-<p>Upload multiple CV PDFs to get a full skill report. Download detailed Excel with all discovered skills.</p>
+<h1>Realistic CV Analyzer</h1>
+<p>Upload multiple CV PDFs to extract real information, skills, experiences, education, and contacts.</p>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
 <button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
@@ -38,6 +39,14 @@ button:disabled { background: #999; cursor: not-allowed; }
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+// الأقسام والمهارات الأولية
+const categories = {
+    "IT Skills": ["it","information technology","network","website","html","css","javascript","ms office","excel","troubleshooting","database","sql","python","java"],
+    "Leadership / Management": ["management","leader","team lead","coordinator","manager","organize","project","planning","supervision"],
+    "Customer Service": ["customer service","communication","problem solving","teamwork","support","helpdesk","service","client","sales"],
+    "Languages": ["english","arabic","french","spanish","german"]
+};
 
 let results = [];
 
@@ -59,24 +68,41 @@ async function analyzeBatch() {
     results = [];
     for (let file of filesInput.files) {
         const text = await extractTextFromPDF(file);
-        const analysis = analyzeAllSkills(text);
-        const phone = extractPhone(text);
-        results.push({ name: file.name, phone, ...analysis });
+        const info = extractInfo(text);
+        const skillData = analyzeCategories(text);
+        results.push({ name: file.name, ...info, ...skillData });
     }
 
+    resultsCards.innerHTML = "";
     results.sort((a,b)=>b.score-a.score);
 
-    // عرض النتائج بشكل بطاقات
+    // عرض النتائج
     let cardsHTML = "";
-    results.forEach(res => {
-        let skillsDisplay = res.skills.slice(0,20).map(([w,c])=>`${w}(${c})`).join(", "); // عرض أول 20 كلمة فقط
+    results.forEach(res=>{
+        let skillsHTML = "";
+        for(let cat in res.skillMatches){
+            let skillsArr = Object.entries(res.skillMatches[cat]).map(([w,c])=>`${w}(${c})`);
+            if(skillsArr.length>0){
+                skillsHTML += `<div class="section-title">${cat}:</div><div class="skills">${skillsArr.join(", ")}</div>`;
+            }
+        }
+
+        let expHTML="", eduHTML="";
+        if(res.experience.length>0){
+            expHTML = `<div class="section-title">Experience:</div><div class="experience">${res.experience.join("<br>")}</div>`;
+        }
+        if(res.education.length>0){
+            eduHTML = `<div class="section-title">Education:</div><div class="education">${res.education.join("<br>")}</div>`;
+        }
+
         cardsHTML += `
         <div class="card">
             <h3>${res.name}</h3>
-            <p><strong>Score:</strong> ${res.score}%</p>
-            <p><strong>Evaluation:</strong> ${res.message}</p>
+            ${res.email?`<p class="email">Email: ${res.email}</p>`:''}
             ${res.phone?`<p class="phone">Phone: ${res.phone}</p>`:''}
-            <p class="skills"><strong>Top Skills:</strong><br>${skillsDisplay}</p>
+            ${expHTML}
+            ${eduHTML}
+            ${skillsHTML}
         </div>`;
     });
 
@@ -85,7 +111,7 @@ async function analyzeBatch() {
     analyzeBtn.disabled = false;
 }
 
-// استخراج النص أولًا ثم OCR عند الحاجة
+// استخراج النص
 async function extractTextFromPDF(file){
     const fileReader = new FileReader();
     return new Promise((resolve)=>{
@@ -117,49 +143,92 @@ async function extractTextFromPDF(file){
     });
 }
 
-// تحليل شامل لكل الكلمات/المهارات
-function analyzeAllSkills(text){
-    const words = text.toLowerCase().match(/\b[a-zA-Z0-9]+\b/g);
-    const wordCounts = {};
-    words.forEach(word=>{
-        if(word.length>2){
-            wordCounts[word] = (wordCounts[word]||0)+1;
+// استخراج البريد، الهاتف، الخبرات، والتعليم
+function extractInfo(text){
+    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/);
+    const phoneMatch = text.match(/(\+?\d{1,4}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)?[\d\s-]{5,15}/);
+
+    // استخراج الخبرات: البحث عن كلمات common position/company
+    let experience=[], education=[];
+    const lines = text.split(/\r?\n/);
+    lines.forEach(line=>{
+        line = line.trim();
+        if(line.length>5){
+            // كلمات مفتاحية للتجربة العملية
+            if(/(company|position|worked at|experience|role|internship)/i.test(line)){
+                experience.push(line);
+            }
+            // كلمات مفتاحية للتعليم
+            if(/(university|institute|bachelor|master|degree|diploma)/i.test(line)){
+                education.push(line);
+            }
         }
     });
 
-    const sortedSkills = Object.entries(wordCounts).sort((a,b)=>b[1]-a[1]);
-    const importantWords = sortedSkills.filter(([w,c])=>c>=2);
-    const score = Math.round((importantWords.length / sortedSkills.length)*100);
-
-    let message="";
-    if(score>=70) message="Strong Match ✅";
-    else if(score>=40) message="Moderate Match ⚠️";
-    else message="Weak Match ❌";
-
-    return {score,message,skills:sortedSkills};
+    return {
+        email: emailMatch?emailMatch[0]:'',
+        phone: phoneMatch?phoneMatch[0]:'',
+        experience,
+        education
+    };
 }
 
-// استخراج رقم الهاتف
-function extractPhone(text){
-    const phoneRegex = /(\+?\d{1,4}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)?[\d\s-]{5,15}/g;
-    const matches = text.match(phoneRegex);
-    return matches ? matches[0] : '';
+// تحليل المهارات وتصنيفها
+function analyzeCategories(text){
+    let skillMatches = {};
+    for(let cat in categories) skillMatches[cat] = {};
+    skillMatches["Other Skills"] = {};
+
+    const words = text.split(/\W+/);
+    words.forEach(word=>{
+        if(word.length>2){
+            let matched=false;
+            for(let cat in categories){
+                if(categories[cat].includes(word)){
+                    skillMatches[cat][word] = (skillMatches[cat][word]||0)+1;
+                    matched=true;
+                }
+            }
+            if(!matched){
+                skillMatches["Other Skills"][word] = (skillMatches["Other Skills"][word]||0)+1;
+            }
+        }
+    });
+
+    let totalMatched = Object.values(skillMatches).reduce((sum,catObj)=>{
+        return sum + Object.values(catObj).reduce((a,b)=>a+b,0);
+    },0);
+    let score = Math.round((totalMatched/words.length)*100);
+    if(score>100) score=100;
+
+    return {skillMatches,score};
 }
 
-// تصدير Excel شامل كل المهارات المكتشفة
+// تصدير Excel
 function downloadExcel(){
     const wb = XLSX.utils.book_new();
-    const ws_data=[["CV Name","Phone","Score %","Evaluation","Skills","Count"]];
+    const ws_data=[["CV Name","Email","Phone","Experience","Education","Category","Skill","Count"]];
 
     results.forEach(res=>{
-        res.skills.forEach(([word,count])=>{
-            ws_data.push([res.name,res.phone,res.score,res.message,word,count]);
-        });
+        for(let cat in res.skillMatches){
+            for(let [skill,count] of Object.entries(res.skillMatches[cat])){
+                ws_data.push([
+                    res.name,
+                    res.email,
+                    res.phone,
+                    res.experience.join(" | "),
+                    res.education.join(" | "),
+                    cat,
+                    skill,
+                    count
+                ]);
+            }
+        }
     });
 
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    XLSX.utils.book_append_sheet(wb,ws,"CV Skills");
-    XLSX.writeFile(wb,"CV_Analysis_Full.xlsx");
+    XLSX.utils.book_append_sheet(wb,ws,"CV Realistic Data");
+    XLSX.writeFile(wb,"CV_Analysis_Realistic.xlsx");
 }
 </script>
 
