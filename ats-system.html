@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced CV PDF Analyzer</title>
+<!-- pdf.js القديمة لتجنب مشاكل التعريف -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+<style>
+body { font-family: Arial, sans-serif; background: #f4f4f9; color: #333; padding: 20px; }
+.container { max-width: 900px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+h1 { color: #1e88e5; }
+input[type=file] { margin-bottom: 15px; }
+button { padding: 10px 15px; background: #1e88e5; color: #fff; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; }
+.result { margin-top: 20px; padding: 10px; background: #e0f7fa; border-left: 5px solid #1e88e5; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>Advanced CV PDF Analyzer</h1>
+<p>Upload any CV PDF (text or scanned) to get a full report of skills and keyword strength.</p>
+
+<input type="file" id="pdfFile" accept="application/pdf">
+<button onclick="analyzeCV()">Analyze CV</button>
+
+<div class="result" id="result">Results will appear here...</div>
+</div>
+
+<script>
+// إصلاح تحذير Worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+async function analyzeCV() {
+    const fileInput = document.getElementById('pdfFile');
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = "Processing PDF, please wait... ⏳";
+
+    if(fileInput.files.length === 0){
+        alert("Please select a PDF file.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const fileReader = new FileReader();
+
+    fileReader.onload = async function() {
+        const typedarray = new Uint8Array(this.result);
+        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+        let fullText = "";
+
+        for(let i = 1; i <= pdf.numPages; i++){
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 2 });
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+            // OCR باستخدام Tesseract.js
+            const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+            fullText += text + " ";
+        }
+
+        const text = fullText.toLowerCase();
+
+        // قائمة الكلمات المفتاحية مع أقسامها
+        const keywords = {
+            "Customer Service": ["customer service", "communication", "problem solving", "teamwork", "support", "helpdesk"],
+            "IT Skills": ["it", "information technology", "troubleshooting", "ms office", "excel", "network", "website", "html", "css", "javascript"],
+            "Leadership / Management": ["management", "leader", "team lead", "coordinator", "manager", "organize", "project"],
+            "Languages": ["english", "arabic", "french"]
+        };
+
+        let skillMatches = {};
+        let totalKeywords = 0;
+        let matchedKeywords = 0;
+
+        for (let category in keywords){
+            skillMatches[category] = {};
+            keywords[category].forEach(word => {
+                totalKeywords++;
+                const count = (text.match(new RegExp(word, "g")) || []).length;
+                if(count > 0){
+                    matchedKeywords++;
+                    skillMatches[category][word] = count;
+                }
+            });
+        }
+
+        // تقييم شامل
+        const score = Math.round((matchedKeywords / totalKeywords) * 100);
+        let overallMessage = "";
+        if(score >= 70) overallMessage = "Strong Match! ✅ Highly suitable for the position.";
+        else if(score >= 40) overallMessage = "Moderate Match ⚠️ Some relevant skills found.";
+        else overallMessage = "Weak Match ❌ May not be suitable.";
+
+        // إنشاء تقرير مرتب
+        let report = `Overall Score: ${score}%\n${overallMessage}\n\nMatched Skills:\n`;
+
+        for (let category in skillMatches){
+            if(Object.keys(skillMatches[category]).length > 0){
+                report += `\n${category}:\n`;
+                for (let skill in skillMatches[category]){
+                    report += ` - ${skill} (found ${skillMatches[category][skill]} times)\n`;
+                }
+            }
+        }
+
+        resultDiv.innerText = report;
+    };
+
+    fileReader.readAsArrayBuffer(file);
+}
+</script>
+
+</body>
+</html>
