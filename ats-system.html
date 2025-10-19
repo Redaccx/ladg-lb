@@ -3,177 +3,163 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Batch CV PDF Analyzer with Excel Export</title>
+<title>Ultimate CV Analyzer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body { font-family: Arial, sans-serif; background: #f4f4f9; color: #333; padding: 20px; }
-.container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-h1 { color: #1e88e5; }
-input[type=file] { margin-bottom: 15px; }
-button { padding: 10px 15px; background: #1e88e5; color: #fff; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-th { background: #1e88e5; color: #fff; }
-.result { margin-top: 20px; padding: 10px; background: #e0f7fa; border-left: 5px solid #1e88e5; white-space: pre-wrap; }
+body { font-family: Arial, sans-serif; background: #f4f4f9; color: #333; padding: 15px; margin:0;}
+.container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border-radius:10px;}
+h1 { color: #1e88e5; text-align:center; margin-bottom:20px;}
+input[type=file] { margin-bottom: 15px; width:100%; }
+button { padding: 10px 15px; background: #1e88e5; color: #fff; border: none; cursor: pointer; border-radius: 5px; margin-bottom: 10px; display:inline-block; }
+button:disabled { background: #999; cursor: not-allowed; }
+.cards { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top:20px;}
+.card { background: #e0f7fa; padding:15px; border-radius:10px; flex: 1 1 280px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
+.card h3 { margin: 0 0 10px 0; color: #1e88e5;}
+.card p { margin:5px 0; }
+.skills { margin-top:10px; font-size:0.9em; line-height:1.3; }
+.phone { font-weight:bold; margin-top:5px; color:#0d47a1; }
+@media(max-width:600px){.cards{flex-direction:column;align-items:center;}}
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1>Batch CV PDF Analyzer with Excel Export</h1>
-<p>Upload multiple CV PDFs (text or scanned) to get a full report and sorted ranking. You can download the results as Excel.</p>
+<h1>Ultimate CV Analyzer</h1>
+<p>Upload multiple CV PDFs to get a full skill report. Download detailed Excel with all discovered skills.</p>
 
 <input type="file" id="pdfFiles" accept="application/pdf" multiple>
-<button onclick="analyzeBatch()">Analyze CVs</button>
+<button id="analyzeBtn" onclick="analyzeBatch()">Analyze CVs</button>
 <button id="downloadExcel" style="display:none;" onclick="downloadExcel()">Download Excel</button>
 
-<div class="result" id="result">Results will appear here...</div>
+<div class="cards" id="resultsCards"></div>
 </div>
 
 <script>
-// إصلاح تحذير Worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// قائمة الكلمات المفتاحية مع أقسامها
-const keywords = {
-    "Customer Service": ["customer service", "communication", "problem solving", "teamwork", "support", "helpdesk"],
-    "IT Skills": ["it", "information technology", "troubleshooting", "ms office", "excel", "network", "website", "html", "css", "javascript"],
-    "Leadership / Management": ["management", "leader", "team lead", "coordinator", "manager", "organize", "project"],
-    "Languages": ["english", "arabic", "french"]
-};
-
-let results = []; // لتخزين النتائج للـ Excel
+let results = [];
 
 async function analyzeBatch() {
     const filesInput = document.getElementById('pdfFiles');
-    const resultDiv = document.getElementById('result');
+    const resultsCards = document.getElementById('resultsCards');
     const downloadBtn = document.getElementById('downloadExcel');
-    resultDiv.innerHTML = "Processing PDFs, please wait... ⏳";
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    resultsCards.innerHTML = "Processing PDFs, please wait... ⏳";
     downloadBtn.style.display = "none";
+    analyzeBtn.disabled = true;
 
     if(filesInput.files.length === 0){
         alert("Please select at least one PDF file.");
+        analyzeBtn.disabled = false;
         return;
     }
 
-    results = []; // إعادة تعيين النتائج
+    results = [];
     for (let file of filesInput.files) {
         const text = await extractTextFromPDF(file);
-        const analysis = analyzeText(text);
-        results.push({ name: file.name, ...analysis });
+        const analysis = analyzeAllSkills(text);
+        const phone = extractPhone(text);
+        results.push({ name: file.name, phone, ...analysis });
     }
 
-    // فرز النتائج حسب الدرجة من الأعلى للأقل
-    results.sort((a, b) => b.score - a.score);
+    results.sort((a,b)=>b.score-a.score);
 
-    // إنشاء جدول النتائج
-    let tableHTML = `<table>
-        <tr><th>CV Name</th><th>Score %</th><th>Evaluation</th><th>Top Skills</th></tr>`;
-    
+    // عرض النتائج بشكل بطاقات
+    let cardsHTML = "";
     results.forEach(res => {
-        let topSkills = [];
-        for (let cat in res.skillMatches){
-            for (let skill in res.skillMatches[cat]){
-                topSkills.push(`${skill}(${res.skillMatches[cat][skill]})`);
-            }
-        }
-        tableHTML += `<tr>
-            <td>${res.name}</td>
-            <td>${res.score}%</td>
-            <td>${res.message}</td>
-            <td>${topSkills.join(", ")}</td>
-        </tr>`;
+        let skillsDisplay = res.skills.slice(0,20).map(([w,c])=>`${w}(${c})`).join(", "); // عرض أول 20 كلمة فقط
+        cardsHTML += `
+        <div class="card">
+            <h3>${res.name}</h3>
+            <p><strong>Score:</strong> ${res.score}%</p>
+            <p><strong>Evaluation:</strong> ${res.message}</p>
+            ${res.phone?`<p class="phone">Phone: ${res.phone}</p>`:''}
+            <p class="skills"><strong>Top Skills:</strong><br>${skillsDisplay}</p>
+        </div>`;
     });
-    tableHTML += `</table>`;
 
-    resultDiv.innerHTML = tableHTML;
-    downloadBtn.style.display = "inline-block"; // إظهار زر Excel
+    resultsCards.innerHTML = cardsHTML;
+    downloadBtn.style.display = "inline-block";
+    analyzeBtn.disabled = false;
 }
 
-// استخراج النص من PDF أولًا ثم OCR عند الحاجة
+// استخراج النص أولًا ثم OCR عند الحاجة
 async function extractTextFromPDF(file){
     const fileReader = new FileReader();
-    return new Promise((resolve) => {
-        fileReader.onload = async function() {
+    return new Promise((resolve)=>{
+        fileReader.onload = async function(){
             const typedarray = new Uint8Array(this.result);
             const pdf = await pdfjsLib.getDocument(typedarray).promise;
             let fullText = "";
 
-            for(let i = 1; i <= pdf.numPages; i++){
+            for(let i=1;i<=pdf.numPages;i++){
                 const page = await pdf.getPage(i);
-
-                // محاولة استخراج النص مباشرة
                 const textContent = await page.getTextContent();
-                let pageText = textContent.items.map(item => item.str).join(" ").trim();
+                let pageText = textContent.items.map(item=>item.str).join(" ").trim();
 
-                // إذا النص قليل أو فارغ، استخدم OCR
-                if(pageText.length < 10){
-                    const viewport = page.getViewport({ scale: 2 });
+                if(pageText.length<10){
+                    const viewport = page.getViewport({scale:2});
                     const canvas = document.createElement("canvas");
                     const context = canvas.getContext("2d");
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
+                    await page.render({canvasContext:context, viewport:viewport}).promise;
+                    const {data:{text}} = await Tesseract.recognize(canvas,'eng');
                     pageText = text;
                 }
-
                 fullText += pageText + " ";
             }
-
             resolve(fullText.toLowerCase());
         };
         fileReader.readAsArrayBuffer(file);
     });
 }
 
-// تحليل النص للكلمات المفتاحية
-function analyzeText(text){
-    let skillMatches = {};
-    let totalKeywords = 0;
-    let matchedKeywords = 0;
+// تحليل شامل لكل الكلمات/المهارات
+function analyzeAllSkills(text){
+    const words = text.toLowerCase().match(/\b[a-zA-Z0-9]+\b/g);
+    const wordCounts = {};
+    words.forEach(word=>{
+        if(word.length>2){
+            wordCounts[word] = (wordCounts[word]||0)+1;
+        }
+    });
 
-    for (let category in keywords){
-        skillMatches[category] = {};
-        keywords[category].forEach(word => {
-            totalKeywords++;
-            const count = (text.match(new RegExp(word, "g")) || []).length;
-            if(count > 0){
-                matchedKeywords++;
-                skillMatches[category][word] = count;
-            }
-        });
-    }
+    const sortedSkills = Object.entries(wordCounts).sort((a,b)=>b[1]-a[1]);
+    const importantWords = sortedSkills.filter(([w,c])=>c>=2);
+    const score = Math.round((importantWords.length / sortedSkills.length)*100);
 
-    const score = Math.round((matchedKeywords / totalKeywords) * 100);
-    let message = "";
-    if(score >= 70) message = "Strong Match ✅";
-    else if(score >= 40) message = "Moderate Match ⚠️";
-    else message = "Weak Match ❌";
+    let message="";
+    if(score>=70) message="Strong Match ✅";
+    else if(score>=40) message="Moderate Match ⚠️";
+    else message="Weak Match ❌";
 
-    return { score, message, skillMatches };
+    return {score,message,skills:sortedSkills};
 }
 
-// تصدير النتائج إلى Excel
+// استخراج رقم الهاتف
+function extractPhone(text){
+    const phoneRegex = /(\+?\d{1,4}[\s-]?)?(\(?\d{2,4}\)?[\s-]?)?[\d\s-]{5,15}/g;
+    const matches = text.match(phoneRegex);
+    return matches ? matches[0] : '';
+}
+
+// تصدير Excel شامل كل المهارات المكتشفة
 function downloadExcel(){
     const wb = XLSX.utils.book_new();
-    const ws_data = [["CV Name","Score %","Evaluation","Top Skills"]];
+    const ws_data=[["CV Name","Phone","Score %","Evaluation","Skills","Count"]];
 
-    results.forEach(res => {
-        let topSkills = [];
-        for (let cat in res.skillMatches){
-            for (let skill in res.skillMatches[cat]){
-                topSkills.push(`${skill}(${res.skillMatches[cat][skill]})`);
-            }
-        }
-        ws_data.push([res.name, res.score, res.message, topSkills.join(", ")]);
+    results.forEach(res=>{
+        res.skills.forEach(([word,count])=>{
+            ws_data.push([res.name,res.phone,res.score,res.message,word,count]);
+        });
     });
 
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    XLSX.utils.book_append_sheet(wb, ws, "CV Results");
-    XLSX.writeFile(wb, "CV_Analysis_Results.xlsx");
+    XLSX.utils.book_append_sheet(wb,ws,"CV Skills");
+    XLSX.writeFile(wb,"CV_Analysis_Full.xlsx");
 }
 </script>
 
