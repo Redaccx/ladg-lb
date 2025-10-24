@@ -54,9 +54,7 @@
       transition: 0.2s;
     }
 
-    .post:hover {
-      transform: scale(1.02);
-    }
+    .post:hover { transform: scale(1.02); }
 
     .post img {
       width: 100%;
@@ -71,10 +69,7 @@
       font-size: 16px;
     }
 
-    .post small {
-      color: gray;
-      font-size: 12px;
-    }
+    .post small { color: gray; font-size: 12px; }
 
     .heart {
       cursor: pointer;
@@ -83,9 +78,7 @@
       margin-right: 5px;
     }
 
-    .heart.liked {
-      color: red;
-    }
+    .heart.liked { color: red; }
 
     #loadingMessage {
       text-align: center;
@@ -94,7 +87,7 @@
       color: gray;
     }
 
-    /* Popup */
+    /* ✅ Popup */
     .popup {
       display: none;
       position: fixed;
@@ -114,6 +107,8 @@
       text-align: center;
       position: relative;
       animation: fadeIn 0.3s;
+      overflow-y: auto;
+      max-height: 90vh;
     }
 
     @keyframes fadeIn {
@@ -137,8 +132,12 @@
       border-radius: 50%;
       width: 30px;
       height: 30px;
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .action-buttons {
@@ -175,9 +174,11 @@
 <div id="loadingMessage">⏳ جاري تحميل المنشورات...</div>
 <div id="postsContainer" class="posts-grid" style="display:none;"></div>
 
-<!-- Popup -->
-<div id="popup" class="popup">
-  <div class="popup-content" id="popupContent"></div>
+<!-- ✅ Popup -->
+<div id="popup" class="popup" onclick="closePopup(event)">
+  <div class="popup-content" id="popupContent">
+    <button class="close-btn" onclick="closePopup(event)">×</button>
+  </div>
 </div>
 
 <!-- Firebase -->
@@ -280,47 +281,38 @@ async function loadPosts() {
 
   loadingText.style.display = "none";
   container.style.display = "grid";
-
-  // فتح مباشر عبر رابط
-  const urlParams = new URLSearchParams(window.location.search);
-  const openId = urlParams.get("id");
-  if (openId) {
-    const doc = await db.collection("news").doc(openId).get();
-    if (doc.exists) openPopup(openId, doc.data());
-  }
 }
 
 function openPopup(id, data) {
   const popup = document.getElementById("popup");
   const content = document.getElementById("popupContent");
-  
   const shortUrl = `https://alanmaa-lb.com/p?id=${id}`;
 
   content.innerHTML = `
-    <button class="close-btn" onclick="closePopup()">×</button>
+    <button class="close-btn" onclick="closePopup(event)">×</button>
     <img src="${data.image}" alt="post">
     <h3>${data.title}</h3>
     <p>${data.content}</p>
     ${data.link ? `<a href="${data.link}" target="_blank">${data.link}</a>` : ""}
     <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small>
     <div class="action-buttons">
-      <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}')">📋 نسخ النص</button>
+      <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}')">📋 نسخ</button>
       <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','${shortUrl}')">💬 واتساب</button>
       <button class="share-btn facebook" onclick="shareFacebook('${shortUrl}')">📘 فيسبوك</button>
-      <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 نسخ الرابط</button>
+      <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 رابط</button>
     </div>
   `;
   popup.style.display = "flex";
-  popup.onclick = (e) => { if (e.target.id === "popup") closePopup(); };
-  history.replaceState(null, "", `?id=${id}`);
 }
 
-function closePopup() {
-  document.getElementById("popup").style.display = "none";
-  history.replaceState(null, "", window.location.pathname);
+function closePopup(event) {
+  if (event.target.classList.contains("close-btn") || event.target.id === "popup") {
+    document.getElementById("popup").style.display = "none";
+  }
 }
 
 window.onload = applyLanguage;
 </script>
+
 </body>
 </html>
