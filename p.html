@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>منشور الجمعية اللبنانية للإنماء</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background-color: #f8f8f8;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+      direction: rtl;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #C1272D;
+      flex: 1 1 100%;
+      margin-bottom: 10px;
+      font-size: 22px;
+    }
+
+    .back-btn {
+      background-color: #C1272D;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+    }
+
+    img {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    p {
+      line-height: 1.7;
+      font-size: 16px;
+      color: #333;
+      margin: 10px 0;
+    }
+
+    small {
+      color: gray;
+      display: block;
+      margin-bottom: 15px;
+    }
+
+    .heart {
+      cursor: pointer;
+      font-size: 22px;
+      color: gray;
+      transition: 0.2s;
+      user-select: none;
+    }
+
+    .heart.liked {
+      color: red;
+      transform: scale(1.2);
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .copy-btn, .share-btn {
+      background: #C1272D;
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .share-btn.whatsapp { background: #25D366; }
+    .share-btn.facebook { background: #1877F2; }
+    .share-btn.link { background: #444; }
+
+    #loading {
+      font-size: 16px;
+      color: gray;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="back-btn" onclick="window.location.href='https://alanmaa-lb.com'">← الصفحة الرئيسية</button>
+  <h1>منشور الجمعية اللبنانية للإنماء</h1>
+</header>
+
+<div id="loading">⏳ جاري تحميل المنشور...</div>
+<div id="postContainer" style="display:none;"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
+  authDomain: "alanmaa-lb.firebaseapp.com",
+  databaseURL: "https://alanmaa-lb-default-rtdb.firebaseio.com",
+  projectId: "alanmaa-lb",
+  storageBucket: "alanmaa-lb.firebasestorage.app",
+  messagingSenderId: "503038482881",
+  appId: "1:503038482881:web:101ead344c3274e668f740",
+  measurementId: "G-W0TF54W20B"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function copyText(text) {
+  navigator.clipboard.writeText(text);
+  alert("✅ تم النسخ بنجاح!");
+}
+
+function shareWhatsApp(title, content, url) {
+  const text = `${title}\n\n${content}\n\n${url}`;
+  const link = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(link, "_blank");
+}
+
+function shareFacebook(url) {
+  const link = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  window.open(link, "_blank");
+}
+
+function isLiked(id) {
+  const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+  return likedPosts.includes(id);
+}
+
+function toggleLike(id) {
+  const heart = document.getElementById("heartIcon");
+  let likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+  if (likedPosts.includes(id)) {
+    likedPosts = likedPosts.filter(x => x !== id);
+    heart.classList.remove("liked");
+  } else {
+    likedPosts.push(id);
+    heart.classList.add("liked");
+  }
+  localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
+}
+
+async function loadPost() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  const loading = document.getElementById("loading");
+  const container = document.getElementById("postContainer");
+
+  if (!id) {
+    loading.innerText = "❌ لم يتم العثور على المنشور.";
+    return;
+  }
+
+  const doc = await db.collection("news").doc(id).get();
+  if (!doc.exists) {
+    loading.innerText = "❌ هذا المنشور غير موجود.";
+    return;
+  }
+
+  const data = doc.data();
+  const shortUrl = `https://alanmaa-lb.com/p?id=${id}`;
+
+  container.innerHTML = `
+    <img src="${data.image}" alt="post">
+    <h2>${data.title}</h2>
+    <p>${data.content}</p>
+    ${data.link ? `<a href="${data.link}" target="_blank">${data.link}</a>` : ""}
+    <small>🗓️ ${new Date(data.date).toLocaleString("ar-LB")}</small>
+    <div>
+      <span id="heartIcon" class="heart ${isLiked(id) ? "liked" : ""}" onclick="toggleLike('${id}')">♥</span>
+    </div>
+    <div class="action-buttons">
+      <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}')">📋 نسخ النص</button>
+      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','${shortUrl}')">💬 واتساب</button>
+      <button class="share-btn facebook" onclick="shareFacebook('${shortUrl}')">📘 فيسبوك</button>
+      <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 نسخ الرابط</button>
+    </div>
+  `;
+
+  loading.style.display = "none";
+  container.style.display = "block";
+}
+
+window.onload = loadPost;
+</script>
+
+</body>
+</html>
