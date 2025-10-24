@@ -79,7 +79,6 @@
 
     .post small { color: gray; font-size: 12px; display:block; text-align:center; margin-bottom:5px; }
 
-    /* زر نسخ الرابط قبل popup */
     .post .action-buttons {
       display: flex;
       justify-content: center;
@@ -100,7 +99,6 @@
 
     #loadingMessage { text-align: center; margin-top: 40px; font-size: 16px; color: gray; }
 
-    /* Popup */
     .popup {
       display: none;
       position: fixed;
@@ -161,8 +159,7 @@
       margin-top: 15px;
     }
 
-    .popup .copy-btn, .popup .share-btn {
-      background: #C1272D;
+    .popup .share-btn {
       color: white;
       border: none;
       padding: 7px 14px;
@@ -187,14 +184,12 @@
 <div id="loadingMessage">⏳ جاري تحميل المنشورات...</div>
 <div id="postsContainer" class="posts-grid" style="display:none;"></div>
 
-<!-- Popup -->
 <div id="popup" class="popup" onclick="closePopup(event)">
   <div class="popup-content" id="popupContent">
     <button class="close-btn" onclick="closePopup(event)">×</button>
   </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -239,10 +234,10 @@ function copyText(text) {
   alert("✅ تم النسخ بنجاح!");
 }
 
-// دوال مشاركة واتساب وفيسبوك
 function shareWhatsApp(title, content, url) {
   const text = `${title}\n${content}\n${url}`;
-  const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const encodedText = encodeURIComponent(text);
+  const waUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
   window.open(waUrl, "_blank");
 }
 
@@ -299,8 +294,7 @@ function openPopup(id, data) {
     ${data.link ? `<a href="${data.link}" target="_blank">${data.link}</a>` : ""}
     <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small>
     <div class="action-buttons">
-      <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}')">📋 نسخ</button>
-      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','${shortUrl}')">💬 واتساب</button>
+      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title.replace(/'/g,"\\'")}','${data.content.replace(/'/g,"\\'")}','${shortUrl}')">💬 واتساب</button>
       <button class="share-btn facebook" onclick="shareFacebook('${shortUrl}')">📘 فيسبوك</button>
       <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 رابط</button>
     </div>
