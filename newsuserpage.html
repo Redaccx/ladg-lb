@@ -176,10 +176,8 @@
 <div id="postsContainer" class="posts-grid" style="display:none;"></div>
 
 <!-- Popup -->
-<div id="popup" class="popup" onclick="closePopup(event)">
-  <div class="popup-content" id="popupContent">
-    <button class="close-btn" onclick="closePopup(event)">×</button>
-  </div>
+<div id="popup" class="popup">
+  <div class="popup-content" id="popupContent"></div>
 </div>
 
 <!-- Firebase -->
@@ -296,11 +294,10 @@ function openPopup(id, data) {
   const popup = document.getElementById("popup");
   const content = document.getElementById("popupContent");
   
-  const fullUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
-  const shortUrl = `https://alanmaa-lb.com/p?id=${id}`; // 🔗 عدّلها حسب نطاق موقعك
+  const shortUrl = `https://alanmaa-lb.com/p?id=${id}`;
 
   content.innerHTML = `
-    <button class="close-btn" onclick="closePopup(event)">×</button>
+    <button class="close-btn" onclick="closePopup()">×</button>
     <img src="${data.image}" alt="post">
     <h3>${data.title}</h3>
     <p>${data.content}</p>
@@ -314,18 +311,16 @@ function openPopup(id, data) {
     </div>
   `;
   popup.style.display = "flex";
+  popup.onclick = (e) => { if (e.target.id === "popup") closePopup(); };
   history.replaceState(null, "", `?id=${id}`);
 }
 
-function closePopup(event) {
-  if (event.target.id === "popup" || event.target.classList.contains("close-btn")) {
-    document.getElementById("popup").style.display = "none";
-    history.replaceState(null, "", window.location.pathname);
-  }
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+  history.replaceState(null, "", window.location.pathname);
 }
 
 window.onload = applyLanguage;
 </script>
-
 </body>
 </html>
