@@ -79,15 +79,28 @@
 
     .post small { color: gray; font-size: 12px; display:block; text-align:center; margin-bottom:5px; }
 
-    .heart {
-      cursor: pointer;
-      color: gray;
-      font-size: 18px;
-      display:block;
-      text-align:center;
+    /* أزرار المشاركة قبل popup */
+    .post .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
     }
 
-    .heart.liked { color: red; }
+    .post .copy-btn, .post .share-btn {
+      background: #C1272D;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .post .share-btn.whatsapp { background: #25D366; }
+    .post .share-btn.facebook { background: #1877F2; }
+    .post .share-btn.link { background: #444; }
 
     #loadingMessage { text-align: center; margin-top: 40px; font-size: 16px; color: gray; }
 
@@ -144,7 +157,7 @@
       justify-content: center;
     }
 
-    .action-buttons {
+    .popup .action-buttons {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
@@ -152,7 +165,7 @@
       margin-top: 15px;
     }
 
-    .copy-btn, .share-btn {
+    .popup .copy-btn, .popup .share-btn {
       background: #C1272D;
       color: white;
       border: none;
@@ -162,9 +175,9 @@
       font-size: 14px;
     }
 
-    .share-btn.whatsapp { background: #25D366; }
-    .share-btn.facebook { background: #1877F2; }
-    .share-btn.link { background: #444; }
+    .popup .share-btn.whatsapp { background: #25D366; }
+    .popup .share-btn.facebook { background: #1877F2; }
+    .popup .share-btn.link { background: #444; }
   </style>
 </head>
 <body>
@@ -205,8 +218,8 @@ const db = firebase.firestore();
 
 let currentLang = localStorage.getItem("lang") || "ar";
 const translations = {
-  ar: { title:"آخر الأخبار", back:"رجوع", like:"إعجاب", loading:"⏳ جاري تحميل المنشورات...", empty:"لا يوجد منشورات حاليا" },
-  en: { title:"Last News", back:"Back", like:"Like", loading:"⏳ Loading posts...", empty:"No posts available" }
+  ar: { title:"آخر الأخبار", back:"رجوع", loading:"⏳ جاري تحميل المنشورات...", empty:"لا يوجد منشورات حاليا" },
+  en: { title:"Last News", back:"Back", loading:"⏳ Loading posts...", empty:"No posts available" }
 };
 
 function applyLanguage() {
@@ -223,20 +236,6 @@ function toggleLanguage() {
   currentLang = currentLang === "ar" ? "en" : "ar";
   localStorage.setItem("lang", currentLang);
   applyLanguage();
-}
-
-function isLiked(id) {
-  const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-  return likedPosts.includes(id);
-}
-
-function toggleLike(elem, id) {
-  const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-  const liked = likedPosts.includes(id);
-  if (liked) likedPosts.splice(likedPosts.indexOf(id), 1);
-  else likedPosts.push(id);
-  localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
-  elem.classList.toggle("liked");
 }
 
 function copyText(text) {
@@ -278,7 +277,12 @@ async function loadPosts() {
       <h3>${data.title}</h3>
       <div class="read-more">اضغط هنا لقراءة النص الكامل</div>
       <small>🗓️ ${new Date(data.date).toLocaleDateString(currentLang)}</small>
-      <span class="heart ${isLiked(id)?'liked':''}" onclick="toggleLike(this, '${id}');event.stopPropagation();">♥</span>
+      <div class="action-buttons">
+        <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}');event.stopPropagation();">📋 نسخ</button>
+        <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();">💬 واتساب</button>
+        <button class="share-btn facebook" onclick="shareFacebook('https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();">📘 فيسبوك</button>
+        <button class="share-btn link" onclick="copyText('https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();">🔗 رابط</button>
+      </div>
     `;
     div.onclick = () => openPopup(id, data);
     container.appendChild(div);
