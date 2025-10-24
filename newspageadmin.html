@@ -23,6 +23,7 @@ button { background: #C1272D; color: white; padding: 10px 16px; border: none; bo
 .modal h3 { margin-top: 0; }
 .modal label { font-weight: bold; margin-top: 10px; display: block; }
 .password-toggle { margin-top: 4px; background:#eee;color:#222;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px;width:100%; }
+#currentImage { width: 100%; max-height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; display:block; }
 </style>
 </head>
 <body>
@@ -54,6 +55,7 @@ button { background: #C1272D; color: white; padding: 10px 16px; border: none; bo
   </div>
 </div>
 
+<!-- نافذة تعديل المنشور -->
 <div id="editModal" class="modal-bg">
   <div class="modal">
     <h3>تعديل المنشور</h3>
@@ -63,6 +65,10 @@ button { background: #C1272D; color: white; padding: 10px 16px; border: none; bo
     <textarea id="editContent"></textarea>
     <label>الرابط (اختياري):</label>
     <input type="text" id="editLink" />
+    <label>الصورة الحالية:</label>
+    <img id="currentImage" src="" alt="الصورة الحالية">
+    <label>تغيير الصورة (اختياري):</label>
+    <input type="file" id="editImage" accept="image/*" />
     <button onclick="saveEdit()">حفظ التعديل</button>
     <button onclick="closeEditModal()" style="background:#999;margin-left:10px;">إلغاء</button>
   </div>
@@ -87,7 +93,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-
 let currentEditId = null;
 
 // حفظ الجلسة تلقائياً
@@ -130,9 +135,7 @@ document.getElementById("togglePassword").onclick = () => {
   passField.type = passField.type==="password" ? "text" : "password";
 };
 
-// الباقي كما في كودك السابق: إضافة/تحميل/تعديل/حذف المنشورات
-let editModalId = null;
-
+// إضافة منشور
 async function addPost() {
   const title = document.getElementById("title").value.trim();
   const content = document.getElementById("content").value.trim();
@@ -141,7 +144,6 @@ async function addPost() {
   const loading = document.getElementById("loading");
 
   if(!title || !content || !imageInput.files[0]){ alert("يرجى تعبئة جميع الحقول المطلوبة."); return; }
-
   loading.style.display = "block";
 
   const reader = new FileReader();
@@ -163,6 +165,7 @@ async function addPost() {
   reader.readAsDataURL(imageInput.files[0]);
 }
 
+// تحميل المنشورات
 async function loadPosts(){
   const container = document.getElementById("posts");
   container.innerHTML = "جاري تحميل المنشورات...";
@@ -181,7 +184,7 @@ async function loadPosts(){
         ${data.link? `<a href="${data.link}" target="_blank">${data.link}</a>`: ""}
         <p style="font-size:12px;color:gray;">${new Date(data.date).toLocaleString()}</p>
         <button class="like-btn" onclick="likePost('${doc.id}',${data.likes})">إعجاب (${data.likes})</button>
-        <button class="edit-btn" onclick="openEditModal('${doc.id}',\`${data.title}\`,\`${data.content}\`,\`${data.link||''}\`)">تعديل</button>
+        <button class="edit-btn" onclick="openEditModal('${doc.id}',\`${data.title}\`,\`${data.content}\`,\`${data.link||''}\`,\`${data.image}\`)">تعديل</button>
         <button class="delete-btn" onclick="deletePost('${doc.id}')">حذف</button>
       `;
       container.appendChild(div);
@@ -189,25 +192,51 @@ async function loadPosts(){
   }catch(err){ container.innerHTML="حدث خطأ أثناء تحميل المنشورات"; console.error(err); }
 }
 
+// حذف المنشور
 async function deletePost(id){ if(confirm("هل أنت متأكد؟")){ await db.collection("news").doc(id).delete(); loadPosts(); } }
+
+// إعجاب
 async function likePost(id,likes){ await db.collection("news").doc(id).update({likes:likes+1}); loadPosts(); }
 
-function openEditModal(id,title,content,link){
+// فتح نافذة التعديل
+function openEditModal(id,title,content,link,image){
   currentEditId=id;
   document.getElementById("editTitle").value=title;
   document.getElementById("editContent").value=content;
   document.getElementById("editLink").value=link;
+  document.getElementById("currentImage").src=image;
   document.getElementById("editModal").style.display="flex";
 }
+
+// إغلاق نافذة التعديل
 function closeEditModal(){ document.getElementById("editModal").style.display="none"; }
+
+// حفظ التعديلات
 async function saveEdit(){
-  const title=document.getElementById("editTitle").value.trim();
-  const content=document.getElementById("editContent").value.trim();
-  const link=document.getElementById("editLink").value.trim();
-  if(!title||!content){ alert("العنوان والمحتوى مطلوبان"); return; }
-  await db.collection("news").doc(currentEditId).update({title,content,link});
-  closeEditModal();
-  loadPosts();
+  const title = document.getElementById("editTitle").value.trim();
+  const content = document.getElementById("editContent").value.trim();
+  const link = document.getElementById("editLink").value.trim();
+  const imageInput = document.getElementById("editImage");
+
+  if(!title || !content){ alert("العنوان والمحتوى مطلوبان"); return; }
+
+  let updateData = { title, content, link };
+
+  if(imageInput.files[0]){
+    const reader = new FileReader();
+    reader.onload = async function(e){
+      updateData.image = e.target.result;
+      await db.collection("news").doc(currentEditId).update(updateData);
+      closeEditModal();
+      loadPosts();
+      imageInput.value = "";
+    };
+    reader.readAsDataURL(imageInput.files[0]);
+  } else {
+    await db.collection("news").doc(currentEditId).update(updateData);
+    closeEditModal();
+    loadPosts();
+  }
 }
 </script>
 </body>
