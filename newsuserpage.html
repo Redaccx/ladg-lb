@@ -79,28 +79,22 @@
 
     .post small { color: gray; font-size: 12px; display:block; text-align:center; margin-bottom:5px; }
 
-    /* أزرار المشاركة قبل popup */
-    .post .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 5px;
-      flex-wrap: wrap;
-      margin-bottom: 5px;
-    }
-
-    .post .copy-btn, .post .share-btn {
+    /* زر نسخ كأيقونة قبل popup */
+    .post .copy-btn {
       background: #C1272D;
       color: white;
       border: none;
-      padding: 4px 8px;
+      padding: 5px 8px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 5px;
+      width: 35px;
+      height: 35px;
     }
-
-    .post .share-btn.whatsapp { background: #25D366; }
-    .post .share-btn.facebook { background: #1877F2; }
-    .post .share-btn.link { background: #444; }
 
     #loadingMessage { text-align: center; margin-top: 40px; font-size: 16px; color: gray; }
 
@@ -156,28 +150,6 @@
       align-items: center;
       justify-content: center;
     }
-
-    .popup .action-buttons {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .popup .copy-btn, .popup .share-btn {
-      background: #C1272D;
-      color: white;
-      border: none;
-      padding: 7px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .popup .share-btn.whatsapp { background: #25D366; }
-    .popup .share-btn.facebook { background: #1877F2; }
-    .popup .share-btn.link { background: #444; }
   </style>
 </head>
 <body>
@@ -243,17 +215,6 @@ function copyText(text) {
   alert("✅ تم النسخ بنجاح!");
 }
 
-function shareWhatsApp(title, content, url) {
-  const text = `${title}\n\n${content}\n\n${url}`;
-  const link = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(link, "_blank");
-}
-
-function shareFacebook(url) {
-  const link = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  window.open(link, "_blank");
-}
-
 async function loadPosts() {
   const container = document.getElementById("postsContainer");
   const loadingText = document.getElementById("loadingMessage");
@@ -277,12 +238,7 @@ async function loadPosts() {
       <h3>${data.title}</h3>
       <div class="read-more">اضغط هنا لقراءة النص الكامل</div>
       <small>🗓️ ${new Date(data.date).toLocaleDateString(currentLang)}</small>
-      <div class="action-buttons">
-        <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}');event.stopPropagation();">📋 نسخ</button>
-        <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();">💬 واتساب</button>
-        <button class="share-btn facebook" onclick="shareFacebook('https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();">📘 فيسبوك</button>
-        <button class="share-btn link" onclick="copyText('https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();">🔗 رابط</button>
-      </div>
+      <button class="copy-btn" onclick="copyText('https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();">🔗</button>
     `;
     div.onclick = () => openPopup(id, data);
     container.appendChild(div);
@@ -306,8 +262,6 @@ function openPopup(id, data) {
     <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small>
     <div class="action-buttons">
       <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}')">📋 نسخ</button>
-      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','${shortUrl}')">💬 واتساب</button>
-      <button class="share-btn facebook" onclick="shareFacebook('${shortUrl}')">📘 فيسبوك</button>
       <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 رابط</button>
     </div>
   `;
