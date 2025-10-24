@@ -41,7 +41,7 @@ button { background: #C1272D; color: white; padding: 10px 16px; border: none; bo
     <input type="text" id="title" placeholder="عنوان الخبر" />
     <textarea id="content" placeholder="نص الخبر"></textarea>
     <input type="text" id="link" placeholder="رابط خارجي (اختياري)" />
-    <input type="file" id="image" accept="image/*" />
+    <input type="file" id="image" accept="image/jpeg, image/png" />
     <button onclick="addPost()">نشر</button>
     <p id="loading" class="loading">جاري الإضافة...</p>
   </div>
@@ -61,7 +61,7 @@ button { background: #C1272D; color: white; padding: 10px 16px; border: none; bo
     <label>الرابط (اختياري):</label>
     <input type="text" id="editLink" />
     <label>تغيير الصورة (اختياري):</label>
-    <input type="file" id="editImage" accept="image/*" />
+    <input type="file" id="editImage" accept="image/jpeg, image/png" />
     <button onclick="saveEdit()">حفظ التعديل</button>
     <button onclick="closeEditModal()" style="background:#999;margin-left:10px;">إلغاء</button>
   </div>
@@ -146,24 +146,24 @@ async function addPost() {
   const file = imageInput.files[0];
   const imageRef = storage.ref('news_images/' + Date.now() + '_' + file.name);
 
-  const uploadTask = imageRef.put(file);
+  try {
+    const snapshot = await imageRef.put(file);
+    const imageUrl = await snapshot.ref.getDownloadURL();
 
-  uploadTask.on('state_changed', null,
-    error => { loading.style.display="none"; alert("حدث خطأ أثناء رفع الصورة: "+error.message); },
-    async () => {
-      const imageUrl = await uploadTask.snapshot.ref.getDownloadURL();
-      try {
-        await db.collection("news").add({ title, content, link, image: imageUrl, date: new Date().toISOString(), likes: 0 });
-        loading.style.display = "none";
-        alert("تمت إضافة المنشور بنجاح!");
-        document.getElementById("title").value="";
-        document.getElementById("content").value="";
-        document.getElementById("link").value="";
-        document.getElementById("image").value="";
-        loadPosts();
-      } catch(err){ loading.style.display="none"; alert("حدث خطأ أثناء حفظ المنشور"); console.error(err); }
-    }
-  );
+    await db.collection("news").add({ title, content, link, image: imageUrl, date: new Date().toISOString(), likes: 0 });
+
+    loading.style.display = "none";
+    alert("تمت إضافة المنشور بنجاح!");
+    document.getElementById("title").value="";
+    document.getElementById("content").value="";
+    document.getElementById("link").value="";
+    document.getElementById("image").value="";
+    loadPosts();
+  } catch(err){
+    loading.style.display = "none";
+    alert("حدث خطأ أثناء الإضافة: " + err.message);
+    console.error(err);
+  }
 }
 
 // تحميل المنشورات
@@ -197,10 +197,8 @@ async function loadPosts(){
 async function deletePost(id,imageUrl){
   if(!confirm("هل أنت متأكد؟")) return;
   try{
-    // حذف الصورة من Storage
     const storageRef = storage.refFromURL(imageUrl);
     await storageRef.delete();
-    // حذف المستند
     await db.collection("news").doc(id).delete();
     loadPosts();
   } catch(err){ alert("حدث خطأ أثناء الحذف"); console.error(err); }
@@ -221,33 +219,43 @@ function openEditModal(id,title,content,link){
 function closeEditModal(){ document.getElementById("editModal").style.display="none"; }
 
 async function saveEdit(){
-  const title=document.getElementById("editTitle").value.trim();
-  const content=document.getElementById("editContent").value.trim();
-  const link=document.getElementById("editLink").value.trim();
+  const title = document.getElementById("editTitle").value.trim();
+  const content = document.getElementById("editContent").value.trim();
+  const link = document.getElementById("editLink").value.trim();
   const imageFile = document.getElementById("editImage").files[0];
 
   if(!title || !content){ alert("العنوان والمحتوى مطلوبان"); return; }
 
   let updateData = { title, content, link };
 
-  if(imageFile){
-    // رفع الصورة الجديدة
-    const imageRef = storage.ref('news_images/' + Date.now() + '_' + imageFile.name);
-    const uploadTask = imageRef.put(imageFile);
-    await new Promise((resolve,reject)=>{
-      uploadTask.on('state_changed', null,
-        error => reject(error),
-        async () => {
-          updateData.image = await uploadTask.snapshot.ref.getDownloadURL();
-          resolve();
-        }
-      );
-    });
-  }
+  try {
+    if(imageFile){
+      // رفع الصورة الجديدة
+      const imageRef = storage.ref('news_images/' + Date.now() + '_' + imageFile.name);
+      const snapshot = await imageRef.put(imageFile);
+      const newImageUrl = await snapshot.ref.getDownloadURL();
 
-  await db.collection("news").doc(currentEditId).update(updateData);
-  closeEditModal();
-  loadPosts();
+      // حذف الصورة القديمة
+      const docSnap = await db.collection("news").doc(currentEditId).get();
+      if(docSnap.exists){
+        const oldImageUrl = docSnap.data().image;
+        if(oldImageUrl){
+          const oldRef = storage.refFromURL(oldImageUrl);
+          oldRef.delete().catch(err => console.warn("خطأ حذف الصورة القديمة:", err));
+        }
+      }
+
+      updateData.image = newImageUrl;
+    }
+
+    await db.collection("news").doc(currentEditId).update(updateData);
+    closeEditModal();
+    loadPosts();
+    alert("تم تعديل المنشور بنجاح!");
+  } catch(err){
+    console.error(err);
+    alert("حدث خطأ أثناء تعديل المنشور: " + err.message);
+  }
 }
 </script>
 </body>
