@@ -63,8 +63,6 @@ button { background: #C1272D; color: white; padding: 10px 16px; border: none; bo
     <textarea id="editContent"></textarea>
     <label>الرابط (اختياري):</label>
     <input type="text" id="editLink" />
-    <label>الصورة (اختياري لتغيير الصورة):</label>
-    <input type="file" id="editImage" accept="image/*" />
     <button onclick="saveEdit()">حفظ التعديل</button>
     <button onclick="closeEditModal()" style="background:#999;margin-left:10px;">إلغاء</button>
   </div>
@@ -89,6 +87,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+
 let currentEditId = null;
 
 // حفظ الجلسة تلقائياً
@@ -131,7 +130,9 @@ document.getElementById("togglePassword").onclick = () => {
   passField.type = passField.type==="password" ? "text" : "password";
 };
 
-// إضافة منشور جديد
+// الباقي كما في كودك السابق: إضافة/تحميل/تعديل/حذف المنشورات
+let editModalId = null;
+
 async function addPost() {
   const title = document.getElementById("title").value.trim();
   const content = document.getElementById("content").value.trim();
@@ -162,7 +163,6 @@ async function addPost() {
   reader.readAsDataURL(imageInput.files[0]);
 }
 
-// تحميل المنشورات
 async function loadPosts(){
   const container = document.getElementById("posts");
   container.innerHTML = "جاري تحميل المنشورات...";
@@ -181,7 +181,7 @@ async function loadPosts(){
         ${data.link? `<a href="${data.link}" target="_blank">${data.link}</a>`: ""}
         <p style="font-size:12px;color:gray;">${new Date(data.date).toLocaleString()}</p>
         <button class="like-btn" onclick="likePost('${doc.id}',${data.likes})">إعجاب (${data.likes})</button>
-        <button class="edit-btn" onclick="openEditModal('${doc.id}','${escapeQuotes(data.title)}','${escapeQuotes(data.content)}','${escapeQuotes(data.link||'')}','${data.image}')">تعديل</button>
+        <button class="edit-btn" onclick="openEditModal('${doc.id}',\`${data.title}\`,\`${data.content}\`,\`${data.link||''}\`)">تعديل</button>
         <button class="delete-btn" onclick="deletePost('${doc.id}')">حذف</button>
       `;
       container.appendChild(div);
@@ -189,56 +189,26 @@ async function loadPosts(){
   }catch(err){ container.innerHTML="حدث خطأ أثناء تحميل المنشورات"; console.error(err); }
 }
 
-// مساعدة لتجنب مشاكل علامات التنصيص في JS
-function escapeQuotes(str){ return str.replace(/'/g,"\\'").replace(/"/g,'\\"'); }
-
-// حذف المنشور
 async function deletePost(id){ if(confirm("هل أنت متأكد؟")){ await db.collection("news").doc(id).delete(); loadPosts(); } }
-
-// إعجاب بالمنشور
 async function likePost(id,likes){ await db.collection("news").doc(id).update({likes:likes+1}); loadPosts(); }
 
-// فتح نافذة تعديل
-function openEditModal(id,title,content,link,image){
+function openEditModal(id,title,content,link){
   currentEditId=id;
   document.getElementById("editTitle").value=title;
   document.getElementById("editContent").value=content;
   document.getElementById("editLink").value=link;
-  document.getElementById("editImage").value="";
   document.getElementById("editModal").style.display="flex";
 }
-
-// إغلاق نافذة تعديل
 function closeEditModal(){ document.getElementById("editModal").style.display="none"; }
-
-// حفظ التعديل
 async function saveEdit(){
-  const title = document.getElementById("editTitle").value.trim();
-  const content = document.getElementById("editContent").value.trim();
-  const link = document.getElementById("editLink").value.trim();
-  const imageInput = document.getElementById("editImage");
-
-  if(!title || !content){ alert("العنوان والمحتوى مطلوبان"); return; }
-
-  let updateData = { title, content, link };
-
-  if(imageInput.files[0]){
-    const file = imageInput.files[0];
-    const reader = new FileReader();
-    reader.onload = async function(e){
-      updateData.image = e.target.result;
-      await db.collection("news").doc(currentEditId).update(updateData);
-      closeEditModal();
-      loadPosts();
-    };
-    reader.readAsDataURL(file); // يدعم كل أنواع الصور
-  } else {
-    await db.collection("news").doc(currentEditId).update(updateData);
-    closeEditModal();
-    loadPosts();
-  }
+  const title=document.getElementById("editTitle").value.trim();
+  const content=document.getElementById("editContent").value.trim();
+  const link=document.getElementById("editLink").value.trim();
+  if(!title||!content){ alert("العنوان والمحتوى مطلوبان"); return; }
+  await db.collection("news").doc(currentEditId).update({title,content,link});
+  closeEditModal();
+  loadPosts();
 }
-
 </script>
 </body>
 </html>
