@@ -43,8 +43,16 @@
     img {
       width: 100%;
       max-width: 500px;
+      height: 250px; /* ارتفاع ثابت */
+      object-fit: cover; /* تغطية الإطار بالكامل بدون تشويه */
       border-radius: 8px;
       margin-bottom: 15px;
+    }
+
+    h2 {
+      color: #C1272D;
+      font-size: 20px;
+      margin: 10px 0;
     }
 
     p {
@@ -137,13 +145,13 @@ function copyText(text) {
 
 function shareWhatsApp(title, content, url) {
   const text = `${title}\n\n${content}\n\n${url}`;
-  const link = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(link, "_blank");
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+  window.open(waUrl, "_blank");
 }
 
 function shareFacebook(url) {
-  const link = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  window.open(link, "_blank");
+  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  window.open(fbUrl, "_blank");
 }
 
 function isLiked(id) {
@@ -195,7 +203,7 @@ async function loadPost() {
     </div>
     <div class="action-buttons">
       <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}')">📋 نسخ النص</button>
-      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','${shortUrl}')">💬 واتساب</button>
+      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title.replace(/'/g,"\\'")}','${data.content.replace(/'/g,"\\'")}','${shortUrl}')">💬 واتساب</button>
       <button class="share-btn facebook" onclick="shareFacebook('${shortUrl}')">📘 فيسبوك</button>
       <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 نسخ الرابط</button>
     </div>
