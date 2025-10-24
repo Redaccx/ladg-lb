@@ -239,6 +239,18 @@ function copyText(text) {
   alert("✅ تم النسخ بنجاح!");
 }
 
+// دوال مشاركة واتساب وفيسبوك
+function shareWhatsApp(title, content, url) {
+  const text = `${title}\n${content}\n${url}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(waUrl, "_blank");
+}
+
+function shareFacebook(url) {
+  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  window.open(fbUrl, "_blank", "width=600,height=400");
+}
+
 async function loadPosts() {
   const container = document.getElementById("postsContainer");
   const loadingText = document.getElementById("loadingMessage");
