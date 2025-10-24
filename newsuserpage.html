@@ -10,9 +10,9 @@ header { display:flex; justify-content:space-between; align-items:center; flex-w
 h1 { text-align:center; color:#C1272D; flex:1 1 100%; margin-bottom:10px; }
 .lang-btn, .back-btn { background:#C1272D; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer; margin:5px; font-size:14px; }
 .posts-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:15px; margin-top:20px; }
-.post { background:#fff; padding:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); cursor:pointer; transition:.2s; }
-.post:hover { transform:scale(1.02); }
-.post img { width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; }
+.post { display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden; cursor:pointer; transition: transform 0.2s; }
+.post:hover { transform: scale(1.02); }
+.post img { width: 100%; height: 250px; object-fit: cover; border-radius: 0; } /* حجم ثابت للصور */
 .post h3 { text-align:center; margin:8px 0 5px; color:#C1272D; font-size:16px; }
 .read-more { text-align:center; font-size:12px; color:white; background:#C1272D; padding:5px 8px; border-radius:12px; margin:5px auto 10px; width:fit-content; cursor:pointer; }
 .post small { color:gray; font-size:12px; display:block; text-align:center; margin-bottom:5px; }
@@ -22,7 +22,7 @@ h1 { text-align:center; color:#C1272D; flex:1 1 100%; margin-bottom:10px; }
 .popup { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:999; }
 .popup-content { background:white; padding:20px; border-radius:10px; max-width:500px; width:90%; text-align:center; position:relative; animation:fadeIn 0.3s; overflow-y:auto; max-height:90vh; }
 @keyframes fadeIn { from {opacity:0; transform:scale(0.9);} to {opacity:1; transform:scale(1);} }
-.popup-content img { width:100%; border-radius:8px; margin-bottom:10px; }
+.popup-content img { width:100%; height:250px; object-fit:cover; border-radius:8px; margin-bottom:10px; }
 .close-btn { position:absolute; top:10px; left:10px; background:#C1272D; color:white; border:none; border-radius:50%; width:30px; height:30px; font-size:18px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; }
 .popup .action-buttons { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:15px; }
 .popup .share-btn { color:white; border:none; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:14px; }
@@ -92,7 +92,7 @@ function copyText(text) {
   alert("✅ تم النسخ بنجاح!");
 }
 
-// دوال مشاركة واتساب وفيسبوك
+// مشاركة واتساب وفيسبوك
 function shareWhatsApp(title, content, url) {
   const text = `${title}\n${content}\n${url}`;
   const encodedText = encodeURIComponent(text);
@@ -112,11 +112,8 @@ async function loadPosts() {
   loadingText.style.display = "block";
   container.style.display = "none";
 
-  const snapshot = await db.collection("news").orderBy("date", "desc").get();
-  if (snapshot.empty) {
-    loadingText.innerText = translations[currentLang].empty;
-    return;
-  }
+  const snapshot = await db.collection("news").orderBy("date","desc").get();
+  if(snapshot.empty) { loadingText.innerText = translations[currentLang].empty; return; }
 
   snapshot.forEach(doc => {
     const data = doc.data();
@@ -132,7 +129,7 @@ async function loadPosts() {
         <button class="share-btn link" onclick="copyText('https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();" title="نسخ الرابط">🔗</button>
       </div>
     `;
-    div.onclick = () => openPopup(id, data);
+    div.onclick = () => openPopup(id,data);
     container.appendChild(div);
   });
 
@@ -140,7 +137,7 @@ async function loadPosts() {
   container.style.display = "grid";
 }
 
-function openPopup(id, data) {
+function openPopup(id,data) {
   const popup = document.getElementById("popup");
   const content = document.getElementById("popupContent");
   const shortUrl = `https://alanmaa-lb.com/p?id=${id}`;
@@ -162,13 +159,12 @@ function openPopup(id, data) {
 }
 
 function closePopup(event) {
-  if (event.target.classList.contains("close-btn") || event.target.id === "popup") {
+  if(event.target.classList.contains("close-btn") || event.target.id === "popup") {
     document.getElementById("popup").style.display = "none";
   }
 }
 
 window.onload = applyLanguage;
 </script>
-
 </body>
 </html>
