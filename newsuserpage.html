@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>منشورات الجمعية</title>
+  <title>منشورات الجمعية اللبنانية للإنماء</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -24,6 +24,7 @@
       text-align: center;
       color: #C1272D;
       flex: 1 1 100%;
+      margin-bottom: 10px;
     }
 
     .lang-btn, .back-btn {
@@ -34,16 +35,27 @@
       border-radius: 5px;
       cursor: pointer;
       margin: 5px;
+      font-size: 14px;
+    }
+
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
     }
 
     .post {
       background: #fff;
-      margin: 20px auto;
-      padding: 15px;
-      max-width: 600px;
+      padding: 10px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .post:hover {
+      transform: scale(1.02);
     }
 
     .post img {
@@ -54,12 +66,9 @@
     }
 
     .post h3 {
-      margin: 10px 0 5px;
+      margin: 8px 0 4px;
       color: #C1272D;
-    }
-
-    .post p {
-      margin: 5px 0;
+      font-size: 16px;
     }
 
     .post small {
@@ -67,19 +76,11 @@
       font-size: 12px;
     }
 
-    .link {
-      color: #0066cc;
-      text-decoration: underline;
-      display: block;
-      margin-top: 5px;
-    }
-
     .heart {
       cursor: pointer;
       color: gray;
-      font-size: 20px;
-      margin-top: 10px;
-      display: inline-block;
+      font-size: 18px;
+      margin-right: 5px;
     }
 
     .heart.liked {
@@ -88,10 +89,79 @@
 
     #loadingMessage {
       text-align: center;
-      margin-top: 30px;
+      margin-top: 40px;
       font-size: 16px;
       color: gray;
     }
+
+    /* Popup */
+    .popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: scale(0.9);}
+      to {opacity: 1; transform: scale(1);}
+    }
+
+    .popup-content img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #C1272D;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .copy-btn, .share-btn {
+      background: #C1272D;
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .share-btn.whatsapp { background: #25D366; }
+    .share-btn.facebook { background: #1877F2; }
+    .share-btn.link { background: #444; }
   </style>
 </head>
 <body>
@@ -99,18 +169,25 @@
 <header>
   <button class="back-btn" onclick="window.location.href='index.html'">← <span id="backText">رجوع</span></button>
   <button class="lang-btn" onclick="toggleLanguage()"><span id="langText">English</span></button>
-  <h1 id="pageTitle">اخر الاخبار</h1>
+  <h1 id="pageTitle">آخر الأخبار</h1>
 </header>
 
 <div id="loadingMessage">⏳ جاري تحميل المنشورات...</div>
-<div id="postsContainer" style="display:none;"></div>
+<div id="postsContainer" class="posts-grid" style="display:none;"></div>
+
+<!-- Popup -->
+<div id="popup" class="popup" onclick="closePopup(event)">
+  <div class="popup-content" id="popupContent">
+    <button class="close-btn" onclick="closePopup(event)">×</button>
+  </div>
+</div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
   authDomain: "alanmaa-lb.firebaseapp.com",
   databaseURL: "https://alanmaa-lb-default-rtdb.firebaseio.com",
@@ -120,98 +197,134 @@
   appId: "1:503038482881:web:101ead344c3274e668f740",
   measurementId: "G-W0TF54W20B"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+let currentLang = localStorage.getItem("lang") || "ar";
+const translations = {
+  ar: { title:"آخر الأخبار", back:"رجوع", like:"إعجاب", loading:"⏳ جاري تحميل المنشورات...", empty:"لا يوجد منشورات حاليا" },
+  en: { title:"Last News", back:"Back", like:"Like", loading:"⏳ Loading posts...", empty:"No posts available" }
+};
 
-  let currentLang = localStorage.getItem("lang") || "ar";
-  const translations = {
-    ar: {
-      title: "اخر الاخبار",
-      back: "رجوع",
-      like: "إعجاب",
-      loading: "⏳ جاري تحميل المنشورات...",
-      empty: "لا يوجد منشورات حاليا"
-    },
-    en: {
-      title: "Last News",
-      back: "Back",
-      like: "Like",
-      loading: "⏳ Loading posts...",
-      empty: "No posts available"
-    }
-  };
+function applyLanguage() {
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+  document.getElementById("pageTitle").innerText = translations[currentLang].title;
+  document.getElementById("backText").innerText = translations[currentLang].back;
+  document.getElementById("langText").innerText = currentLang === "ar" ? "English" : "عربي";
+  document.getElementById("loadingMessage").innerText = translations[currentLang].loading;
+  loadPosts();
+}
 
-  function applyLanguage() {
-    document.documentElement.lang = currentLang;
-    document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
-    document.getElementById("pageTitle").innerText = translations[currentLang].title;
-    document.getElementById("backText").innerText = translations[currentLang].back;
-    document.getElementById("langText").innerText = currentLang === "ar" ? "English" : "عربي";
-    document.getElementById("loadingMessage").innerText = translations[currentLang].loading;
-    loadPosts();
+function toggleLanguage() {
+  currentLang = currentLang === "ar" ? "en" : "ar";
+  localStorage.setItem("lang", currentLang);
+  applyLanguage();
+}
+
+function isLiked(id) {
+  const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+  return likedPosts.includes(id);
+}
+
+function toggleLike(elem, id) {
+  const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+  const liked = likedPosts.includes(id);
+  if (liked) likedPosts.splice(likedPosts.indexOf(id), 1);
+  else likedPosts.push(id);
+  localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
+  elem.classList.toggle("liked");
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text);
+  alert("✅ تم النسخ بنجاح!");
+}
+
+function shareWhatsApp(title, content, url) {
+  const text = `${title}\n\n${content}\n\n${url}`;
+  const link = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(link, "_blank");
+}
+
+function shareFacebook(url) {
+  const link = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+  window.open(link, "_blank");
+}
+
+async function loadPosts() {
+  const container = document.getElementById("postsContainer");
+  const loadingText = document.getElementById("loadingMessage");
+  container.innerHTML = "";
+  loadingText.style.display = "block";
+  container.style.display = "none";
+
+  const snapshot = await db.collection("news").orderBy("date", "desc").get();
+  if (snapshot.empty) {
+    loadingText.innerText = translations[currentLang].empty;
+    return;
   }
 
-  function toggleLanguage() {
-    currentLang = currentLang === "ar" ? "en" : "ar";
-    localStorage.setItem("lang", currentLang);
-    applyLanguage();
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const id = doc.id;
+    const div = document.createElement("div");
+    div.className = "post";
+    div.innerHTML = `
+      <img src="${data.image}" alt="post">
+      <h3>${data.title}</h3>
+      <small>🗓️ ${new Date(data.date).toLocaleDateString(currentLang)}</small>
+      <span class="heart ${isLiked(id)?'liked':''}" onclick="toggleLike(this, '${id}');event.stopPropagation();">♥</span>
+    `;
+    div.onclick = () => openPopup(id, data);
+    container.appendChild(div);
+  });
+
+  loadingText.style.display = "none";
+  container.style.display = "grid";
+
+  // فتح مباشر عبر رابط
+  const urlParams = new URLSearchParams(window.location.search);
+  const openId = urlParams.get("id");
+  if (openId) {
+    const doc = await db.collection("news").doc(openId).get();
+    if (doc.exists) openPopup(openId, doc.data());
   }
+}
 
-  function isLiked(id) {
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    return likedPosts.includes(id);
+function openPopup(id, data) {
+  const popup = document.getElementById("popup");
+  const content = document.getElementById("popupContent");
+  
+  const fullUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
+  const shortUrl = `https://alanmaa-lb.com/p?id=${id}`; // 🔗 عدّلها حسب نطاق موقعك
+
+  content.innerHTML = `
+    <button class="close-btn" onclick="closePopup(event)">×</button>
+    <img src="${data.image}" alt="post">
+    <h3>${data.title}</h3>
+    <p>${data.content}</p>
+    ${data.link ? `<a href="${data.link}" target="_blank">${data.link}</a>` : ""}
+    <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small>
+    <div class="action-buttons">
+      <button class="copy-btn" onclick="copyText('${data.content.replace(/'/g,"\\'")}')">📋 نسخ النص</button>
+      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title}','${data.content}','${shortUrl}')">💬 واتساب</button>
+      <button class="share-btn facebook" onclick="shareFacebook('${shortUrl}')">📘 فيسبوك</button>
+      <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 نسخ الرابط</button>
+    </div>
+  `;
+  popup.style.display = "flex";
+  history.replaceState(null, "", `?id=${id}`);
+}
+
+function closePopup(event) {
+  if (event.target.id === "popup" || event.target.classList.contains("close-btn")) {
+    document.getElementById("popup").style.display = "none";
+    history.replaceState(null, "", window.location.pathname);
   }
+}
 
-  function toggleLike(elem, id) {
-    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-    const liked = likedPosts.includes(id);
-    if (liked) {
-      likedPosts.splice(likedPosts.indexOf(id), 1);
-    } else {
-      likedPosts.push(id);
-    }
-    localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
-    elem.classList.toggle("liked");
-  }
-
-  async function loadPosts() {
-    const container = document.getElementById("postsContainer");
-    const loadingText = document.getElementById("loadingMessage");
-
-    container.innerHTML = "";
-    loadingText.style.display = "block";
-    container.style.display = "none";
-
-    const snapshot = await db.collection("news").orderBy("date", "desc").get();
-
-    if (snapshot.empty) {
-      loadingText.innerText = translations[currentLang].empty;
-      return;
-    }
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const id = doc.id;
-
-      const div = document.createElement("div");
-      div.className = "post";
-      div.innerHTML = `
-        <img src="${data.image}" alt="post">
-        <h3>${data.title}</h3>
-        <p>${data.content}</p>
-        ${data.link ? `<a href="${data.link}" class="link" target="_blank">${data.link}</a>` : ""}
-        <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small><br/>
-        <span class="heart ${isLiked(id) ? 'liked' : ''}" onclick="toggleLike(this, '${id}')">♥</span>
-      `;
-      container.appendChild(div);
-    });
-
-    loadingText.style.display = "none";
-    container.style.display = "block";
-  }
-
-  window.onload = applyLanguage;
+window.onload = applyLanguage;
 </script>
 
 </body>
