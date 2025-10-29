@@ -337,22 +337,33 @@ async function loadData() {
             row.insertCell(3).innerText = r.checkin || "-";
             row.insertCell(4).innerText = r.checkout || "-";
             row.insertCell(5).innerText = calculateWorkHours(r.checkin, r.checkout, r.date);
+            
             const st = row.insertCell(6);
             st.innerText = r.status;
             st.className = r.status === "حاضر" ? "status-hadir" : "status-ghayeb";
+            
             const actions = row.insertCell(7);
             actions.innerHTML = `
-        <button class="present" onclick="toggleStatus('${r.id}','${r.status}')">Status</button>
-        <button class="edit" onclick="editRecord('${r.id}')">Edit</button>
-        <button class="delete" onclick="deleteRecord('${r.id}')">Delete</button>`;
+                <button class="present" data-id="${r.id}" data-status="${r.status}">Status</button>
+                <button class="edit" onclick="editRecord('${r.id}')">Edit</button>
+                <button class="delete" onclick="deleteRecord('${r.id}')">Delete</button>`;
         });
         
         box.appendChild(table);
         container.appendChild(box);
     });
+    
+    // ===== إضافة event listener لكل زر Status =====
+    document.querySelectorAll(".present").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const docId = this.dataset.id;
+            const currentStatus = this.dataset.status;
+            const newStatus = currentStatus === "حاضر" ? "غائب" : "حاضر";
+            db.collection("attendance").doc(docId).update({ status: newStatus })
+                .then(() => loadData());
+        });
+    });
 }
-
-
 // ===== فلترة السجلات =====
 function applyFilter() {
     const filter = document.getElementById("filterSelect").value;
