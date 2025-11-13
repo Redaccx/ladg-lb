@@ -2,14 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Attendance System 2.0 — Dashboard</title>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- SheetJS -->
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<!-- Firebase (compat for easier migration from your current code) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -22,66 +22,82 @@
   --bg:#f4f6f9;
   --radius:10px;
 }
-*{box-sizing:border-box}
-body{margin:0;font-family:"Cairo",system-ui,Arial;background:var(--bg);color:#111}
-.app{
-  display:flex;min-height:100vh;
-}
+*{box-sizing:border-box;}
+body{margin:0;font-family:"Cairo",system-ui,Arial;background:var(--bg);color:#111;}
+.app{display:flex;min-height:100vh;}
 
 /* Sidebar */
 .sidebar{
   width:260px;background:#0f1724;color:white;padding:20px 12px;box-shadow:2px 0 18px rgba(2,6,23,0.2);
-  display:flex;flex-direction:column;gap:14px;
+  display:flex;flex-direction:column;gap:14px;transition: all 0.3s ease;
 }
-.brand{font-weight:700;font-size:20px;color:var(--accent);text-align:center;padding-bottom:6px}
-.nav-btn{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;cursor:pointer;color:#e6eef5}
-.nav-btn:hover{background:rgba(255,255,255,0.03)}
-.nav-btn.active{background:rgba(255,255,255,0.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02)}
-.small{font-size:13px;color:#9aa7b7}
+.brand{font-weight:700;font-size:20px;color:var(--accent);text-align:center;padding-bottom:6px;}
+.nav-btn{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;cursor:pointer;color:#e6eef5;white-space:nowrap;}
+.nav-btn:hover{background:rgba(255,255,255,0.03);}
+.nav-btn.active{background:rgba(255,255,255,0.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02);}
+.small{font-size:13px;color:#9aa7b7;}
+.small-muted{font-size:12px;color:#666;}
 
 /* Main */
 .main{
   flex:1;padding:20px;
 }
 .header{
-  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;
 }
-.h-left{display:flex;align-items:center;gap:12px}
-.logo{background:var(--accent);color:white;padding:8px 14px;border-radius:8px;font-weight:700}
-.search{padding:8px 12px;border-radius:8px;border:1px solid #e6eef5;min-width:260px}
-.actions{display:flex;gap:8px;align-items:center}
+.h-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.logo{background:var(--accent);color:white;padding:8px 14px;border-radius:8px;font-weight:700;}
+.search{padding:8px 12px;border-radius:8px;border:1px solid #e6eef5;min-width:260px;flex:1;}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 
 /* Cards row */
-.cards{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(12,24,40,0.06);flex:1;min-width:200px}
-.card h3{margin:0;font-size:14px;color:var(--muted)}
-.card p{font-size:20px;margin:8px 0 0;font-weight:700}
+.cards{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(12,24,40,0.06);flex:1;min-width:200px;}
+.card h3{margin:0;font-size:14px;color:var(--muted);}
+.card p{font-size:20px;margin:8px 0 0;font-weight:700;}
 
 /* Table and controls */
-.controls{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-.btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:var(--accent);color:white}
-.btn.ghost{background:transparent;border:1px solid #ddd;color:#333}
-.table-wrap{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(12,24,40,0.06)}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #f0f0f0;text-align:center;font-size:13px}
-th{background:transparent;color:var(--muted);font-weight:700}
+.controls{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.btn{padding:6px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--accent);color:white;font-size:13px;}
+.btn.ghost{background:transparent;border:1px solid #ddd;color:#333;font-size:12px;padding:5px 8px;}
+.table-wrap{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(12,24,40,0.06);overflow-x:auto;}
+table{width:100%;border-collapse:collapse;table-layout:fixed;}
+th,td{padding:6px 8px;border-bottom:1px solid #f0f0f0;text-align:center;word-wrap:break-word;font-size:13px;}
+th{background:transparent;color:var(--muted);font-weight:700;}
 
 /* modal */
-.modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;justify-content:center;align-items:center;z-index:50}
-.modal{background:white;padding:18px;border-radius:12px;min-width:320px;max-width:420px}
-.form-row{display:flex;gap:8px;margin-bottom:8px}
-.form-row input, .form-row select{flex:1;padding:8px;border-radius:8px;border:1px solid #e6e6e6}
-.label{font-size:13px;margin-bottom:6px;color:#333}
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;justify-content:center;align-items:center;z-index:50;}
+.modal{background:white;padding:16px;border-radius:12px;min-width:300px;max-width:400px;}
+.form-row{display:flex;gap:8px;margin-bottom:8px;}
+.form-row input, .form-row select{flex:1;padding:8px;border-radius:8px;border:1px solid #e6e6e6;}
+.label{font-size:13px;margin-bottom:6px;color:#333;}
 
 /* responsive */
-@media(max-width:900px){
-  .sidebar{display:none}
-  .cards{flex-direction:column}
+@media(max-width:1024px){
+  .app{flex-direction:column;}
+  .sidebar{
+    width:100%;
+    display:flex;
+    flex-direction:row;
+    overflow-x:auto;
+    padding:8px;
+  }
+  .sidebar .nav-btn{flex:1;text-align:center;font-size:14px;padding:8px;}
+  .main{padding:12px;}
 }
-.rtl { direction: rtl; }
 
-.small-muted{font-size:12px;color:#666}
-.actions .logout{background:#111;color:white;padding:8px 12px;border-radius:8px;border:none}
+@media(max-width:768px){
+  .header{flex-direction:column;align-items:flex-start;gap:10px;}
+  .h-left{flex-direction:column;align-items:flex-start;gap:6px;}
+  .search{min-width:100%;}
+  .actions{width:100%;justify-content:space-between;}
+  .cards{flex-direction:column;gap:10px;}
+  .card{width:100%;}
+  table, th, td{font-size:12px;}
+  .controls{flex-direction:column;align-items:flex-start;gap:6px;}
+  .controls input, .controls select, .controls button{width:100%;margin-bottom:6px;}
+}
+.actions .logout{background:#111;color:white;padding:8px 12px;border-radius:8px;border:none;}
 </style>
 </head>
 <body class="rtl">
@@ -103,7 +119,6 @@ th{background:transparent;color:var(--muted);font-weight:700}
 
   <!-- MAIN -->
   <div class="main">
-
     <!-- HEADER -->
     <div class="header">
       <div class="h-left">
@@ -148,7 +163,6 @@ th{background:transparent;color:var(--muted);font-weight:700}
         <button class="btn ghost" onclick="clearFilters()">إزالة الفلاتر</button>
         <button class="btn" onclick="exportExcel()">تصدير Excel</button>
       </div>
-
       <div class="table-wrap">
         <table id="attendanceTable">
           <thead>
@@ -189,28 +203,25 @@ th{background:transparent;color:var(--muted);font-weight:700}
         <p class="small-muted">ساعات العمل الرسمية، وإدارة الأدوار</p>
         <div style="margin-top:8px">
           <label class="label">بداية دوام (HH:MM)</label>
-          <input id="workStart" type="time" value="09:00" style="padding:8px;border-radius:8px;border:1px solid #e6e6e6"/>
+          <input id="workStart" type="time" value="09:00"/>
           <label class="label">نهاية دوام (HH:MM)</label>
-          <input id="workEnd" type="time" value="17:00" style="padding:8px;border-radius:8px;border:1px solid #e6e6e6"/>
+          <input id="workEnd" type="time" value="17:00"/>
           <div style="margin-top:8px">
             <button class="btn" onclick="saveSettings()">حفظ الإعدادات</button>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
 <!-- MODALS -->
 <div id="modalBack" class="modal-back">
-  <div class="modal" id="modalContent">
-    <!-- dynamic content -->
-  </div>
+  <div class="modal" id="modalContent"></div>
 </div>
 
 <script>
-/* ===== Firebase config - عدّل هنا إذا لازم ===== */
+// ===== Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
   authDomain: "ladg-attendance.firebaseapp.com",
@@ -223,429 +234,211 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-/* ===== Global state ===== */
-let currentUser = null;
-let attendanceCache = []; // local cache
-let employeesCache = [];
-let settingsCache = { workStart: "09:00", workEnd: "17:00" };
+// ===== Global State =====
+let currentUser=null, attendanceCache=[], employeesCache=[], settingsCache={workStart:"09:00",workEnd:"17:00"};
 
-/* ===== Auth listener ===== */
+// ===== Auth Listener =====
 auth.onAuthStateChanged(async user=>{
-  currentUser = user;
+  currentUser=user;
   if(user){
-    document.getElementById('userEmail').innerText = user.email;
-    // load initial data
-    await loadSettings();
-    await loadEmployees();
-    await loadAttendance();
-    renderTable();
-    renderDashboard();
-  } else {
-    // show login modal
-    showLogin();
-  }
+    document.getElementById('userEmail').innerText=user.email;
+    await loadSettings(); await loadEmployees(); await loadAttendance();
+  } else showLogin();
 });
 
-/* ===== UI utils ===== */
+// ===== UI Helpers =====
 function switchView(name){
-  const views = ['dashboard','attendance','employees','reports','settings'];
+  const views=['dashboard','attendance','employees','reports','settings'];
   views.forEach(v=>{
-    document.getElementById('view-'+v).style.display = (v===name)?'block':'none';
-    document.getElementById('nav'+capitalize(v)) && document.getElementById('nav'+capitalize(v)).classList.toggle('active', v===name);
-  })
+    document.getElementById('view-'+v).style.display=(v===name?'block':'none');
+    document.getElementById('nav'+capitalize(v))?.classList.toggle('active', v===name);
+  });
 }
-function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1) }
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-/* ===== LOGIN modal (simple) ===== */
+// ===== Login =====
 function showLogin(){
-  const content = `
+  const html=`
     <h3 style="margin-top:0">تسجيل دخول</h3>
     <div class="form-row"><input id="loginEmail" placeholder="Email"></div>
     <div class="form-row"><input id="loginPass" type="password" placeholder="Password"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn" onclick="doLogin()">دخول</button>
-      <button class="btn ghost" onclick="modalClose()">إغلاق</button>
     </div>
-    <p style="margin-top:8px;font-size:13px">لا تملك حساب؟ اطلب من المشرف إنشاء حساب لك.</p>
-  `;
-  showModal(content,false);
+    <p style="margin-top:8px;font-size:13px">لا تملك حساب؟ اطلب من المشرف إنشاء حساب لك.</p>`;
+  showModal(html,false);
 }
 async function doLogin(){
   const e=document.getElementById('loginEmail').value.trim();
   const p=document.getElementById('loginPass').value.trim();
-  try{
-    await auth.signInWithEmailAndPassword(e,p);
-    modalClose();
-  }catch(err){
-    alert(err.message);
-  }
+  try{ await auth.signInWithEmailAndPassword(e,p); modalClose(); } catch(err){ alert(err.message); }
 }
 function logout(){ auth.signOut(); location.reload(); }
 
-/* ===== Modal helpers ===== */
-function showModal(html, closable=true){
-  document.getElementById('modalContent').innerHTML = html;
-  const mb = document.getElementById('modalBack');
-  mb.style.display = 'flex';
-  if(closable){
-    mb.onclick = (e)=>{ if(e.target===mb) modalClose(); }
-  } else mb.onclick = null;
+// ===== Modal =====
+function showModal(html,closable=true){
+  const mb=document.getElementById('modalBack');
+  document.getElementById('modalContent').innerHTML=html;
+  mb.style.display='flex';
+  if(closable){ mb.onclick=(e)=>{ if(e.target===mb) modalClose(); } } else mb.onclick=null;
 }
 function modalClose(){ document.getElementById('modalBack').style.display='none'; }
 
-/* ===== Load Settings ===== */
+// ===== Settings =====
 async function loadSettings(){
-  try{
-    const doc = await db.collection('settings').doc('main').get();
-    if(doc.exists) settingsCache = {...settingsCache, ...doc.data()};
-    document.getElementById('workStart').value = settingsCache.workStart || '09:00';
-    document.getElementById('workEnd').value = settingsCache.workEnd || '17:00';
-  }catch(e){ console.error(e) }
+  try{ const doc=await db.collection('settings').doc('main').get();
+    if(doc.exists) settingsCache={...settingsCache,...doc.data()};
+    document.getElementById('workStart').value=settingsCache.workStart||'09:00';
+    document.getElementById('workEnd').value=settingsCache.workEnd||'17:00';
+  } catch(e){ console.error(e); }
 }
 function saveSettings(){
-  settingsCache.workStart = document.getElementById('workStart').value;
-  settingsCache.workEnd = document.getElementById('workEnd').value;
-  db.collection('settings').doc('main').set(settingsCache).then(()=>alert('Saved'));
+  settingsCache.workStart=document.getElementById('workStart').value;
+  settingsCache.workEnd=document.getElementById('workEnd').value;
+  db.collection('settings').doc('main').set(settingsCache).then(()=>alert('تم الحفظ'));
 }
 
-/* ===== Employees ===== */
+// ===== Employees =====
 async function loadEmployees(){
-  employeesCache = [];
-  const sel = document.getElementById('filterEmployee');
-  const rep = document.getElementById('reportEmp');
-  sel.innerHTML = '<option value="all">كل الموظفين</option>';
-  rep.innerHTML = '<option value="all">كل الموظفين</option>';
-  const snapshot = await db.collection('employees').orderBy('name').get();
+  employeesCache=[]; const sel=document.getElementById('filterEmployee'); const rep=document.getElementById('reportEmp');
+  sel.innerHTML='<option value="all">كل الموظفين</option>'; rep.innerHTML='<option value="all">كل الموظفين</option>';
+  const snapshot=await db.collection('employees').orderBy('name').get();
   snapshot.forEach(doc=>{
-    const e = { id: doc.id, ...doc.data() };
-    employeesCache.push(e);
-    const opt = document.createElement('option');
-    opt.value = e.id; opt.textContent = `${e.id} - ${e.name}`;
-    sel.appendChild(opt);
-    const opt2 = opt.cloneNode(true); rep.appendChild(opt2);
+    const e={id:doc.id,...doc.data()}; employeesCache.push(e);
+    const opt=document.createElement('option'); opt.value=e.id; opt.textContent=`${e.id} - ${e.name}`;
+    sel.appendChild(opt); rep.appendChild(opt.cloneNode(true));
   });
   renderEmployeesTable();
 }
 
-/* ===== Attendance ===== */
+// ===== Attendance =====
 function formatDateISOorString(d){
-  try{ const dt = new Date(d); return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}` }
-  catch(e){ return d }
+  try{ const dt=new Date(d); return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}` }
+  catch(e){ return d; }
 }
 function calcWorkHours(checkin,checkout,dateISO){
-  if(!checkin || !checkout || checkout==='-') return '-';
-  const inParts = checkin.split(':').map(Number);
-  const outParts = checkout.split(':').map(Number);
-  const base = new Date(dateISO);
-  base.setHours(inParts[0], inParts[1], 0, 0);
-  const out = new Date(dateISO); out.setHours(outParts[0], outParts[1], 0, 0);
-  const diffMs = out - base;
-  if(isNaN(diffMs) || diffMs < 0) return '-';
-  const h = Math.floor(diffMs/3600000); const m = Math.floor((diffMs%3600000)/60000);
+  if(!checkin||!checkout||checkout==='-') return '-';
+  const inParts=checkin.split(':').map(Number);
+  const outParts=checkout.split(':').map(Number);
+  const base=new Date(dateISO); base.setHours(inParts[0],inParts[1],0,0);
+  const out=new Date(dateISO); out.setHours(outParts[0],outParts[1],0,0);
+  const diffMs=out-base; if(isNaN(diffMs)||diffMs<0) return '-';
+  const h=Math.floor(diffMs/3600000); const m=Math.floor((diffMs%3600000)/60000);
   return `${h}h ${m}m`;
 }
-
 async function loadAttendance(){
-  attendanceCache = [];
-  const snap = await db.collection('attendance').orderBy('date','desc').limit(500).get();
-  snap.forEach(doc=>{
-    attendanceCache.push({ docId: doc.id, ...doc.data() });
-  });
-  renderTable();
-  renderDashboard();
+  attendanceCache=[]; const snap=await db.collection('attendance').orderBy('date','desc').limit(500).get();
+  snap.forEach(doc=>attendanceCache.push({docId:doc.id,...doc.data()}));
+  renderTable(); renderDashboard();
 }
 
-/* Render dashboard statistics & chart */
+// ===== Dashboard =====
 function renderDashboard(){
-  const today = new Date(); const startOfToday = new Date(today.getFullYear(),today.getMonth(),today.getDate());
-  const present = attendanceCache.filter(r => {
-    const d = new Date(r.date); return (d >= startOfToday && d < new Date(startOfToday.getTime()+86400000) && r.checkin && r.checkin!=='-');
-  }).length;
-  const allEmployees = employeesCache.length || 0;
-  const absent = Math.max(0, allEmployees - present);
-
-  document.getElementById('stat-present').innerText = present;
-  document.getElementById('stat-absent').innerText = absent;
-  document.getElementById('stat-records').innerText = attendanceCache.length;
-
-  // chart for last 7 days
-  const labels = []; const dataP = []; const dataA = [];
+  const today=new Date(); const startOfToday=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  const present=attendanceCache.filter(r=>{const d=new Date(r.date); return d>=startOfToday && d<new Date(startOfToday.getTime()+86400000) && r.checkin; }).length;
+  const absent=employeesCache.length - present; document.getElementById('stat-present').innerText=present;
+  document.getElementById('stat-absent').innerText=absent<0?0:absent; document.getElementById('stat-records').innerText=attendanceCache.length;
+  // Chart last 7 days
+  const last7=[], counts=[];
   for(let i=6;i>=0;i--){
-    const dt = new Date(); dt.setDate(dt.getDate()-i);
-    const key = dt.toDateString();
-    labels.push(`${dt.getDate()}/${dt.getMonth()+1}`);
-    const dayRecords = attendanceCache.filter(r => (new Date(r.date)).toDateString() === key);
-    const p = dayRecords.filter(rr=> rr.checkin && rr.checkin!=='-').length;
-    const a = Math.max(0, employeesCache.length - p);
-    dataP.push(p); dataA.push(a);
+    const d=new Date(); d.setDate(today.getDate()-i);
+    const key=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    last7.push(`${d.getDate()}/${d.getMonth()+1}`);
+    counts.push(attendanceCache.filter(r=>{ const rd=new Date(r.date); return rd.getFullYear()===d.getFullYear() && rd.getMonth()===d.getMonth() && rd.getDate()===d.getDate(); }).length);
   }
-  // draw chart
-  const ctx = document.getElementById('chartDays').getContext('2d');
-  if(window._chart) window._chart.destroy();
-  window._chart = new Chart(ctx,{ type:'bar', data:{
-    labels, datasets:[
-      { label:'حاضر', data:dataP, backgroundColor:'#27ae60' },
-      { label:'غائب', data:dataA, backgroundColor:'#e74c3c' }
-    ]
-  }, options:{responsive:true, maintainAspectRatio:false} });
+  const ctx=document.getElementById('chartDays').getContext('2d');
+  if(window.myChart) window.myChart.destroy();
+  window.myChart=new Chart(ctx,{type:'bar',data:{labels:last7,datasets:[{label:'سجلات',data:counts,backgroundColor:'rgba(193,39,45,0.7)'}]},options:{responsive:true,plugins:{legend:{display:false}}}});
 }
 
-/* Render attendance table with filters */
+// ===== Render Tables =====
 function renderTable(){
-  const tbody = document.querySelector('#attendanceTable tbody');
-  tbody.innerHTML = '';
-  const empFilter = document.getElementById('filterEmployee').value;
-  const dateFilter = document.getElementById('filterDate').value; // YYYY-MM-DD
-
-  const rows = attendanceCache.filter(r=>{
-    if(empFilter!=='all' && r.id !== empFilter) return false;
-    if(dateFilter){
-      const [y,m,d] = dateFilter.split('-').map(Number);
-      const sel = new Date(y,m-1,d);
-      const rowDate = new Date(r.date);
-      return sel.toDateString() === rowDate.toDateString();
-    }
-    return true;
-  });
-
-  rows.forEach((r, idx)=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.id}</td>
-      <td>${r.name}</td>
-      <td>${formatDateISOorString(r.date)}</td>
-      <td>${r.checkin||'-'}</td>
-      <td>${r.checkout||'-'}</td>
-      <td>${calcWorkHours(r.checkin,r.checkout,r.date)}</td>
-      <td>${r.status||'-'}</td>
-<td>
-  <button class="btn ghost" onclick="openEditRecord('${r.docId}')">✏️ تعديل</button>
-  <button class="btn ghost" onclick="deleteRecord('${r.docId}')">🗑️ حذف</button>
-  <button class="btn" style="background:#27ae60" onclick="markStatus('${r.docId}','حاضر')">✅ حاضر</button>
-  <button class="btn" style="background:#e74c3c" onclick="markStatus('${r.docId}','غائب')">❌ غائب</button>
-</td>`;
-    tbody.appendChild(tr);
+  const tbl=document.getElementById('attendanceTable').querySelector('tbody'); tbl.innerHTML='';
+  const fEmp=document.getElementById('filterEmployee').value;
+  const fDate=document.getElementById('filterDate').value;
+  attendanceCache.forEach((r,i)=>{
+    if(fEmp!=='all' && r.employeeId!==fEmp) return;
+    if(fDate && formatDateISOorString(r.date)!==fDate.split('-').reverse().join('/')) return;
+    const emp=employeesCache.find(e=>e.id===r.employeeId);
+    const row=document.createElement('tr');
+    row.innerHTML=`<td>${i+1}</td><td>${emp?.name||'-'}</td><td>${formatDateISOorString(r.date)}</td><td>${r.checkin||'-'}</td><td>${r.checkout||'-'}</td><td>${calcWorkHours(r.checkin,r.checkout,r.date)}</td><td>${r.checkin?'حاضر':'غائب'}</td><td><button class="btn ghost" onclick="deleteAttendance('${r.docId}')">حذف</button></td>`;
+    tbl.appendChild(row);
   });
 }
-
-/* Render employees table */
 function renderEmployeesTable(){
-  const tbody = document.querySelector('#employeesTable tbody');
-  tbody.innerHTML = '';
-  employeesCache.forEach(e=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${e.id}</td><td>${e.name}</td><td>${e.role||'employee'}</td>
-      <td><button class="btn ghost" onclick="openEmployeeModal('${e.id}','${e.name}','${e.role||'employee'}')">تعديل</button>
-      <button class="btn ghost" onclick="deleteEmployee('${e.id}')">حذف</button></td>`;
-    tbody.appendChild(tr);
+  const tbl=document.getElementById('employeesTable').querySelector('tbody'); tbl.innerHTML='';
+  employeesCache.forEach((e,i)=>{
+    const row=document.createElement('tr');
+    row.innerHTML=`<td>${i+1}</td><td>${e.name}</td><td>${e.role||'-'}</td><td><button class="btn ghost" onclick="deleteEmployee('${e.id}')">حذف</button></td>`;
+    tbl.appendChild(row);
   });
 }
 
-/* Search */
-function applySearch(q){ q = q.trim().toLowerCase();
-  if(!q){ renderTable(); return; }
-  const tbody = document.querySelector('#attendanceTable tbody'); tbody.innerHTML='';
-  attendanceCache.filter(r=> (r.id+' '+r.name).toLowerCase().includes(q)).forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${r.id}</td><td>${r.name}</td><td>${formatDateISOorString(r.date)}</td><td>${r.checkin||'-'}</td><td>${r.checkout||'-'}</td><td>${calcWorkHours(r.checkin,r.checkout,r.date)}</td><td>${r.status||'-'}</td><td>
-      <button class="btn ghost" onclick="openEditRecord('${r.docId}')">تعديل</button>
-      <button class="btn ghost" onclick="deleteRecord('${r.docId}')">حذف</button></td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-/* ===== Check In / Out via modal (supports past date + custom time) ===== */
-let activeCheckAction = null; // 'in' or 'out'
-let activeEmployeeForCheck = null;
-
-function openCheckModal(action){
-  activeCheckAction = action;
-  // build modal content
-  let empOptions = '<option value="">اختر موظف</option>';
-  employeesCache.forEach(e=> empOptions += `<option value="${e.id}">${e.id} - ${e.name}</option>`);
-  const html = `
-    <h3>${action==='in' ? 'تسجيل حضور' : 'تسجيل إنصراف'}</h3>
-    <div class="label">الموظف</div>
-    <div class="form-row"><select id="modalEmp">${empOptions}</select></div>
-    <div class="label">التاريخ (يمكن إدخال تاريخ قديم)</div>
-    <div class="form-row"><input id="modalDate" type="date" /></div>
-    <div class="label">الوقت (HH:MM) - اتركه فارغ ليأخذ الوقت الحالي</div>
-    <div class="form-row"><input id="modalTime" type="time" /></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-      <button class="btn" onclick="submitCheck()">حفظ</button>
-      <button class="btn ghost" onclick="modalClose()">إلغاء</button>
-    </div>
-  `;
+// ===== Employee Modals =====
+function openEmployeeModal(){
+  const html=`<h3>إضافة موظف</h3>
+    <div class="form-row"><input id="empName" placeholder="الاسم"></div>
+    <div class="form-row"><input id="empRole" placeholder="الدور"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="saveEmployee()">حفظ</button></div>`;
   showModal(html);
 }
+async function saveEmployee(){
+  const name=document.getElementById('empName').value.trim();
+  const role=document.getElementById('empRole').value.trim();
+  if(!name){ alert('الرجاء إدخال الاسم'); return; }
+  const doc=await db.collection('employees').add({name,role}); employeesCache.push({id:doc.id,name,role});
+  modalClose(); renderEmployeesTable(); renderDashboard();
+}
+async function deleteEmployee(id){
+  if(!confirm('تأكيد حذف الموظف؟')) return;
+  await db.collection('employees').doc(id).delete();
+  employeesCache=employeesCache.filter(e=>e.id!==id); renderEmployeesTable(); renderDashboard();
+}
 
-async function submitCheck(){
-  const empId = document.getElementById('modalEmp').value;
-  if(!empId){ alert('اختر موظف'); return; }
-  const emp = employeesCache.find(x=>x.id===empId);
-  if(!emp){ alert('الموظف غير موجود'); return; }
-  const dateVal = document.getElementById('modalDate').value;
-  const timeVal = document.getElementById('modalTime').value;
-  const now = new Date();
-  const dateObj = dateVal ? new Date(dateVal+'T00:00:00Z') : now;
-  const isoDate = dateObj.toISOString();
-  const timeStr = timeVal ? timeVal : new Date().toLocaleTimeString('en-GB',{hour12:false});
-  if(activeCheckAction === 'in'){
-    // create record (allow past date)
-    await db.collection('attendance').add({
-      id: emp.id,
-      name: emp.name,
-      date: isoDate,
-      checkin: timeStr,
-      checkout: '-',
-      status: 'حاضر',
-      createdBy: currentUser ? currentUser.uid : null
-    });
-  } else {
-    // find open check-in record for that employee on that date (checkout == '-')
-    const q = await db.collection('attendance')
-      .where('id','==',empId)
-      .where('checkout','==','-')
-      .get();
-    if(!q.empty){
-      // if date specified, try to update nearest record with same date; otherwise update all open
-      let updated = false;
-      for(const doc of q.docs){
-        const r = doc.data();
-        const rowDate = new Date(r.date);
-        if(!dateVal || rowDate.toDateString() === (new Date(dateVal)).toDateString()){
-          await doc.ref.update({ checkout: timeStr }); updated = true;
-        }
-      }
-      if(!updated){
-        alert('لم يتم العثور على check-in لنفس التاريخ. يمكنك إضافة check-in أولاً.');
-        modalClose(); return;
-      }
-    } else {
-      alert('لا يوجد تسجيل دخول مفتوح لهذا الموظف. أضف تسجيل دخول أولاً.');
-      modalClose(); return;
-    }
+// ===== Attendance Modals =====
+function openCheckModal(type){
+  let html=`<h3>${type==='in'?'تسجيل حضور':'تسجيل إنصراف'}</h3>
+  <div class="form-row"><select id="selEmployee">${employeesCache.map(e=>`<option value="${e.id}">${e.name}</option>`)}</select></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="saveAttendance('${type}')">حفظ</button></div>`;
+  showModal(html);
+}
+async function saveAttendance(type){
+  const empId=document.getElementById('selEmployee').value; const today=new Date().toISOString().split('T')[0];
+  let query=db.collection('attendance').where('employeeId','==',empId).where('date','>=',today).where('date','<',today+'T23:59:59');
+  const snap=await query.get();
+  let record;
+  if(snap.empty){ record={employeeId:empId,date:new Date().toISOString(),checkin:type==='in'?new Date().toTimeString().slice(0,5):'-',checkout:type==='out'?new Date().toTimeString().slice(0,5):'-'};
+    const doc=await db.collection('attendance').add(record); record.docId=doc.id; attendanceCache.push(record);
+  } else { record=snap.docs[0].data(); record.docId=snap.docs[0].id;
+    if(type==='in'){ await db.collection('attendance').doc(record.docId).update({checkin:new Date().toTimeString().slice(0,5)}); record.checkin=new Date().toTimeString().slice(0,5);}
+    if(type==='out'){ await db.collection('attendance').doc(record.docId).update({checkout:new Date().toTimeString().slice(0,5)}); record.checkout=new Date().toTimeString().slice(0,5);}
   }
-  await loadAttendance();
-  modalClose();
+  modalClose(); renderTable(); renderDashboard();
+}
+async function deleteAttendance(id){
+  if(!confirm('تأكيد حذف السجل؟')) return;
+  await db.collection('attendance').doc(id).delete();
+  attendanceCache=attendanceCache.filter(a=>a.docId!==id); renderTable(); renderDashboard();
 }
 
-/* ===== Edit / Delete record ===== */
-function openEditRecord(docId){
-  const rec = attendanceCache.find(r=> r.docId === docId);
-  if(!rec) return alert('Record not found');
-  const dateISO = new Date(rec.date);
-  const dateStr = dateISO.toISOString().substring(0,10);
-  const html = `
-    <h3>تعديل السجل</h3>
-    <div class="label">التاريخ</div>
-    <div class="form-row"><input id="editDate" type="date" value="${dateStr}"></div>
-    <div class="label">وقت الدخول</div>
-    <div class="form-row"><input id="editIn" type="time" value="${rec.checkin || ''}"></div>
-    <div class="label">وقت الخروج</div>
-    <div class="form-row"><input id="editOut" type="time" value="${rec.checkout && rec.checkout!=='-'?rec.checkout:''}"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-      <button class="btn" onclick="submitEdit('${docId}')">حفظ</button>
-      <button class="btn ghost" onclick="modalClose()">إلغاء</button>
-    </div>
-  `;
-  showModal(html);
-}
-async function submitEdit(docId){
-  const d = document.getElementById('editDate').value;
-  const inT = document.getElementById('editIn').value || '-';
-  const outT = document.getElementById('editOut').value || '-';
-  if(!d){ alert('أدخل التاريخ'); return; }
-  const iso = new Date(d+'T00:00:00Z').toISOString();
-  await db.collection('attendance').doc(docId).update({ date: iso, checkin: inT, checkout: outT });
-  await loadAttendance();
-  modalClose();
-}
-function deleteRecord(docId){
-  if(!confirm('هل تريد حذف هذا السجل؟')) return;
-  db.collection('attendance').doc(docId).delete().then(()=>{ loadAttendance(); });
-}
-
-/* ===== Manual Status Update ===== */
-async function markStatus(docId, status) {
-  try {
-    await db.collection('attendance').doc(docId).update({ status });
-    await loadAttendance();
-  } catch (e) {
-    console.error(e);
-    alert('حدث خطأ أثناء تحديث الحالة');
-  }
-}
-
-/* ===== Employees CRUD ===== */
-function openEmployeeModal(id='', name='', role='employee'){
-  const html = `
-    <h3>${id ? 'تعديل موظف' : 'إضافة موظف'}</h3>
-    <div class="label">الرقم (ID)</div>
-    <div class="form-row"><input id="empId" ${id?'readonly':''} value="${id}"></div>
-    <div class="label">الاسم</div>
-    <div class="form-row"><input id="empName" value="${name}"></div>
-    <div class="label">الدور</div>
-    <div class="form-row"><select id="empRole"><option value="employee">employee</option><option value="admin">admin</option></select></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-      <button class="btn" onclick="submitEmployee('${id ? 'edit' : 'create'}')">حفظ</button>
-      <button class="btn ghost" onclick="modalClose()">إلغاء</button>
-    </div>
-  `;
-  showModal(html);
-  document.getElementById('empRole').value = role;
-}
-async function submitEmployee(mode){
-  const id = document.getElementById('empId').value.trim();
-  const name = document.getElementById('empName').value.trim();
-  const role = document.getElementById('empRole').value;
-  if(!id || !name) return alert('الرجاء إدخال ID واسم');
-  await db.collection('employees').doc(id).set({ name, role });
-  await loadEmployees();
-  modalClose();
-}
-function deleteEmployee(id){
-  if(!confirm('حذف الموظف سيحذف بياناته؟ موافق؟')) return;
-  db.collection('employees').doc(id).delete().then(()=>loadEmployees());
-}
-
-/* ===== Reports & Export ===== */
-function exportExcel(){
-  const data = attendanceCache.map(r=>({
-    ID:r.id, Name:r.name, Date: formatDateISOorString(r.date),
-    'Check In': r.checkin || '-', 'Check Out': r.checkout || '-', 'Work Hours': calcWorkHours(r.checkin,r.checkout,r.date), Status: r.status || '-'
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Records');
-  XLSX.writeFile(wb,'attendance.xlsx');
-}
-
-async function generateReport(){
-  const from = document.getElementById('reportFrom').value;
-  const to = document.getElementById('reportTo').value;
-  const emp = document.getElementById('reportEmp').value;
-  if(!from || !to) return alert('اختر من وإلى');
-  const f = new Date(from), t = new Date(to); t.setHours(23,59,59,999);
-  const rows = attendanceCache.filter(r=>{
-    const d = new Date(r.date);
-    if(d < f || d > t) return false;
-    if(emp !== 'all' && r.id !== emp) return false;
-    return true;
-  }).map(r=>({
-    ID:r.id, Name:r.name, Date: formatDateISOorString(r.date),
-    'Check In': r.checkin || '-', 'Check Out': r.checkout || '-', 'Work Hours': calcWorkHours(r.checkin,r.checkout,r.date), Status: r.status || '-'
-  }));
-  if(rows.length===0) return alert('لا توجد بيانات ضمن الفترة المحددة');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Report');
-  XLSX.writeFile(wb,'report.xlsx');
-}
-
-/* ===== Utilities ===== */
+// ===== Search & Filters =====
+function applySearch(term){ term=term.toLowerCase(); const tbl=document.getElementById('attendanceTable').querySelector('tbody'); for(const r of tbl.rows){ r.style.display=r.cells[1].textContent.toLowerCase().includes(term)?'':'none'; } }
 function clearFilters(){ document.getElementById('filterEmployee').value='all'; document.getElementById('filterDate').value=''; renderTable(); }
 
-/* initial view */
-switchView('dashboard');
+// ===== Export Excel =====
+function exportExcel(){
+  const wb=XLSX.utils.book_new(); const ws_data=[['الرقم','الاسم','التاريخ','دخول','خروج','ساعات العمل','الحالة']];
+  document.querySelectorAll('#attendanceTable tbody tr').forEach((tr,i)=>{
+    if(tr.style.display==='none') return;
+    const tds=[...tr.cells].map(td=>td.textContent);
+    ws_data.push(tds);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(ws_data); XLSX.utils.book_append_sheet(wb,ws,'Attendance'); XLSX.writeFile(wb,'attendance.xlsx');
+}
 
+// ===== Reports =====
+function generateReport(){ exportExcel(); alert('تم توليد التقرير!'); }
 </script>
+
 </body>
 </html>
