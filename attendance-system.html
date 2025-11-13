@@ -384,7 +384,7 @@ function manualCheckIn() {
     
     // ⏰ إدخال وقت يدوي (اختياري)
     const timeInput = prompt("Enter Check In Time (HH:MM) or leave empty for now:");
-    const checkin = timeInput ? timeInput : now.toLocaleTimeString("en-GB", { hour12: false });
+    const checkin = timeInput ? timeInput : now.toLocaleTimeString("en-US", { hour12: false });
     
     db.collection("attendance").add({
       id: empId,
@@ -410,7 +410,7 @@ function manualCheckOut() {
         const timeInput = prompt("Enter Check Out Time (HH:MM) or leave empty for now:");
         const checkout = timeInput ?
           timeInput :
-          new Date().toLocaleTimeString("en-GB", { hour12: false });
+          new Date().toLocaleTimeString("en-US", { hour12: false });
         
         snap.forEach(doc => {
           doc.ref.update({ checkout: checkout }).then(() => loadData());
