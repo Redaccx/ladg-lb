@@ -417,10 +417,12 @@ function renderTable(){
       <td>${r.checkout||'-'}</td>
       <td>${calcWorkHours(r.checkin,r.checkout,r.date)}</td>
       <td>${r.status||'-'}</td>
-      <td>
-        <button class="btn ghost" onclick="openEditRecord('${r.docId}')">تعديل</button>
-        <button class="btn ghost" onclick="deleteRecord('${r.docId}')">حذف</button>
-      </td>`;
+<td>
+  <button class="btn ghost" onclick="openEditRecord('${r.docId}')">✏️ تعديل</button>
+  <button class="btn ghost" onclick="deleteRecord('${r.docId}')">🗑️ حذف</button>
+  <button class="btn" style="background:#27ae60" onclick="markStatus('${r.docId}','حاضر')">✅ حاضر</button>
+  <button class="btn" style="background:#e74c3c" onclick="markStatus('${r.docId}','غائب')">❌ غائب</button>
+</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -561,6 +563,17 @@ async function submitEdit(docId){
 function deleteRecord(docId){
   if(!confirm('هل تريد حذف هذا السجل؟')) return;
   db.collection('attendance').doc(docId).delete().then(()=>{ loadAttendance(); });
+}
+
+/* ===== Manual Status Update ===== */
+async function markStatus(docId, status) {
+  try {
+    await db.collection('attendance').doc(docId).update({ status });
+    await loadAttendance();
+  } catch (e) {
+    console.error(e);
+    alert('حدث خطأ أثناء تحديث الحالة');
+  }
 }
 
 /* ===== Employees CRUD ===== */
