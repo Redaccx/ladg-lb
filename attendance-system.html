@@ -368,33 +368,57 @@ function clearFilters() {
 }
 
 // ===== Check In / Out =====
-function manualCheckIn(){
-  const empId=document.getElementById("employeeSelect").value;
-  if(!empId){alert("Select employee"); return;}
-  db.collection("employees").doc(empId).get().then(doc=>{
-    if(!doc.exists){alert("Employee not found"); return;}
-    const emp=doc.data();
-    const now=new Date();
+// ===== Check In / Out (مع إمكانية إدخال تاريخ قديم) =====
+function manualCheckIn() {
+  const empId = document.getElementById("employeeSelect").value;
+  if (!empId) { alert("Select employee"); return; }
+  
+  db.collection("employees").doc(empId).get().then(doc => {
+    if (!doc.exists) { alert("Employee not found"); return; }
+    const emp = doc.data();
+    
+    // 🗓️ إدخال تاريخ يدوي (قديم أو جديد)
+    const dateInput = prompt("Enter Date (YYYY-MM-DD), e.g. 2025-11-10:");
+    const now = new Date();
+    const date = dateInput ? new Date(dateInput) : now;
+    
+    // ⏰ إدخال وقت يدوي (اختياري)
+    const timeInput = prompt("Enter Check In Time (HH:MM) or leave empty for now:");
+    const checkin = timeInput ? timeInput : now.toLocaleTimeString("en-GB", { hour12: false });
+    
     db.collection("attendance").add({
-      id: empId, name: emp.name,
-      date: now.toISOString(),
-      checkin: now.toLocaleTimeString("en-GB",{hour12:false}),
+      id: empId,
+      name: emp.name,
+      date: date.toISOString(), // 👈 يقبل أي تاريخ حتى قديم
+      checkin: checkin,
       checkout: "-",
       status: "حاضر"
-    }).then(()=>loadData());
+    }).then(() => loadData());
   });
 }
-function manualCheckOut(){
-  const empId=document.getElementById("employeeSelect").value;
-  if(!empId){alert("Select employee"); return;}
-  db.collection("attendance").where("id","==",empId).where("checkout","==","-").get().then(snap=>{
-    if(!snap.empty){
-      snap.forEach(doc=>{
-        const now=new Date();
-        doc.ref.update({checkout:now.toLocaleTimeString("en-GB",{hour12:false})}).then(()=>loadData());
-      });
-    } else alert("No check-in found");
-  });
+
+function manualCheckOut() {
+  const empId = document.getElementById("employeeSelect").value;
+  if (!empId) { alert("Select employee"); return; }
+  
+  db.collection("attendance")
+    .where("id", "==", empId)
+    .where("checkout", "==", "-")
+    .get()
+    .then(snap => {
+      if (!snap.empty) {
+        const timeInput = prompt("Enter Check Out Time (HH:MM) or leave empty for now:");
+        const checkout = timeInput ?
+          timeInput :
+          new Date().toLocaleTimeString("en-GB", { hour12: false });
+        
+        snap.forEach(doc => {
+          doc.ref.update({ checkout: checkout }).then(() => loadData());
+        });
+      } else {
+        alert("No check-in found for this employee");
+      }
+    });
 }
 
 function toggleStatus(docId,current){
