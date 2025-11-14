@@ -345,14 +345,17 @@ function calcWorkHours(checkin,checkout,dateISO){
   return `${h}h ${m}m`;
 }
 
-async function loadAttendance(){
+async function loadAttendance() {
   attendanceCache = [];
-  const snap = await db.collection('attendance').orderBy('date','desc').limit(500).get();
-  snap.forEach(doc=>{
+  const snap = await db.collection('attendance').orderBy('date', 'desc').limit(500).get();
+  snap.forEach(doc => {
     attendanceCache.push({ docId: doc.id, ...doc.data() });
   });
+  
+  // تحديث كل الجداول والإحصائيات تلقائياً
   renderTable();
   renderDashboard();
+  renderEmployeesTable();
 }
 
 /* Render dashboard statistics & chart */
@@ -427,15 +430,55 @@ function renderTable(){
   });
 }
 
+function calcEmployeeStats(empId){
+  const empRecords = attendanceCache.filter(r => r.id === empId);
+  let daysPresent = 0, daysAbsent = 0, totalMinutes = 0;
+
+  // خريطة للتواريخ لتجنب العد المكرر
+  const dateMap = {};
+  empRecords.forEach(r=>{
+    const dateKey = (new Date(r.date)).toDateString();
+    if(!dateMap[dateKey]) dateMap[dateKey] = r;
+  });
+
+  Object.values(dateMap).forEach(r=>{
+    const checkin = r.checkin && r.checkin!=='-' ? r.checkin : null;
+    const checkout = r.checkout && r.checkout!=='-' ? r.checkout : null;
+    if(checkin){
+      daysPresent++;
+      const inParts = checkin.split(':').map(Number);
+      const outParts = (checkout?checkout:'00:00').split(':').map(Number);
+      const minutes = ((outParts[0]*60 + outParts[1]) - (inParts[0]*60 + inParts[1]));
+      if(minutes>0) totalMinutes += minutes;
+    } else daysAbsent++;
+  });
+
+  const totalHours = Math.floor(totalMinutes/60);
+  const totalMins = totalMinutes % 60;
+  return { daysPresent, daysAbsent, totalHours, totalMins };
+}
+
 /* Render employees table */
-function renderEmployeesTable(){
+function renderEmployeesTable() {
   const tbody = document.querySelector('#employeesTable tbody');
   tbody.innerHTML = '';
-  employeesCache.forEach(e=>{
+  employeesCache.forEach(e => {
+    const stats = calcEmployeeStats(e.id);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${e.id}</td><td>${e.name}</td><td>${e.role||'employee'}</td>
-      <td><button class="btn ghost" onclick="openEmployeeModal('${e.id}','${e.name}','${e.role||'employee'}')">تعديل</button>
-      <button class="btn ghost" onclick="deleteEmployee('${e.id}')">حذف</button></td>`;
+    tr.innerHTML = `
+      <td>${e.id}</td>
+      <td>${e.name}</td>
+      <td>${e.role||'employee'}</td>
+      <td>
+        حاضر: ${stats.daysPresent} يوم<br>
+        غائب: ${stats.daysAbsent} يوم<br>
+        ساعات العمل: ${stats.totalHours}h ${stats.totalMins}m
+      </td>
+      <td>
+        <button class="btn ghost" onclick="openEmployeeModal('${e.id}','${e.name}','${e.role||'employee'}')">تعديل</button>
+        <button class="btn ghost" onclick="deleteEmployee('${e.id}')">حذف</button>
+      </td>
+    `;
     tbody.appendChild(tr);
   });
 }
