@@ -8,7 +8,7 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- SheetJS -->
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <!-- Firebase (compat for easier migration from your current code) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -250,11 +250,41 @@ auth.onAuthStateChanged(async user=>{
 function switchView(name){
   const views = ['dashboard','attendance','employees','reports','settings'];
   views.forEach(v=>{
-    document.getElementById('view-'+v).style.display = (v===name)?'block':'none';
-    document.getElementById('nav'+capitalize(v)) && document.getElementById('nav'+capitalize(v)).classList.toggle('active', v===name);
+    const el = document.getElementById('view-'+v);
+    if(el) el.style.display = (v===name)?'block':'none';
+    const nav = document.getElementById('nav'+capitalize(v));
+    if(nav) nav.classList.toggle('active', v===name);
   })
 }
 function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1) }
+
+/* ===== Helpers to handle timezone-safe dates ===== */
+/**
+ * cleanDate(d)
+ * returns YYYY-MM-DD based on UTC (so comparisons unaffected by local timezone)
+ * accepts Date object or ISO string
+ */
+function cleanDate(d){
+  const dt = new Date(d);
+  const y = dt.getUTCFullYear();
+  const m = String(dt.getUTCMonth()+1).padStart(2,'0');
+  const day = String(dt.getUTCDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * formatDateISOorString(d)
+ * returns DD/MM/YYYY using UTC (for display)
+ */
+function formatDateISOorString(d){
+  try{
+    const dt = new Date(d);
+    const day = String(dt.getUTCDate()).padStart(2,'0');
+    const month = String(dt.getUTCMonth()+1).padStart(2,'0');
+    const year = dt.getUTCFullYear();
+    return `${day}/${month}/${year}`;
+  }catch(e){ return d }
+}
 
 /* ===== LOGIN modal (simple) ===== */
 function showLogin(){
@@ -328,17 +358,14 @@ async function loadEmployees(){
 }
 
 /* ===== Attendance ===== */
-function formatDateISOorString(d){
-  try{ const dt = new Date(d); return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}` }
-  catch(e){ return d }
-}
 function calcWorkHours(checkin,checkout,dateISO){
   if(!checkin || !checkout || checkout==='-') return '-';
   const inParts = checkin.split(':').map(Number);
   const outParts = checkout.split(':').map(Number);
+  // use UTC hours to avoid timezone shifts
   const base = new Date(dateISO);
-  base.setHours(inParts[0], inParts[1], 0, 0);
-  const out = new Date(dateISO); out.setHours(outParts[0], outParts[1], 0, 0);
+  base.setUTCHours(inParts[0], inParts[1], 0, 0);
+  const out = new Date(dateISO); out.setUTCHours(outParts[0], outParts[1], 0, 0);
   const diffMs = out - base;
   if(isNaN(diffMs) || diffMs < 0) return '-';
   const h = Math.floor(diffMs/3600000); const m = Math.floor((diffMs%3600000)/60000);
@@ -360,10 +387,14 @@ async function loadAttendance() {
 
 /* Render dashboard statistics & chart */
 function renderDashboard(){
-  const today = new Date(); const startOfToday = new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  const today = new Date();
+  // get today's date in UTC normalized form
+  const todayKey = cleanDate(today);
   const present = attendanceCache.filter(r => {
-    const d = new Date(r.date); return (d >= startOfToday && d < new Date(startOfToday.getTime()+86400000) && r.checkin && r.checkin!=='-');
-  }).length;
+    const dKey = cleanDate(r.date);
+    return (dKey === todayKey && r.checkin && r.checkin!=='-');
+  }).map(x=>x.id).filter((v,i,a)=>a.indexOf(v)===i).length; // count unique employees present today
+
   const allEmployees = employeesCache.length || 0;
   const absent = Math.max(0, allEmployees - present);
 
@@ -374,13 +405,16 @@ function renderDashboard(){
   // chart for last 7 days
   const labels = []; const dataP = []; const dataA = [];
   for(let i=6;i>=0;i--){
-    const dt = new Date(); dt.setDate(dt.getDate()-i);
-    const key = dt.toDateString();
-    labels.push(`${dt.getDate()}/${dt.getMonth()+1}`);
-    const dayRecords = attendanceCache.filter(r => (new Date(r.date)).toDateString() === key);
-    const p = dayRecords.filter(rr=> rr.checkin && rr.checkin!=='-').length;
-    const a = Math.max(0, employeesCache.length - p);
-    dataP.push(p); dataA.push(a);
+    const dt = new Date();
+    dt.setDate(dt.getDate()-i);
+    const key = cleanDate(dt);
+    labels.push(`${dt.getUTCDate()}/${dt.getUTCMonth()+1}`);
+    const dayRecords = attendanceCache.filter(r => cleanDate(r.date) === key);
+    // count unique present employees that day
+    const presentIds = dayRecords.filter(rr=> rr.checkin && rr.checkin!=='-').map(x=>x.id);
+    const uniquePresent = Array.from(new Set(presentIds)).length;
+    const a = Math.max(0, employeesCache.length - uniquePresent);
+    dataP.push(uniquePresent); dataA.push(a);
   }
   // draw chart
   const ctx = document.getElementById('chartDays').getContext('2d');
@@ -403,10 +437,7 @@ function renderTable(){
   const rows = attendanceCache.filter(r=>{
     if(empFilter!=='all' && r.id !== empFilter) return false;
     if(dateFilter){
-      const [y,m,d] = dateFilter.split('-').map(Number);
-      const sel = new Date(y,m-1,d);
-      const rowDate = new Date(r.date);
-      return sel.toDateString() === rowDate.toDateString();
+      return cleanDate(r.date) === dateFilter;
     }
     return true;
   });
@@ -434,11 +465,17 @@ function calcEmployeeStats(empId){
   const empRecords = attendanceCache.filter(r => r.id === empId);
   let daysPresent = 0, daysAbsent = 0, totalMinutes = 0;
 
-  // خريطة للتواريخ لتجنب العد المكرر
+  // خريطة للتواريخ لتجنب العد المكرر - استخدم cleanDate
   const dateMap = {};
   empRecords.forEach(r=>{
-    const dateKey = (new Date(r.date)).toDateString();
+    const dateKey = cleanDate(r.date);
     if(!dateMap[dateKey]) dateMap[dateKey] = r;
+    else {
+      // إذا فيه أكثر من سجل لنفس اليوم ندمج: لو أحدهم فيه checkin فخليه
+      const existing = dateMap[dateKey];
+      // prefer record with checkin if current has checkin
+      if((r.checkin && r.checkin!=='-') && !(existing.checkin && existing.checkin!=='-')) dateMap[dateKey] = r;
+    }
   });
 
   Object.values(dateMap).forEach(r=>{
@@ -529,7 +566,8 @@ async function submitCheck(){
   const dateVal = document.getElementById('modalDate').value;
   const timeVal = document.getElementById('modalTime').value;
   const now = new Date();
-  const dateObj = dateVal ? new Date(dateVal+'T00:00:00Z') : now;
+  // store date as midnight UTC for consistency
+  const dateObj = dateVal ? new Date(dateVal + 'T00:00:00Z') : now;
   const isoDate = dateObj.toISOString();
   const timeStr = timeVal ? timeVal : new Date().toLocaleTimeString('en-GB',{hour12:false});
   if(activeCheckAction === 'in'){
@@ -554,9 +592,10 @@ async function submitCheck(){
       let updated = false;
       for(const doc of q.docs){
         const r = doc.data();
-        const rowDate = new Date(r.date);
-        if(!dateVal || rowDate.toDateString() === (new Date(dateVal)).toDateString()){
-          await doc.ref.update({ checkout: timeStr }); updated = true;
+        const rowDateKey = cleanDate(r.date);
+        if(!dateVal || rowDateKey === cleanDate(dateVal + 'T00:00:00Z')){
+          await doc.ref.update({ checkout: timeStr });
+          updated = true;
         }
       }
       if(!updated){
@@ -667,7 +706,7 @@ async function generateReport(){
   const to = document.getElementById('reportTo').value;
   const emp = document.getElementById('reportEmp').value;
   if(!from || !to) return alert('اختر من وإلى');
-  const f = new Date(from), t = new Date(to); t.setHours(23,59,59,999);
+  const f = new Date(from + 'T00:00:00Z'), t = new Date(to + 'T00:00:00Z'); t.setUTCHours(23,59,59,999);
   const rows = attendanceCache.filter(r=>{
     const d = new Date(r.date);
     if(d < f || d > t) return false;
