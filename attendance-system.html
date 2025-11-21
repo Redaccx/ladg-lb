@@ -470,15 +470,14 @@ function renderTable(){
 function calcEmployeeStats(empId){
   const empRecords = attendanceCache.filter(r => r.id === empId);
 
-  // خريطة لتواريخ السجلات لتجنب التكرار
+  // تجميع السجلات حسب اليوم لتجنب التكرار
   const dateMap = {};
   empRecords.forEach(r=>{
     const dateKey = cleanDate(r.date);
     if(!dateMap[dateKey]) dateMap[dateKey] = r;
     else {
       const existing = dateMap[dateKey];
-      // احتفظ بالسجل الذي يحتوي على checkin إذا وُجد
-      if((r.checkin && r.checkin !== '-') && !(existing.checkin && existing.checkin !== '-')) dateMap[dateKey] = r;
+      if((r.checkin && r.checkin!=='-') && !(existing.checkin && existing.checkin!=='-')) dateMap[dateKey] = r;
     }
   });
 
@@ -487,14 +486,17 @@ function calcEmployeeStats(empId){
   Object.values(dateMap).forEach(r=>{
     const checkin = r.checkin && r.checkin !== '-' ? r.checkin : null;
     const checkout = r.checkout && r.checkout !== '-' ? r.checkout : null;
+    const status = r.status || '';
 
-    if(checkin){
+    if(checkin || status === 'حاضر'){
       daysPresent++;
-      const inParts = checkin.split(':').map(Number);
-      const outParts = checkout ? checkout.split(':').map(Number) : inParts;
-      const minutes = (outParts[0]*60 + outParts[1]) - (inParts[0]*60 + inParts[1]);
-      if(minutes>0) totalMinutes += minutes;
-    } else {
+      if(checkin){
+        const inParts = checkin.split(':').map(Number);
+        const outParts = checkout ? checkout.split(':').map(Number) : inParts;
+        const minutes = (outParts[0]*60 + outParts[1]) - (inParts[0]*60 + inParts[1]);
+        if(minutes>0) totalMinutes += minutes;
+      }
+    } else if(status === 'غائب' || !checkin){
       daysAbsent++;
     }
   });
