@@ -467,44 +467,48 @@ function renderTable(){
   });
 }
 
-function calcEmployeeStats(empId){
+function calcEmployeeStats(empId) {
+  // فلترة سجلات الموظف
   const empRecords = attendanceCache.filter(r => r.id === empId);
-
-  // تجميع السجلات حسب اليوم لتجنب التكرار
+  
+  // تجميع السجلات حسب التاريخ
   const dateMap = {};
-  empRecords.forEach(r=>{
+  empRecords.forEach(r => {
     const dateKey = cleanDate(r.date);
-    if(!dateMap[dateKey]) dateMap[dateKey] = r;
+    if (!dateMap[dateKey]) dateMap[dateKey] = r;
     else {
       const existing = dateMap[dateKey];
-      if((r.checkin && r.checkin!=='-') && !(existing.checkin && existing.checkin!=='-')) dateMap[dateKey] = r;
+      // احتفظ بالسجل الذي يحتوي على checkin أو status = حاضر
+      if ((r.checkin && r.checkin !== '-') || r.status === 'حاضر') dateMap[dateKey] = r;
     }
   });
-
-  let daysPresent = 0, daysAbsent = 0, totalMinutes = 0;
-
-  Object.values(dateMap).forEach(r=>{
+  
+  let daysPresent = 0;
+  let daysAbsent = 0;
+  let totalMinutes = 0;
+  
+  Object.values(dateMap).forEach(r => {
     const checkin = r.checkin && r.checkin !== '-' ? r.checkin : null;
     const checkout = r.checkout && r.checkout !== '-' ? r.checkout : null;
     const status = r.status || '';
-
-    if(checkin || status === 'حاضر'){
+    
+    if (checkin || status === 'حاضر') {
       daysPresent++;
-      if(checkin){
-        const inParts = checkin.split(':').map(Number);
-        const outParts = checkout ? checkout.split(':').map(Number) : inParts;
-        const minutes = (outParts[0]*60 + outParts[1]) - (inParts[0]*60 + inParts[1]);
-        if(minutes>0) totalMinutes += minutes;
+      if (checkin) {
+        const [hIn, mIn] = checkin.split(':').map(Number);
+        const [hOut, mOut] = checkout ? checkout.split(':').map(Number) : [hIn, mIn];
+        const minutes = (hOut * 60 + mOut) - (hIn * 60 + mIn);
+        if (minutes > 0) totalMinutes += minutes;
       }
-    } else if(status === 'غائب' || !checkin){
+    } else if (status === 'غائب' || !checkin) {
       daysAbsent++;
     }
   });
-
+  
   return {
     daysPresent,
     daysAbsent,
-    totalHours: Math.floor(totalMinutes/60),
+    totalHours: Math.floor(totalMinutes / 60),
     totalMins: totalMinutes % 60
   };
 }
