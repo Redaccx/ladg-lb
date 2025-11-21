@@ -392,45 +392,56 @@ async function loadAttendance() {
 }
 
 /* Render dashboard statistics & chart */
-function renderDashboard(){
-  const today = new Date();
-  // get today's date in UTC normalized form
-  const todayKey = cleanDate(today);
-  const present = attendanceCache.filter(r => {
+function renderDashboard() {
+  const todayKey = cleanDate(new Date());
+  
+  // احصل على الموظفين الحاضرين اليوم
+  const presentToday = attendanceCache.filter(r => {
     const dKey = cleanDate(r.date);
-    return (dKey === todayKey && r.checkin && r.checkin!=='-');
-  }).map(x=>x.id).filter((v,i,a)=>a.indexOf(v)===i).length; // count unique employees present today
-
-  const allEmployees = employeesCache.length || 0;
-  const absent = Math.max(0, allEmployees - present);
-
-  document.getElementById('stat-present').innerText = present;
-  document.getElementById('stat-absent').innerText = absent;
+    return dKey === todayKey && (r.checkin && r.checkin !== '-' || r.status === 'حاضر');
+  }).map(r => r.id);
+  
+  const uniquePresent = Array.from(new Set(presentToday)).length;
+  const totalEmployees = employeesCache.length;
+  const absentToday = totalEmployees - uniquePresent;
+  
+  document.getElementById('stat-present').innerText = uniquePresent;
+  document.getElementById('stat-absent').innerText = absentToday >= 0 ? absentToday : 0;
   document.getElementById('stat-records').innerText = attendanceCache.length;
-
-  // chart for last 7 days
-  const labels = []; const dataP = []; const dataA = [];
-  for(let i=6;i>=0;i--){
+  
+  // بيانات آخر 7 أيام
+  const labels = [];
+  const dataP = [];
+  const dataA = [];
+  for (let i = 6; i >= 0; i--) {
     const dt = new Date();
-    dt.setDate(dt.getDate()-i);
+    dt.setDate(dt.getDate() - i);
     const key = cleanDate(dt);
     labels.push(`${dt.getUTCDate()}/${dt.getUTCMonth()+1}`);
+    
     const dayRecords = attendanceCache.filter(r => cleanDate(r.date) === key);
-    // count unique present employees that day
-    const presentIds = dayRecords.filter(rr=> rr.checkin && rr.checkin!=='-').map(x=>x.id);
-    const uniquePresent = Array.from(new Set(presentIds)).length;
-    const a = Math.max(0, employeesCache.length - uniquePresent);
-    dataP.push(uniquePresent); dataA.push(a);
+    const presentIds = dayRecords.filter(r => r.checkin && r.checkin !== '-' || r.status === 'حاضر').map(r => r.id);
+    const uniqueDayPresent = Array.from(new Set(presentIds)).length;
+    const absentDay = totalEmployees - uniqueDayPresent;
+    
+    dataP.push(uniqueDayPresent);
+    dataA.push(absentDay >= 0 ? absentDay : 0);
   }
-  // draw chart
+  
+  // رسم المخطط
   const ctx = document.getElementById('chartDays').getContext('2d');
-  if(window._chart) window._chart.destroy();
-  window._chart = new Chart(ctx,{ type:'bar', data:{
-    labels, datasets:[
-      { label:'حاضر', data:dataP, backgroundColor:'#27ae60' },
-      { label:'غائب', data:dataA, backgroundColor:'#e74c3c' }
-    ]
-  }, options:{responsive:true, maintainAspectRatio:false} });
+  if (window._chart) window._chart.destroy();
+  window._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'حاضر', data: dataP, backgroundColor: '#27ae60' },
+        { label: 'غائب', data: dataA, backgroundColor: '#e74c3c' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
 }
 
 /* Render attendance table with filters */
@@ -471,7 +482,7 @@ function calcEmployeeStats(empId) {
   // فلترة سجلات الموظف
   const empRecords = attendanceCache.filter(r => r.id === empId);
   
-  // تجميع السجلات حسب التاريخ
+  // تجميع السجلات حسب التاريخ (يوم واحد = سجل واحد)
   const dateMap = {};
   empRecords.forEach(r => {
     const dateKey = cleanDate(r.date);
@@ -494,15 +505,16 @@ function calcEmployeeStats(empId) {
     
     if (checkin || status === 'حاضر') {
       daysPresent++;
-      if (checkin) {
+      if (checkin && checkout) {
         const [hIn, mIn] = checkin.split(':').map(Number);
-        const [hOut, mOut] = checkout ? checkout.split(':').map(Number) : [hIn, mIn];
+        const [hOut, mOut] = checkout.split(':').map(Number);
         const minutes = (hOut * 60 + mOut) - (hIn * 60 + mIn);
         if (minutes > 0) totalMinutes += minutes;
       }
-    } else if (status === 'غائب' || !checkin) {
+    } else if (status === 'غائب') {
       daysAbsent++;
     }
+    // ملاحظة: إذا لا يوجد checkin ولا status، لا يُحسب غياب تلقائي
   });
   
   return {
