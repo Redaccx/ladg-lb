@@ -469,36 +469,47 @@ function renderTable(){
 
 function calcEmployeeStats(empId){
   const empRecords = attendanceCache.filter(r => r.id === empId);
-  let daysPresent = 0, daysAbsent = 0, totalMinutes = 0;
 
-  // خريطة للتواريخ لتجنب العد المكرر - استخدم cleanDate
+  // إنشاء خريطة للتواريخ لتجنب العد المكرر
   const dateMap = {};
   empRecords.forEach(r=>{
     const dateKey = cleanDate(r.date);
     if(!dateMap[dateKey]) dateMap[dateKey] = r;
     else {
-      // إذا فيه أكثر من سجل لنفس اليوم ندمج: لو أحدهم فيه checkin فخليه
       const existing = dateMap[dateKey];
-      // prefer record with checkin if current has checkin
-      if((r.checkin && r.checkin!=='-') && !(existing.checkin && existing.checkin!=='-')) dateMap[dateKey] = r;
+      if((r.checkin && r.checkin !== '-') && !(existing.checkin && existing.checkin !== '-')) dateMap[dateKey] = r;
     }
   });
 
-  Object.values(dateMap).forEach(r=>{
-    const checkin = r.checkin && r.checkin!=='-' ? r.checkin : null;
-    const checkout = r.checkout && r.checkout!=='-' ? r.checkout : null;
-    if(checkin){
-      daysPresent++;
-      const inParts = checkin.split(':').map(Number);
-      const outParts = (checkout?checkout:'00:00').split(':').map(Number);
-      const minutes = ((outParts[0]*60 + outParts[1]) - (inParts[0]*60 + inParts[1]));
-      if(minutes>0) totalMinutes += minutes;
-    } else daysAbsent++;
-  });
+  // حدد أول وآخر يوم في السجلات أو الشهر الحالي
+  const today = new Date();
+  const firstDate = empRecords.length > 0 ? new Date(Math.min(...empRecords.map(r=>new Date(r.date)))) : new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastDate = empRecords.length > 0 ? new Date(Math.max(...empRecords.map(r=>new Date(r.date)))) : today;
 
-  const totalHours = Math.floor(totalMinutes/60);
-  const totalMins = totalMinutes % 60;
-  return { daysPresent, daysAbsent, totalHours, totalMins };
+  let daysPresent = 0, daysAbsent = 0, totalMinutes = 0;
+
+  for(let dt = new Date(firstDate); dt <= lastDate; dt.setDate(dt.getDate()+1)){
+    const dateKey = cleanDate(dt);
+    const record = dateMap[dateKey];
+
+    if(record && record.checkin && record.checkin !== '-'){
+      daysPresent++;
+      const inParts = record.checkin.split(':').map(Number);
+      const outParts = (record.checkout && record.checkout!=='-') ? record.checkout.split(':').map(Number) : inParts;
+      const minutes = (outParts[0]*60 + outParts[1]) - (inParts[0]*60 + inParts[1]);
+      if(minutes > 0) totalMinutes += minutes;
+    } else {
+      // الموظف غائب إذا لا يوجد سجل أو لا يوجد checkin
+      daysAbsent++;
+    }
+  }
+
+  return {
+    daysPresent,
+    daysAbsent,
+    totalHours: Math.floor(totalMinutes / 60),
+    totalMins: totalMinutes % 60
+  };
 }
 
 /* Render employees table */
