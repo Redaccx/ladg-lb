@@ -619,6 +619,7 @@ async function submitCheck(){
   if(!empId){ showToast('اختر موظف'); return; }
   const emp = employeesCache.find(x=>x.id===empId);
   if(!emp){ showToast('الموظف غير موجود'); return; }
+
   const dateVal = document.getElementById('modalDate').value;
   const timeVal = document.getElementById('modalTime').value;
   const isoDate = dateVal ? localDateISO(dateVal) : localDateISO(new Date());
@@ -626,17 +627,33 @@ async function submitCheck(){
 
   try{
     if(activeCheckAction === 'in'){
-      await db.collection('attendance').add({
-        id: emp.id,
-        name: emp.name,
-        date: isoDate,
-        checkin: timeStr,
-        checkout: '-',
-        status: 'حاضر',
-        createdBy: currentUser ? currentUser.uid : null
-      });
+      // تحقق إذا فيه سجل لنفس الموظف لنفس التاريخ
+      const q = await db.collection('attendance')
+        .where('id','==',empId)
+        .get();
+      let found = false;
+      for(const doc of q.docs){
+        const r = doc.data();
+        const rowDate = new Date(r.date);
+        if(rowDate.toDateString() === (new Date(isoDate)).toDateString()){
+          await doc.ref.update({ checkin: timeStr, status:'حاضر' });
+          found = true;
+        }
+      }
+      if(!found){
+        await db.collection('attendance').add({
+          id: emp.id,
+          name: emp.name,
+          date: isoDate,
+          checkin: timeStr,
+          checkout: '-',
+          status: 'حاضر',
+          createdBy: currentUser ? currentUser.uid : null
+        });
+      }
       showToast('تم تسجيل الدخول');
     } else {
+      // تسجيل خروج
       const q = await db.collection('attendance')
         .where('id','==',empId)
         .where('checkout','==','-')
