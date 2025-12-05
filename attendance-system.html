@@ -428,16 +428,18 @@ function timeNowHHMM(){
   const now = new Date();
   return now.toTimeString().slice(0,5); // "HH:MM"
 }
-function calcWorkHours(checkin,checkout,dateISO){
-  if(!checkin || !checkout || checkout==='-' || checkin==='-') return '-';
+function calcWorkHours(checkin, checkout, dateISO){
+  if(!checkin || checkin==='-') return '0h 0m'; // إذا ما في تسجيل دخول، ساعات 0
+  if(!checkout || checkout==='-') return '6h 0m'; // افتراضي 6 ساعات إذا لم يتم تسجيل خروج
   const inParts = checkin.split(':').map(Number);
   const outParts = checkout.split(':').map(Number);
   const base = new Date(dateISO);
   base.setHours(inParts[0], inParts[1], 0, 0);
   const out = new Date(dateISO); out.setHours(outParts[0], outParts[1], 0, 0);
   const diffMs = out - base;
-  if(isNaN(diffMs) || diffMs < 0) return '-';
-  const h = Math.floor(diffMs/3600000); const m = Math.floor((diffMs%3600000)/60000);
+  if(isNaN(diffMs) || diffMs <=0) return '6h 0m';
+  const h = Math.floor(diffMs/3600000); 
+  const m = Math.floor((diffMs%3600000)/60000);
   return `${h}h ${m}m`;
 }
 
@@ -457,11 +459,18 @@ function renderDashboard(){
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(),today.getMonth(),today.getDate());
   const endOfToday = new Date(startOfToday.getTime() + 86400000 - 1);
-  const present = attendanceCache.filter(r => {
-    const d = new Date(r.date);
-    return (d >= startOfToday && d <= endOfToday && r.checkin && r.checkin!=='-');
-  }).length;
+
+  let present = 0;
   const allEmployees = employeesCache.length || 0;
+
+  employeesCache.forEach(emp=>{
+    const todayRecord = attendanceCache.find(r => r.id===emp.id && (new Date(r.date)).toDateString() === startOfToday.toDateString());
+    const isWeekend = startOfToday.getDay() === 6 || startOfToday.getDay() === 0;
+    if((todayRecord && todayRecord.checkin && todayRecord.checkin!=='-') || isWeekend){
+      present++;
+    }
+  });
+
   const absent = Math.max(0, allEmployees - present);
   document.getElementById('stat-present').innerText = present;
   document.getElementById('stat-absent').innerText = absent;
@@ -473,11 +482,16 @@ function renderDashboard(){
     const dt = new Date(); dt.setDate(dt.getDate()-i);
     const key = dt.toDateString();
     labels.push(`${dt.getDate()}/${dt.getMonth()+1}`);
-    const dayRecords = attendanceCache.filter(r => (new Date(r.date)).toDateString() === key);
-    const p = dayRecords.filter(rr=> rr.checkin && rr.checkin!=='-').length;
-    const a = Math.max(0, employeesCache.length - p);
-    dataP.push(p); dataA.push(a);
+    let p = 0;
+    employeesCache.forEach(emp=>{
+      const rec = attendanceCache.find(r => r.id===emp.id && (new Date(r.date)).toDateString()===key);
+      const isWeekend = dt.getDay()===6 || dt.getDay()===0;
+      if((rec && rec.checkin && rec.checkin!=='-') || isWeekend) p++;
+    });
+    dataP.push(p);
+    dataA.push(Math.max(0, employeesCache.length - p));
   }
+
   const ctx = document.getElementById('chartDays').getContext('2d');
   if(window._chart) window._chart.destroy();
   window._chart = new Chart(ctx, {
@@ -492,7 +506,6 @@ function renderDashboard(){
     options:{responsive:true, maintainAspectRatio:false}
   });
 }
-
 /* Render attendance table with filters */
 function renderTable(){
   const tbody = document.querySelector('#attendanceTable tbody');
@@ -534,21 +547,39 @@ function calcEmployeeStats(empId){
   const empRecords = attendanceCache.filter(r => r.id === empId);
   let daysPresent = 0, daysAbsent = 0, totalMinutes = 0;
   const dateMap = {};
+
   empRecords.forEach(r=>{
     const dateKey = (new Date(r.date)).toDateString();
-    if(!dateMap[dateKey]) dateMap[dateKey] = r;
+    dateMap[dateKey] = r;
   });
-  Object.values(dateMap).forEach(r=>{
-    const checkin = r.checkin && r.checkin!=='-' ? r.checkin : null;
-    const checkout = r.checkout && r.checkout!=='-' ? r.checkout : null;
-    if(checkin){
+
+  // احسب آخر 30 يوم
+  const today = new Date();
+  for(let i=0; i<30; i++){
+    const dt = new Date(today); dt.setDate(today.getDate()-i);
+    const key = dt.toDateString();
+    const r = dateMap[key];
+
+    // تحقق إذا اليوم سبت أو أحد
+    const isWeekend = dt.getDay() === 6 || dt.getDay() === 0; // 0=الأحد،6=السبت
+
+    if(r && r.checkin && r.checkin!=='-'){
+      // يوم حضور مسجل
       daysPresent++;
-      const inParts = checkin.split(':').map(Number);
-      const outParts = (checkout?checkout:'00:00').split(':').map(Number);
+      const inParts = r.checkin.split(':').map(Number);
+      const outParts = (r.checkout && r.checkout!=='-' ? r.checkout : '15:00').split(':').map(Number); // 6 ساعات افتراضية
       const minutes = ((outParts[0]*60 + outParts[1]) - (inParts[0]*60 + inParts[1]));
       if(minutes>0) totalMinutes += minutes;
-    } else daysAbsent++;
-  });
+    } else if(isWeekend){
+      // عطلة رسمية تُحسب حضور
+      daysPresent++;
+      totalMinutes += 6*60; // 6 ساعات افتراضية للعطلة
+    } else {
+      // يوم بدون تسجيل يُحسب غياب
+      daysAbsent++;
+    }
+  }
+
   const totalHours = Math.floor(totalMinutes/60);
   const totalMins = totalMinutes % 60;
   return { daysPresent, daysAbsent, totalHours, totalMins };
