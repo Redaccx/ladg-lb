@@ -535,8 +535,7 @@ function renderTable(){
 <td style="min-width:210px">
   <button class="btn ghost" onclick="openEditRecord('${r.docId}')">✏️ تعديل</button>
   <button class="btn ghost" onclick="deleteRecord('${r.docId}')">🗑️ حذف</button>
-  <button class="btn" style="background:${'var(--success)'}" onclick="markStatus('${r.docId}','حاضر')">✅</button>
-  <button class="btn" style="background:${'var(--danger)'}" onclick="markStatus('${r.docId}','غائب')">❌</button>
+
 </td>`;
     tbody.appendChild(tr);
   });
@@ -609,17 +608,55 @@ function renderEmployeesTable(){
 }
 
 /* Search */
-function applySearch(q){
-  q = q.trim().toLowerCase();
-  if(!q){ renderTable(); return; }
-  const tbody = document.querySelector('#attendanceTable tbody'); tbody.innerHTML='';
-  attendanceCache.filter(r=> (r.id+' '+r.name).toLowerCase().includes(q)).forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${r.id}</td><td>${r.name}</td><td>${formatDateISOorString(r.date)}</td><td>${r.checkin||'-'}</td><td>${r.checkout||'-'}</td><td>${calcWorkHours(r.checkin,r.checkout,r.date)}</td><td>${r.status||'-'}</td><td>
-      <button class="btn ghost" onclick="openEditRecord('${r.docId}')">تعديل</button>
-      <button class="btn ghost" onclick="deleteRecord('${r.docId}')">حذف</button></td>`;
-    tbody.appendChild(tr);
-  });
+function applySearch() {
+  const q = document.getElementById('globalSearch').value.trim().toLowerCase();
+  
+  // حدد الصفحة المفتوحة حالياً
+  const views = ['dashboard', 'attendance', 'employees', 'reports', 'settings'];
+  const currentView = views.find(v => document.getElementById('view-' + v).style.display === 'block');
+  
+  if (currentView === 'attendance') {
+    const tbody = document.querySelector('#attendanceTable tbody');
+    tbody.innerHTML = '';
+    attendanceCache.filter(r => (r.id + ' ' + r.name).toLowerCase().includes(q)).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.id}</td>
+        <td>${r.name}</td>
+        <td>${formatDateISOorString(r.date)}</td>
+        <td>${r.checkin||'-'}</td>
+        <td>${r.checkout||'-'}</td>
+        <td>${calcWorkHours(r.checkin,r.checkout,r.date)}</td>
+        <td>${r.status||'-'}</td>
+        <td>
+          <button class="btn ghost" onclick="openEditRecord('${r.docId}')">✏️ تعديل</button>
+          <button class="btn ghost" onclick="deleteRecord('${r.docId}')">🗑️ حذف</button>
+      
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  
+  if (currentView === 'employees') {
+    const tbody = document.querySelector('#employeesTable tbody');
+    tbody.innerHTML = '';
+    employeesCache.filter(e => (e.id + ' ' + e.name).toLowerCase().includes(q)).forEach(e => {
+      const stats = calcEmployeeStats(e.id);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${e.id}</td>
+        <td>${e.name}</td>
+        <td>${e.role||'employee'}</td>
+        <td>حاضر: ${stats.daysPresent} يوم<br>غائب: ${stats.daysAbsent} يوم<br>ساعات العمل: ${stats.totalHours}h ${stats.totalMins}m</td>
+        <td>
+          <button class="btn ghost" onclick="openEmployeeModal('${e.id}','${e.name}','${e.role||'employee'}')">✏️ تعديل</button>
+          <button class="btn ghost" onclick="deleteEmployee('${e.id}')">🗑️ حذف</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  
+  // إضافة صفحات أخرى لاحقاً بنفس الأسلوب إذا أحببت
 }
 
 /* ===== Check In / Out via modal (supports past date + custom time) ===== */
