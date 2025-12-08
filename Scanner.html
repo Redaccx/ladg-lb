@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QR Attendance</title>
 
-<!-- QR Scanner -->
 <script src="https://unpkg.com/html5-qrcode"></script>
-
-<!-- Firebase Compat -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -42,7 +39,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ---------- Users List ----------
+// ---------- قائمة المستخدمين ----------
 const users = {
   "123-456-7907": "Mais Salloum",
   "123-456-7905": "Waad Al-Ahmad",
@@ -53,6 +50,7 @@ const users = {
   "123-456-7903": "Mohsen Youssef",
   "123-456-7897": "Elsy Abdul Sater",
   "123-456-7898": "Ghadir Mostafa",
+  "123-456-8965": "Jihad al ali",
   "123-456-8965": "Nida al ali",
   "123-456-8963": "Ali jaafar",
   "123-456-7891": "Rida Al-Jomaa",
@@ -60,16 +58,16 @@ const users = {
   "123-456-7908": "Zahraa Zaiter"
 };
 
-// ---------- QR Scanner ----------
+// ---------- تشغيل الكاميرا ----------
 const scanner = new Html5Qrcode("reader");
 scanner.start(
   { facingMode: "environment" },
   { fps: 10, qrbox: 250 },
   (decodedText) => processQR(decodedText),
-  (error) => { /* ignore minor errors */ }
+  (error) => { /* minor errors ignored */ }
 );
 
-// ---------- Process QR ----------
+// ---------- معالجة QR ----------
 async function processQR(code) {
   const instructionEl = document.getElementById("instruction");
   const resultEl = document.getElementById("result");
@@ -86,7 +84,7 @@ async function processQR(code) {
   const date = now.toLocaleDateString("en-CA");
   const time = now.toLocaleTimeString();
 
-  // تحقق من آخر دخول/خروج لنفس اليوم
+  // التحقق من آخر تسجيل لنفس اليوم
   const q = await db.collection("attendance")
     .where("code", "==", code)
     .where("date", "==", date)
@@ -101,7 +99,7 @@ async function processQR(code) {
     classStatus = "in-exit";
   }
 
-  // إضافة إلى Firebase
+  // تسجيل الدخول/الخروج في Firebase
   await db.collection("attendance").add({
     code: code,
     name: name,
