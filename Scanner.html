@@ -3,17 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام الحضور برقم ID</title>
-
+<title>نظام الحضور المحسّن</title>
 <style>
   body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f7; display:flex; flex-direction:column; align-items:center; padding:20px; min-height:100vh; margin:0;}
   h1 {color:#333; margin-bottom:20px;}
-  #instruction { font-size:1.3em; margin:15px 0; padding:10px 20px; border-radius:10px; text-align:center; transition: all 0.3s ease; }
+  #instruction { font-size:1.3em; margin:15px 0; padding:10px 20px; border-radius:10px; text-align:center; transition: all 0.3s ease; width: 90%; max-width: 400px; }
   .in-success { background-color:#d4edda; color:#155724; border:2px solid #155724; }
   .in-exit { background-color:#fff3cd; color:#856404; border:2px solid #856404; }
   .in-error { background-color:#f8d7da; color:#721c24; border:2px solid #721c24; }
   #result { font-size:1.5em; margin-top:10px; text-align:center; color:#222; }
-  input { font-size:1.2em; padding:10px; border-radius:8px; border:1px solid #ccc; text-align:center; width:250px; }
+  input { font-size:1.2em; padding:10px; border-radius:8px; border:1px solid #ccc; text-align:center; width:250px; margin-bottom:10px; }
+  button { font-size:1.2em; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer; border:none; }
+  .btn-login { background-color:#28a745; color:white; }
+  .btn-logout { background-color:#ffc107; color:white; }
 </style>
 </head>
 <body>
@@ -21,11 +23,15 @@
 <h1>نظام الحضور</h1>
 <div id="instruction" class="in-success">أدخل رقم الـ ID</div>
 <input type="text" id="user-id" placeholder="رقم ID" />
+<div>
+  <button class="btn-login" id="btn-login">تسجيل دخول</button>
+  <button class="btn-logout" id="btn-logout">تسجيل خروج</button>
+</div>
 <div id="result"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, query, where, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // إعداد Firebase
 const firebaseConfig = {
@@ -41,71 +47,74 @@ const db = getFirestore(app);
 
 // قائمة المستخدمين
 const users = {
-  "123-456-7907": "Mais Salloum",
-  "123-456-7905": "Waad Al-Ahmad",
-  "123-456-7902": "Jomaa Al-Mohammad",
-  "123-456-7901": "Hadi Jaafar",
-  "123-456-7899": "Mohammad Jaafar",
-  "123-456-7904": "Anwar Nemer",
-  "123-456-7903": "Mohsen Youssef",
-  "123-456-7897": "Elsy Abdul Sater",
-  "123-456-7898": "Ghadir Mostafa",
-  "123-456-8965": "Jihad al ali",
-  "123-456-8965": "Nida al ali",
-  "123-456-8963": "Ali jaafar",
-  "123-456-7891": "Rida Al-Jomaa",
-  "123-456-7890": "Jackleen Jaafar",
-  "123-456-7908": "Zahraa Zaiter"
+  "123-456-7907": "ميس السلوم",
+  "123-456-7905": "وعد الاحمد",
+  "123-456-7902": "جمعة المحمد",
+  "123-456-7901": "هادي جعفر",
+  "123-456-7899": "محمد جعفر",
+  "123-456-7904": "أنور النمر",
+  "123-456-7903": "محسن يوسف",
+  "123-456-7897": "السي عبد الساتر",
+  "123-456-7898": "غدير مصطفى",
+  "123-456-8965": "جهاد العلي",
+  "123-456-8964": "نضال العلي",
+  "123-456-8963": "علي جعفر",
+  "123-456-7891": "رضا الجمعة",
+  "123-456-7890": "جاكلين جعفر",
+  "123-456-7908": "زهراء جعفر"
 };
 
 const instructionEl = document.getElementById("instruction");
 const resultEl = document.getElementById("result");
 const inputEl = document.getElementById("user-id");
+const btnLogin = document.getElementById("btn-login");
+const btnLogout = document.getElementById("btn-logout");
 
-async function registerAttendance(code) {
-  if(!users[code]){
+async function registerAttendance(code, status) {
+  code = code.trim();
+  if (!code) {
+    instructionEl.innerText = "⚠️ الرجاء إدخال رقم ID";
+    instructionEl.className = "in-error";
+    resultEl.innerText = "";
+    return;
+  }
+
+  const name = users[code];
+  if (!name) {
     instructionEl.innerText = "⚠️ رقم ID غير معروف";
     instructionEl.className = "in-error";
     resultEl.innerText = code;
     return;
   }
 
-  const name = users[code];
   const now = new Date();
   const date = now.toLocaleDateString("en-CA");
   const time = now.toLocaleTimeString();
 
-  const q = query(
-    collection(db, "attendance"),
-    where("code", "==", code),
-    where("date", "==", date),
-    orderBy("timestamp","desc"),
-    limit(1)
-  );
-  const qSnap = await getDocs(q);
+  try {
+    await addDoc(collection(db, "attendance"), {
+      code, name, date, time, status, timestamp: Date.now()
+    });
 
-  let status="دخول";
-  let classStatus="in-success";
-  if(!qSnap.empty && qSnap.docs[0].data().status==="دخول"){
-    status="خروج";
-    classStatus="in-exit";
+    const classStatus = status === "دخول" ? "in-success" : "in-exit";
+    instructionEl.innerText = `✔️ تم تسجيل ${status}`;
+    instructionEl.className = classStatus;
+    resultEl.innerHTML = `${name}<br>${date} - ${time}`;
+    inputEl.value = "";
+  } catch (error) {
+    instructionEl.innerText = "❌ حدث خطأ أثناء التسجيل";
+    instructionEl.className = "in-error";
+    console.error(error);
   }
-
-  await addDoc(collection(db, "attendance"), {
-    code, name, date, time, status, timestamp: Date.now()
-  });
-
-  instructionEl.innerText=`✔️ تم تسجيل ${status}`;
-  instructionEl.className = classStatus;
-  resultEl.innerHTML=`${name}<br>${date} - ${time}`;
-  inputEl.value = "";
 }
 
-// تسجيل عند الضغط على Enter
+// أحداث الأزرار
+btnLogin.addEventListener("click", () => registerAttendance(inputEl.value, "دخول"));
+btnLogout.addEventListener("click", () => registerAttendance(inputEl.value, "خروج"));
+
+// تسجيل عند الضغط على Enter (افتراضي يسجل دخول)
 inputEl.addEventListener("keypress", e => {
-  if(e.key === "Enter"){
-    registerAttendance(inputEl.value.trim());
-  }
+  if (e.key === "Enter") registerAttendance(inputEl.value, "دخول");
 });
 </script>
 
