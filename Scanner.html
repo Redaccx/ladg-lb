@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Attendance</title>
+
+<!-- نسخة سليمة من html5-qrcode -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<style>
+body { font-family: sans-serif; text-align:center; padding:20px; background:#f0f0f0; }
+#reader { width:300px; margin:auto; }
+#result { background:#fff; padding:15px; margin-top:20px; border-radius:10px; box-shadow:0 0 8px #aaa; }
+</style>
+</head>
+
+<body>
+
+<h2>نظام الحضور والانصراف QR</h2>
+<div id="reader"></div>
+<div id="result">جاهز للمسح...</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
+  authDomain: "ladg-attendance.firebaseapp.com",
+  projectId: "ladg-attendance",
+  storageBucket: "ladg-attendance.appspot.com",
+  messagingSenderId: "499991014945",
+  appId: "1:499991014945:web:e4cd793de709191a157d60"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ----- تشغيل الكاميرا -----
+const scanner = new Html5Qrcode("reader");
+
+// هذا الشرط لمنع الخطأ على iOS أحياناً
+navigator.mediaDevices.getUserMedia({ video: true }).then(() => {
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    (decodedText) => processQR(decodedText),
+    () => {}
+  );
+}).catch(err => {
+  document.getElementById("result").innerText = "⚠️ خطأ تشغيل الكاميرا: " + err;
+});
+
+// ----- تسجيل دخول/خروج -----
+async function processQR(code) {
+  const now = new Date();
+  const date = now.toLocaleDateString("en-CA");
+  const time = now.toLocaleTimeString();
+
+  const q = await db.collection("attendance")
+    .where("code", "==", code)
+    .where("date", "==", date)
+    .orderBy("timestamp", "desc")
+    .limit(1)
+    .get();
+
+  let status = "دخول";
+  if (!q.empty && q.docs[0].data().status === "دخول") {
+    status = "خروج";
+  }
+
+  await db.collection("attendance").add({
+    code: code,
+    date: date,
+    time: time,
+    status: status,
+    timestamp: Date.now()
+  });
+
+  document.getElementById("result").innerHTML =
+    `✔️ تم تسجيل <b>${status}</b><br>${date} - ${time}`;
+}
+</script>
+
+</body>
+</html>
