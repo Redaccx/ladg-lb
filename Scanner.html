@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QR Attendance</title>
 
-<!-- نسخة سليمة من html5-qrcode -->
-<script src="https://unpkg.com/html5-qrcode"></script>
+<!-- مكتبة QR الأصلية بدون مشاكل -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
-<!-- Firebase compat -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -26,6 +26,26 @@ body { font-family: sans-serif; text-align:center; padding:20px; background:#f0f
 <div id="result">جاهز للمسح...</div>
 
 <script>
+// ----- قاعدة بيانات الأكواد -----
+const USERS = {
+  "123-456-7907": "Mais Salloum",
+  "123-456-7905": "Waad Al-Ahmad",
+  "123-456-7902": "Jomaa Al-Mohammad",
+  "123-456-7901": "Hadi Jaafar",
+  "123-456-7899": "Mohammad Jaafar",
+  "123-456-7904": "Anwar Nemer",
+  "123-456-7903": "Mohsen Youssef",
+  "123-456-7897": "Elsy Abdul Sater",
+  "123-456-7898": "Ghadir Mostafa",
+  "123-456-8965": "Jihad al ali",
+  "123-456-8964": "Nida al ali",
+  "123-456-8963": "Ali jaafar",
+  "123-456-7891": "Rida Al-Jomaa",
+  "123-456-7890": "Jackleen Jaafar",
+  "123-456-7908": "Zahraa Zaiter"
+};
+
+// ----- Firebase -----
 const firebaseConfig = {
   apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
   authDomain: "ladg-attendance.firebaseapp.com",
@@ -41,24 +61,32 @@ const db = firebase.firestore();
 // ----- تشغيل الكاميرا -----
 const scanner = new Html5Qrcode("reader");
 
-// هذا الشرط لمنع الخطأ على iOS أحياناً
-navigator.mediaDevices.getUserMedia({ video: true }).then(() => {
-  scanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
-    (decodedText) => processQR(decodedText),
-    () => {}
-  );
-}).catch(err => {
+scanner.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 250 },
+  (decodedText) => processQR(decodedText),
+  (error) => {}
+).catch(err => {
   document.getElementById("result").innerText = "⚠️ خطأ تشغيل الكاميرا: " + err;
 });
 
-// ----- تسجيل دخول/خروج -----
+// ----- تسجيل دخول / خروج -----
 async function processQR(code) {
+  console.log("Scanned:", code);
+
+  // تحقق من أن الكود موجود
+  if (!USERS[code]) {
+    document.getElementById("result").innerHTML =
+      `❌ كود غير معروف<br>${code}`;
+    return;
+  }
+
+  const name = USERS[code];
   const now = new Date();
   const date = now.toLocaleDateString("en-CA");
   const time = now.toLocaleTimeString();
 
+  // الحصول على آخر حركة
   const q = await db.collection("attendance")
     .where("code", "==", code)
     .where("date", "==", date)
@@ -73,6 +101,7 @@ async function processQR(code) {
 
   await db.collection("attendance").add({
     code: code,
+    name: name,
     date: date,
     time: time,
     status: status,
@@ -80,7 +109,7 @@ async function processQR(code) {
   });
 
   document.getElementById("result").innerHTML =
-    `✔️ تم تسجيل <b>${status}</b><br>${date} - ${time}`;
+    `✔️ <b>${name}</b><br>تم تسجيل <b>${status}</b><br>${date} - ${time}`;
 }
 </script>
 
