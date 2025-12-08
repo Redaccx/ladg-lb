@@ -3,77 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام الحضور</title>
-
-<script src="https://unpkg.com/html5-qrcode"></script>
+<title>نظام الحضور برقم ID</title>
 
 <style>
-  body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(to bottom, #f0f4f7, #d9e2ec);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    min-height: 100vh;
-    margin: 0;
-  }
-
-  h1 {
-    color: #333;
-    margin-bottom: 20px;
-  }
-
-  #instruction {
-    font-size: 1.3em;
-    margin: 15px 0;
-    padding: 10px 20px;
-    border-radius: 10px;
-    text-align: center;
-    transition: all 0.3s ease;
-  }
-
-  .in-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 2px solid #155724;
-  }
-
-  .in-exit {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 2px solid #856404;
-  }
-
-  .in-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 2px solid #721c24;
-  }
-
-  #result {
-    font-size: 1.5em;
-    margin-top: 10px;
-    text-align: center;
-    color: #222;
-  }
-
-  #qr-reader {
-    width: 100%;
-    max-width: 400px;
-    margin: 20px auto;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  }
+  body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f7; display:flex; flex-direction:column; align-items:center; padding:20px; min-height:100vh; margin:0;}
+  h1 {color:#333; margin-bottom:20px;}
+  #instruction { font-size:1.3em; margin:15px 0; padding:10px 20px; border-radius:10px; text-align:center; transition: all 0.3s ease; }
+  .in-success { background-color:#d4edda; color:#155724; border:2px solid #155724; }
+  .in-exit { background-color:#fff3cd; color:#856404; border:2px solid #856404; }
+  .in-error { background-color:#f8d7da; color:#721c24; border:2px solid #721c24; }
+  #result { font-size:1.5em; margin-top:10px; text-align:center; color:#222; }
+  input { font-size:1.2em; padding:10px; border-radius:8px; border:1px solid #ccc; text-align:center; width:250px; }
 </style>
 </head>
 <body>
 
 <h1>نظام الحضور</h1>
-<div id="instruction" class="in-success">امسح بطاقة QR</div>
+<div id="instruction" class="in-success">أدخل رقم الـ ID</div>
+<input type="text" id="user-id" placeholder="رقم ID" />
 <div id="result"></div>
-<div id="qr-reader"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -93,22 +41,30 @@ const db = getFirestore(app);
 
 // قائمة المستخدمين
 const users = {
-  "123-456-7891": "رضا جمال",
-  "67890": "زهراء سليمان"
+  "123-456-7907": "Mais Salloum",
+  "123-456-7905": "Waad Al-Ahmad",
+  "123-456-7902": "Jomaa Al-Mohammad",
+  "123-456-7901": "Hadi Jaafar",
+  "123-456-7899": "Mohammad Jaafar",
+  "123-456-7904": "Anwar Nemer",
+  "123-456-7903": "Mohsen Youssef",
+  "123-456-7897": "Elsy Abdul Sater",
+  "123-456-7898": "Ghadir Mostafa",
+  "123-456-8965": "Jihad al ali",
+  "123-456-8965": "Nida al ali",
+  "123-456-8963": "Ali jaafar",
+  "123-456-7891": "Rida Al-Jomaa",
+  "123-456-7890": "Jackleen Jaafar",
+  "123-456-7908": "Zahraa Zaiter"
 };
 
 const instructionEl = document.getElementById("instruction");
 const resultEl = document.getElementById("result");
+const inputEl = document.getElementById("user-id");
 
-async function registerAttendance(decodedText) {
-  let code = decodedText;
-  try {
-    const url = new URL(decodedText);
-    code = url.searchParams.get("id") || decodedText;
-  } catch(e){}
-
+async function registerAttendance(code) {
   if(!users[code]){
-    instructionEl.innerText = "⚠️ كود غير معروف. امسح البطاقة التالية";
+    instructionEl.innerText = "⚠️ رقم ID غير معروف";
     instructionEl.className = "in-error";
     resultEl.innerText = code;
     return;
@@ -139,31 +95,17 @@ async function registerAttendance(decodedText) {
     code, name, date, time, status, timestamp: Date.now()
   });
 
-  instructionEl.innerText=`✔️ تم تسجيل ${status}. امسح البطاقة التالية`;
+  instructionEl.innerText=`✔️ تم تسجيل ${status}`;
   instructionEl.className = classStatus;
   resultEl.innerHTML=`${name}<br>${date} - ${time}`;
+  inputEl.value = "";
 }
 
-// تهيئة QR Scanner للعمل على iPhone وAndroid
-const html5QrCode = new Html5Qrcode("qr-reader");
-
-// خيارات قراءة QR
-const config = { 
-  fps: 15,         // سرعة الفحص
-  qrbox: 300,      // حجم مربع القراءة
-  experimentalFeatures: { useBarCodeDetectorIfSupported: true } // لتحسين الأداء على iOS
-};
-
-html5QrCode.start(
-  { facingMode: "environment" }, // الكاميرا الخلفية
-  config,
-  decodedText => registerAttendance(decodedText),
-  errorMessage => {
-    // تجاهل الأخطاء الصغيرة
-    console.log("QR scan error:", errorMessage);
+// تسجيل عند الضغط على Enter
+inputEl.addEventListener("keypress", e => {
+  if(e.key === "Enter"){
+    registerAttendance(inputEl.value.trim());
   }
-).catch(err => {
-  console.error("فشل تشغيل الكاميرا:", err);
 });
 </script>
 
