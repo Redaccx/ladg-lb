@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام الحضور</title>
 
-<!-- مكتبة QR Scanner -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
@@ -15,10 +14,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    padding: 20px;
     min-height: 100vh;
     margin: 0;
-    padding: 20px;
   }
 
   h1 {
@@ -31,8 +29,8 @@
     margin: 15px 0;
     padding: 10px 20px;
     border-radius: 10px;
-    transition: all 0.3s ease;
     text-align: center;
+    transition: all 0.3s ease;
   }
 
   .in-success {
@@ -78,7 +76,6 @@
 <div id="qr-reader"></div>
 
 <script type="module">
-// Firebase SDK هنا
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, query, where, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
@@ -94,30 +91,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// قائمة المستخدمين (مثال)
+// قائمة المستخدمين
 const users = {
-  "123-456-7907": "Mais Salloum",
-  "123-456-7905": "Waad Al-Ahmad",
-  "123-456-7902": "Jomaa Al-Mohammad",
-  "123-456-7901": "Hadi Jaafar",
-  "123-456-7899": "Mohammad Jaafar",
-  "123-456-7904": "Anwar Nemer",
-  "123-456-7903": "Mohsen Youssef",
-  "123-456-7897": "Elsy Abdul Sater",
-  "123-456-7898": "Ghadir Mostafa",
-  "123-456-8965": "Jihad al ali",
-  "123-456-8965": "Nida al ali",
-  "123-456-8963": "Ali jaafar",
-  "123-456-7891": "Rida Al-Jomaa",
-  "123-456-7890": "Jackleen Jaafar",
-  "123-456-7908": "Zahraa Zaiter"
+  "123-456-7891": "رضا جمال",
+  "67890": "زهراء سليمان"
 };
 
-// العناصر
 const instructionEl = document.getElementById("instruction");
 const resultEl = document.getElementById("result");
 
-// وظيفة تسجيل الحضور
 async function registerAttendance(decodedText) {
   let code = decodedText;
   try {
@@ -162,18 +144,23 @@ async function registerAttendance(decodedText) {
   resultEl.innerHTML=`${name}<br>${date} - ${time}`;
 }
 
-// تهيئة QR Scanner
+// تهيئة QR Scanner للعمل على iPhone وAndroid
 const html5QrCode = new Html5Qrcode("qr-reader");
 
+// خيارات قراءة QR
+const config = { 
+  fps: 15,         // سرعة الفحص
+  qrbox: 300,      // حجم مربع القراءة
+  experimentalFeatures: { useBarCodeDetectorIfSupported: true } // لتحسين الأداء على iOS
+};
+
 html5QrCode.start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: 250 }, // سرعة القراءة وحجم مربع QR
-  (decodedText) => {
-    registerAttendance(decodedText);
-  },
-  (errorMessage) => {
-    // يمكن تجاهل الأخطاء الصغيرة
-    console.warn(errorMessage);
+  { facingMode: "environment" }, // الكاميرا الخلفية
+  config,
+  decodedText => registerAttendance(decodedText),
+  errorMessage => {
+    // تجاهل الأخطاء الصغيرة
+    console.log("QR scan error:", errorMessage);
   }
 ).catch(err => {
   console.error("فشل تشغيل الكاميرا:", err);
