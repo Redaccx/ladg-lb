@@ -3,20 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QR Attendance</title>
+<title>نظام الحضور QR</title>
 
+<!-- QR Scanner -->
 <script src="https://unpkg.com/html5-qrcode"></script>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <style>
-body { font-family:sans-serif; text-align:center; padding:20px; background:#f0f0f0; }
-#reader { width:300px; margin:auto; }
-#instruction { margin-bottom:15px; font-weight:bold; font-size:18px; color:#333; }
-#result { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 8px #aaa; font-size:16px; min-height:50px; }
-.in-success { color:green; }
-.in-exit { color:blue; }
-.in-error { color:red; }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    background: linear-gradient(to bottom, #e0f7fa, #80deea);
+    padding: 20px;
+    margin: 0;
+}
+h2 {
+    color: #006064;
+    margin-bottom: 20px;
+}
+#reader {
+    width: 90%;
+    max-width: 400px;
+    margin: 20px auto;
+    border: 5px solid #004d40;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+#instruction {
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #004d40;
+    min-height: 25px;
+}
+#result {
+    background: #ffffffcc;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    font-size: 18px;
+    min-height: 50px;
+    transition: all 0.3s ease;
+}
+.in-success { color: green; font-weight: bold; }
+.in-exit { color: #0277bd; font-weight: bold; }
+.in-error { color: red; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -29,12 +63,12 @@ body { font-family:sans-serif; text-align:center; padding:20px; background:#f0f0
 <script>
 // ---------- Firebase ----------
 const firebaseConfig = {
-  apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
-  authDomain: "ladg-attendance.firebaseapp.com",
-  projectId: "ladg-attendance",
-  storageBucket: "ladg-attendance.appspot.com",
-  messagingSenderId: "499991014945",
-  appId: "1:499991014945:web:e4cd793de709191a157d60"
+    apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
+    authDomain: "ladg-attendance.firebaseapp.com",
+    projectId: "ladg-attendance",
+    storageBucket: "ladg-attendance.appspot.com",
+    messagingSenderId: "499991014945",
+    appId: "1:499991014945:web:e4cd793de709191a157d60"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -58,69 +92,69 @@ const users = {
   "123-456-7908": "Zahraa Zaiter"
 };
 
-// ---------- تشغيل الكاميرا ----------
+// ---------- تشغيل الكاميرا مع تحسينات ----------
 const scanner = new Html5Qrcode("reader");
 scanner.start(
-  { facingMode: "environment" },
-  { fps: 10, qrbox: 250 },
-  (decodedText) => processQR(decodedText),
-  (error) => { /* ignore minor errors */ }
+    { facingMode: "environment" },
+    { fps: 20, qrbox: 350, aspectRatio: 1.0 },
+    (decodedText) => processQR(decodedText),
+    (error) => { console.log("خطأ مسح QR:", error); }
 );
 
 // ---------- معالجة QR ----------
 async function processQR(decodedText) {
-  const instructionEl = document.getElementById("instruction");
-  const resultEl = document.getElementById("result");
+    const instructionEl = document.getElementById("instruction");
+    const resultEl = document.getElementById("result");
 
-  // محاولة استخراج id من الرابط
-  let code = decodedText;
-  try {
-    const url = new URL(decodedText);
-    code = url.searchParams.get("id") || decodedText; 
-  } catch (e) {
-    // إذا لم يكن رابط URL، نأخذ النص كما هو
-  }
+    // استخراج id من الرابط إذا كان URL
+    let code = decodedText;
+    try {
+        const url = new URL(decodedText);
+        code = url.searchParams.get("id") || decodedText;
+    } catch (e) {
+        // إذا ليس رابط، نأخذ النص كما هو
+    }
 
-  if (!users[code]) {
-    instructionEl.innerText = "⚠️ كود غير معروف. امسح البطاقة التالية";
-    instructionEl.className = "in-error";
-    resultEl.innerText = code;
-    return;
-  }
+    if (!users[code]) {
+        instructionEl.innerText = "⚠️ كود غير معروف. امسح البطاقة التالية";
+        instructionEl.className = "in-error";
+        resultEl.innerText = code;
+        return;
+    }
 
-  const name = users[code];
-  const now = new Date();
-  const date = now.toLocaleDateString("en-CA");
-  const time = now.toLocaleTimeString();
+    const name = users[code];
+    const now = new Date();
+    const date = now.toLocaleDateString("en-CA");
+    const time = now.toLocaleTimeString();
 
-  // التحقق من آخر تسجيل لنفس اليوم
-  const q = await db.collection("attendance")
-    .where("code", "==", code)
-    .where("date", "==", date)
-    .orderBy("timestamp", "desc")
-    .limit(1)
-    .get();
+    // التحقق من آخر تسجيل لنفس اليوم
+    const q = await db.collection("attendance")
+        .where("code", "==", code)
+        .where("date", "==", date)
+        .orderBy("timestamp", "desc")
+        .limit(1)
+        .get();
 
-  let status = "دخول";
-  let classStatus = "in-success";
-  if (!q.empty && q.docs[0].data().status === "دخول") {
-    status = "خروج";
-    classStatus = "in-exit";
-  }
+    let status = "دخول";
+    let classStatus = "in-success";
+    if (!q.empty && q.docs[0].data().status === "دخول") {
+        status = "خروج";
+        classStatus = "in-exit";
+    }
 
-  // تسجيل الدخول/الخروج
-  await db.collection("attendance").add({
-    code: code,
-    name: name,
-    date: date,
-    time: time,
-    status: status,
-    timestamp: Date.now()
-  });
+    // تسجيل الدخول/الخروج
+    await db.collection("attendance").add({
+        code: code,
+        name: name,
+        date: date,
+        time: time,
+        status: status,
+        timestamp: Date.now()
+    });
 
-  instructionEl.innerText = `✔️ تم تسجيل ${status}. امسح البطاقة التالية`;
-  instructionEl.className = classStatus;
-  resultEl.innerHTML = `${name}<br>${date} - ${time}`;
+    instructionEl.innerText = `✔️ تم تسجيل ${status}. امسح البطاقة التالية`;
+    instructionEl.className = classStatus;
+    resultEl.innerHTML = `${name}<br>${date} - ${time}`;
 }
 </script>
 
