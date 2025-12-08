@@ -3,37 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام الحضور المحسّن</title>
+<title>تسجيل حضور الموظف</title>
 <style>
-  body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f7; display:flex; flex-direction:column; align-items:center; padding:20px; min-height:100vh; margin:0;}
-  h1 {color:#333; margin-bottom:20px;}
-  #instruction { font-size:1.3em; margin:15px 0; padding:10px 20px; border-radius:10px; text-align:center; transition: all 0.3s ease; width: 90%; max-width: 400px; }
-  .in-success { background-color:#d4edda; color:#155724; border:2px solid #155724; }
-  .in-exit { background-color:#fff3cd; color:#856404; border:2px solid #856404; }
-  .in-error { background-color:#f8d7da; color:#721c24; border:2px solid #721c24; }
-  #result { font-size:1.5em; margin-top:10px; text-align:center; color:#222; }
-  input { font-size:1.2em; padding:10px; border-radius:8px; border:1px solid #ccc; text-align:center; width:250px; margin-bottom:10px; }
-  button { font-size:1.2em; padding:10px 20px; border-radius:8px; margin:5px; cursor:pointer; border:none; }
-  .btn-login { background-color:#28a745; color:white; }
-  .btn-logout { background-color:#ffc107; color:white; }
+body{font-family:"Cairo",sans-serif;background:#f4f6f9;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;transition:background .3s}
+.container{background:#fff;padding:24px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);width:320px;text-align:center;animation:fadeIn .8s ease}
+h2{margin-bottom:16px;color:#C1272D}
+#employeeName{font-weight:700;margin-bottom:8px;min-height:20px;color:#27ae60;transition:0.3s;}
+input{width:90%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;font-size:14px;transition:0.3s}
+input:focus{border-color:#C1272D;box-shadow:0 0 8px rgba(193,39,45,0.3);}
+button{padding:10px 16px;border:none;border-radius:8px;background:#C1272D;color:white;font-weight:700;cursor:pointer;margin-top:8px;width:100%;transition:0.3s}
+button:hover{transform:scale(1.05);background:#a01f27}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:white;padding:10px 14px;border-radius:12px;opacity:0;transition:opacity .25s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 </style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<h1>نظام الحضور</h1>
-<div id="instruction" class="in-success">أدخل رقم الـ ID</div>
-<input type="text" id="user-id" placeholder="رقم ID" />
-<div>
-  <button class="btn-login" id="btn-login">تسجيل دخول</button>
-  <button class="btn-logout" id="btn-logout">تسجيل خروج</button>
+<div class="container">
+  <h2>تسجيل حضور الموظف</h2>
+  <input type="text" id="empId" placeholder="ادخل رقم الموظف" oninput="fetchName()">
+  <div id="employeeName"></div>
+  <input type="date" id="date">
+  <input type="time" id="time">
+  <button onclick="checkIn()">تسجيل دخول</button>
+  <button onclick="checkOut()">تسجيل خروج</button>
 </div>
-<div id="result"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<div id="toast" class="toast"></div>
 
-// إعداد Firebase
+<script>
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
   authDomain: "ladg-attendance.firebaseapp.com",
@@ -42,81 +45,87 @@ const firebaseConfig = {
   messagingSenderId: "499991014945",
   appId: "1:499991014945:web:e4cd793de709191a157d60"
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-// قائمة المستخدمين
-const users = {
-  "123-456-7907": "ميس السلوم",
-  "123-456-7905": "وعد الاحمد",
-  "123-456-7902": "جمعة المحمد",
-  "123-456-7901": "هادي جعفر",
-  "123-456-7899": "محمد جعفر",
-  "123-456-7904": "أنور النمر",
-  "123-456-7903": "محسن يوسف",
-  "123-456-7897": "السي عبد الساتر",
-  "123-456-7898": "غدير مصطفى",
-  "123-456-8965": "جهاد العلي",
-  "123-456-8964": "نضال العلي",
-  "123-456-8963": "علي جعفر",
-  "123-456-7891": "رضا الجمعة",
-  "123-456-7890": "جاكلين جعفر",
-  "123-456-7908": "زهراء جعفر"
-};
-
-const instructionEl = document.getElementById("instruction");
-const resultEl = document.getElementById("result");
-const inputEl = document.getElementById("user-id");
-const btnLogin = document.getElementById("btn-login");
-const btnLogout = document.getElementById("btn-logout");
-
-async function registerAttendance(code, status) {
-  code = code.trim();
-  if (!code) {
-    instructionEl.innerText = "⚠️ الرجاء إدخال رقم ID";
-    instructionEl.className = "in-error";
-    resultEl.innerText = "";
-    return;
-  }
-
-  const name = users[code];
-  if (!name) {
-    instructionEl.innerText = "⚠️ رقم ID غير معروف";
-    instructionEl.className = "in-error";
-    resultEl.innerText = code;
-    return;
-  }
-
-  const now = new Date();
-  const date = now.toLocaleDateString("en-CA");
-  const time = now.toLocaleTimeString();
-
-  try {
-    await addDoc(collection(db, "attendance"), {
-      code, name, date, time, status, timestamp: Date.now()
-    });
-
-    const classStatus = status === "دخول" ? "in-success" : "in-exit";
-    instructionEl.innerText = `✔️ تم تسجيل ${status}`;
-    instructionEl.className = classStatus;
-    resultEl.innerHTML = `${name}<br>${date} - ${time}`;
-    inputEl.value = "";
-  } catch (error) {
-    instructionEl.innerText = "❌ حدث خطأ أثناء التسجيل";
-    instructionEl.className = "in-error";
-    console.error(error);
-  }
+/* ===== Helpers ===== */
+function showToast(msg,time=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._hid);
+  t._hid=setTimeout(()=>{t.style.opacity='0';},time);
+}
+function getDateISO(){ 
+  const d=document.getElementById('date').value||new Date().toISOString().substring(0,10);
+  return new Date(d+'T00:00:00').toISOString();
+}
+function getTimeHHMM(){
+  const t=document.getElementById('time').value;
+  if(t) return t;
+  const now=new Date();
+  return now.toTimeString().substring(0,5);
 }
 
-// أحداث الأزرار
-btnLogin.addEventListener("click", () => registerAttendance(inputEl.value, "دخول"));
-btnLogout.addEventListener("click", () => registerAttendance(inputEl.value, "خروج"));
+/* ===== Get Employee Name ===== */
+async function fetchName(){
+  const id=document.getElementById('empId').value.trim();
+  if(!id){ document.getElementById('employeeName').textContent=''; return; }
+  const doc = await db.collection('employees').doc(id).get();
+  document.getElementById('employeeName').textContent = doc.exists ? doc.data().name : '';
+}
 
-// تسجيل عند الضغط على Enter (افتراضي يسجل دخول)
-inputEl.addEventListener("keypress", e => {
-  if (e.key === "Enter") registerAttendance(inputEl.value, "دخول");
-});
+/* ===== Actions ===== */
+async function checkIn(){
+  const id = document.getElementById('empId').value.trim();
+  if(!id){ showToast('ادخل رقم الموظف'); return; }
+  const isoDate = getDateISO();
+  const time = getTimeHHMM();
+
+  try{
+    const q = await db.collection('attendance').where('id','==',id).get();
+    let found=false;
+    for(const doc of q.docs){
+      const r=doc.data();
+      if(new Date(r.date).toDateString()===new Date(isoDate).toDateString()){
+        await doc.ref.update({ checkin: time, status:'حاضر' });
+        found=true;
+      }
+    }
+    if(!found){
+      const name=document.getElementById('employeeName').textContent||'-';
+      await db.collection('attendance').add({id,name,date:isoDate,checkin:time,checkout:'-',status:'حاضر'});
+    }
+    showToast('تم تسجيل الدخول ✅');
+    document.body.style.background='#d4edda';
+    setTimeout(()=>{document.body.style.background='#f4f6f9';},400);
+  }catch(e){ console.error(e); showToast('حدث خطأ'); }
+}
+
+async function checkOut(){
+  const id = document.getElementById('empId').value.trim();
+  if(!id){ showToast('ادخل رقم الموظف'); return; }
+  const isoDate = getDateISO();
+  const time = getTimeHHMM();
+
+  try{
+    const q = await db.collection('attendance').where('id','==',id).where('checkout','==','-').get();
+    if(q.empty){ showToast('لم يتم العثور على تسجيل دخول لهذا اليوم'); return; }
+
+    let updated=false;
+    for(const doc of q.docs){
+      const r=doc.data();
+      if(new Date(r.date).toDateString()===new Date(isoDate).toDateString()){
+        await doc.ref.update({ checkout: time });
+        updated=true;
+      }
+    }
+    if(updated){ 
+      showToast('تم تسجيل الخروج ✅');
+      document.body.style.background='#ffeeba';
+      setTimeout(()=>{document.body.style.background='#f4f6f9';},400);
+    } else showToast('لا يوجد تسجيل دخول لهذا التاريخ');
+  }catch(e){ console.error(e); showToast('حدث خطأ'); }
+}
 </script>
-
 </body>
 </html>
