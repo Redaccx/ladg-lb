@@ -3,97 +3,98 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام حضور QR عصري</title>
+<title>نظام الحضور</title>
 
+<!-- مكتبة QR Scanner -->
 <script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <style>
-body {
-  font-family: 'Cairo', sans-serif;
-  margin:0; padding:0;
-  background: linear-gradient(120deg,#a7ffeb,#64ffda);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-height:100vh;
-}
-h1 {
-  margin:20px 0;
-  color:#00695c;
-  text-shadow:1px 1px 2px rgba(0,0,0,0.2);
-}
-#scanner-container {
-  background:#ffffffcc;
-  border-radius:20px;
-  padding:20px;
-  max-width:500px;
-  width:90%;
-  text-align:center;
-  box-shadow:0 0 25px rgba(0,0,0,0.3);
-}
-#reader {
-  width:100%;
-  max-width:450px;
-  height:400px;
-  border-radius:15px;
-  overflow:hidden;
-  position:relative;
-}
-#qr-overlay {
-  position:absolute;
-  top:50%; left:50%;
-  width:200px; height:200px;
-  transform:translate(-50%,-50%);
-  border:2px solid rgba(0,150,136,0.7);
-  border-radius:10px;
-  pointer-events:none;
-}
-#instruction {
-  margin:15px 0;
-  font-size:20px;
-  font-weight:bold;
-  min-height:30px;
-}
-#result {
-  background:#e0f2f1;
-  padding:15px;
-  border-radius:15px;
-  font-size:18px;
-  min-height:60px;
-  transition:0.3s all;
-}
-.in-success { color:#1b5e20; font-weight:bold; }
-.in-exit { color:#006064; font-weight:bold; }
-.in-error { color:#b71c1c; font-weight:bold; }
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to bottom, #f0f4f7, #d9e2ec);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  #instruction {
+    font-size: 1.3em;
+    margin: 15px 0;
+    padding: 10px 20px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  .in-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 2px solid #155724;
+  }
+
+  .in-exit {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 2px solid #856404;
+  }
+
+  .in-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 2px solid #721c24;
+  }
+
+  #result {
+    font-size: 1.5em;
+    margin-top: 10px;
+    text-align: center;
+    color: #222;
+  }
+
+  #qr-reader {
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
 </style>
 </head>
 <body>
 
-<h1>نظام حضور QR عصري</h1>
-<div id="scanner-container">
-  <div id="instruction">جاهز لمسح البطاقة...</div>
-  <div id="reader">
-    <div id="qr-overlay"></div>
-  </div>
-  <div id="result"></div>
-</div>
+<h1>نظام الحضور</h1>
+<div id="instruction" class="in-success">امسح بطاقة QR</div>
+<div id="result"></div>
+<div id="qr-reader"></div>
 
-<script>
-// Firebase
+<script type="module">
+// Firebase SDK هنا
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, query, where, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+// إعداد Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
-    authDomain: "ladg-attendance.firebaseapp.com",
-    projectId: "ladg-attendance",
-    storageBucket: "ladg-attendance.appspot.com",
-    messagingSenderId: "499991014945",
-    appId: "1:499991014945:web:e4cd793de709191a157d60"
+  apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
+  authDomain: "ladg-attendance.firebaseapp.com",
+  projectId: "ladg-attendance",
+  storageBucket: "ladg-attendance.firebasestorage.app",
+  messagingSenderId: "499991014945",
+  appId: "1:499991014945:web:e4cd793de709191a157d60"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// Users
+// قائمة المستخدمين (مثال)
 const users = {
   "123-456-7907": "Mais Salloum",
   "123-456-7905": "Waad Al-Ahmad",
@@ -112,20 +113,12 @@ const users = {
   "123-456-7908": "Zahraa Zaiter"
 };
 
-// Start camera
-const scanner = new Html5Qrcode("reader");
-scanner.start(
-  { facingMode: "environment" },
-  { fps:30, qrbox:0, experimentalFeatures:{useBarCodeDetectorIfSupported:true} },
-  decodedText => processQR(decodedText),
-  error => {}
-);
+// العناصر
+const instructionEl = document.getElementById("instruction");
+const resultEl = document.getElementById("result");
 
-// Process QR
-async function processQR(decodedText){
-  const instructionEl = document.getElementById("instruction");
-  const resultEl = document.getElementById("result");
-
+// وظيفة تسجيل الحضور
+async function registerAttendance(decodedText) {
   let code = decodedText;
   try {
     const url = new URL(decodedText);
@@ -144,28 +137,47 @@ async function processQR(decodedText){
   const date = now.toLocaleDateString("en-CA");
   const time = now.toLocaleTimeString();
 
-  const q = await db.collection("attendance")
-    .where("code","==",code)
-    .where("date","==",date)
-    .orderBy("timestamp","desc")
-    .limit(1)
-    .get();
+  const q = query(
+    collection(db, "attendance"),
+    where("code", "==", code),
+    where("date", "==", date),
+    orderBy("timestamp","desc"),
+    limit(1)
+  );
+  const qSnap = await getDocs(q);
 
   let status="دخول";
   let classStatus="in-success";
-  if(!q.empty && q.docs[0].data().status==="دخول"){
+  if(!qSnap.empty && qSnap.docs[0].data().status==="دخول"){
     status="خروج";
     classStatus="in-exit";
   }
 
-  await db.collection("attendance").add({
-    code, name, date, time, status, timestamp:Date.now()
+  await addDoc(collection(db, "attendance"), {
+    code, name, date, time, status, timestamp: Date.now()
   });
 
   instructionEl.innerText=`✔️ تم تسجيل ${status}. امسح البطاقة التالية`;
-  instructionEl.className=classStatus;
+  instructionEl.className = classStatus;
   resultEl.innerHTML=`${name}<br>${date} - ${time}`;
 }
+
+// تهيئة QR Scanner
+const html5QrCode = new Html5Qrcode("qr-reader");
+
+html5QrCode.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: 250 }, // سرعة القراءة وحجم مربع QR
+  (decodedText) => {
+    registerAttendance(decodedText);
+  },
+  (errorMessage) => {
+    // يمكن تجاهل الأخطاء الصغيرة
+    console.warn(errorMessage);
+  }
+).catch(err => {
+  console.error("فشل تشغيل الكاميرا:", err);
+});
 </script>
 
 </body>
