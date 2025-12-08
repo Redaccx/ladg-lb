@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>نظام الحضور QR</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام حضور الجمعية</title>
 
 <!-- QR Scanner -->
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -13,40 +13,52 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <style>
+* { box-sizing: border-box; margin:0; padding:0; }
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    text-align: center;
-    background: linear-gradient(to bottom, #e0f7fa, #80deea);
-    padding: 20px;
-    margin: 0;
+  font-family: 'Cairo', sans-serif;
+  background: linear-gradient(135deg,#1de9b6,#00bfa5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  color: #004d40;
 }
-h2 {
-    color: #006064;
-    margin-bottom: 20px;
+h1 {
+  margin-bottom: 20px;
+  color: #004d40;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+#scanner-container {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  max-width: 450px;
+  width: 100%;
+  text-align: center;
 }
 #reader {
-    width: 90%;
-    max-width: 400px;
-    margin: 20px auto;
-    border: 5px solid #004d40;
-    border-radius: 15px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  margin: 0 auto;
+  width: 100%;
+  max-width: 400px;
+  border: 5px solid #00bfa5;
+  border-radius: 15px;
 }
 #instruction {
-    font-weight: bold;
-    font-size: 20px;
-    margin-bottom: 15px;
-    color: #004d40;
-    min-height: 25px;
+  margin: 15px 0;
+  font-size: 20px;
+  font-weight: bold;
+  min-height: 30px;
 }
 #result {
-    background: #ffffffcc;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    font-size: 18px;
-    min-height: 50px;
-    transition: all 0.3s ease;
+  background: #e0f2f1;
+  padding: 15px;
+  border-radius: 15px;
+  font-size: 18px;
+  margin-top: 10px;
+  min-height: 60px;
+  transition: 0.3s all;
 }
 .in-success { color: green; font-weight: bold; }
 .in-exit { color: #0277bd; font-weight: bold; }
@@ -55,10 +67,12 @@ h2 {
 </head>
 <body>
 
-<h2>نظام الحضور والانصراف QR</h2>
-<div id="instruction">جاهز لمسح البطاقة...</div>
-<div id="reader"></div>
-<div id="result"></div>
+<h1>نظام حضور الجمعية</h1>
+<div id="scanner-container">
+  <div id="instruction">جاهز لمسح البطاقة...</div>
+  <div id="reader"></div>
+  <div id="result"></div>
+</div>
 
 <script>
 // ---------- Firebase ----------
@@ -92,13 +106,13 @@ const users = {
   "123-456-7908": "Zahraa Zaiter"
 };
 
-// ---------- تشغيل الكاميرا مع تحسينات ----------
+// ---------- تشغيل الكاميرا ----------
 const scanner = new Html5Qrcode("reader");
 scanner.start(
-    { facingMode: "environment" },
-    { fps: 20, qrbox: 350, aspectRatio: 1.0 },
-    (decodedText) => processQR(decodedText),
-    (error) => { console.log("خطأ مسح QR:", error); }
+  { facingMode: "environment" },
+  { fps: 25, qrbox: 350, aspectRatio: 1.0 },
+  (decodedText) => processQR(decodedText),
+  (error) => { /* ignore minor errors */ }
 );
 
 // ---------- معالجة QR ----------
@@ -111,11 +125,9 @@ async function processQR(decodedText) {
     try {
         const url = new URL(decodedText);
         code = url.searchParams.get("id") || decodedText;
-    } catch (e) {
-        // إذا ليس رابط، نأخذ النص كما هو
-    }
+    } catch(e) {}
 
-    if (!users[code]) {
+    if(!users[code]){
         instructionEl.innerText = "⚠️ كود غير معروف. امسح البطاقة التالية";
         instructionEl.className = "in-error";
         resultEl.innerText = code;
@@ -129,20 +141,19 @@ async function processQR(decodedText) {
 
     // التحقق من آخر تسجيل لنفس اليوم
     const q = await db.collection("attendance")
-        .where("code", "==", code)
-        .where("date", "==", date)
-        .orderBy("timestamp", "desc")
+        .where("code","==",code)
+        .where("date","==",date)
+        .orderBy("timestamp","desc")
         .limit(1)
         .get();
 
     let status = "دخول";
     let classStatus = "in-success";
-    if (!q.empty && q.docs[0].data().status === "دخول") {
+    if(!q.empty && q.docs[0].data().status==="دخول"){
         status = "خروج";
         classStatus = "in-exit";
     }
 
-    // تسجيل الدخول/الخروج
     await db.collection("attendance").add({
         code: code,
         name: name,
