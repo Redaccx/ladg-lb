@@ -5,29 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QR Attendance</title>
 
-<!-- مكتبة QR الأصلية بدون مشاكل -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<!-- QR Scanner -->
+<script src="https://unpkg.com/html5-qrcode"></script>
 
-<!-- Firebase -->
+<!-- Firebase Compat -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <style>
-body { font-family: sans-serif; text-align:center; padding:20px; background:#f0f0f0; }
+body { font-family:sans-serif; text-align:center; padding:20px; background:#f0f0f0; }
 #reader { width:300px; margin:auto; }
-#result { background:#fff; padding:15px; margin-top:20px; border-radius:10px; box-shadow:0 0 8px #aaa; }
+#instruction { margin-bottom:15px; font-weight:bold; font-size:18px; color:#333; }
+#result { background:#fff; padding:15px; border-radius:10px; box-shadow:0 0 8px #aaa; font-size:16px; min-height:50px; }
+.in-success { color:green; }
+.in-exit { color:blue; }
+.in-error { color:red; }
 </style>
 </head>
-
 <body>
 
 <h2>نظام الحضور والانصراف QR</h2>
+<div id="instruction">جاهز لمسح البطاقة...</div>
 <div id="reader"></div>
-<div id="result">جاهز للمسح...</div>
+<div id="result"></div>
 
 <script>
-// ----- قاعدة بيانات الأكواد -----
-const USERS = {
+// ---------- Firebase ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
+  authDomain: "ladg-attendance.firebaseapp.com",
+  projectId: "ladg-attendance",
+  storageBucket: "ladg-attendance.appspot.com",
+  messagingSenderId: "499991014945",
+  appId: "1:499991014945:web:e4cd793de709191a157d60"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ---------- Users List ----------
+const users = {
   "123-456-7907": "Mais Salloum",
   "123-456-7905": "Waad Al-Ahmad",
   "123-456-7902": "Jomaa Al-Mohammad",
@@ -37,56 +53,40 @@ const USERS = {
   "123-456-7903": "Mohsen Youssef",
   "123-456-7897": "Elsy Abdul Sater",
   "123-456-7898": "Ghadir Mostafa",
-  "123-456-8965": "Jihad al ali",
-  "123-456-8964": "Nida al ali",
+  "123-456-8965": "Nida al ali",
   "123-456-8963": "Ali jaafar",
   "123-456-7891": "Rida Al-Jomaa",
   "123-456-7890": "Jackleen Jaafar",
   "123-456-7908": "Zahraa Zaiter"
 };
 
-// ----- Firebase -----
-const firebaseConfig = {
-  apiKey: "AIzaSyDVbS9U5qVC4DSk326d0ljW6ETGkyHVLUQ",
-  authDomain: "ladg-attendance.firebaseapp.com",
-  projectId: "ladg-attendance",
-  storageBucket: "ladg-attendance.appspot.com",
-  messagingSenderId: "499991014945",
-  appId: "1:499991014945:web:e4cd793de709191a157d60"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ----- تشغيل الكاميرا -----
+// ---------- QR Scanner ----------
 const scanner = new Html5Qrcode("reader");
-
 scanner.start(
   { facingMode: "environment" },
   { fps: 10, qrbox: 250 },
   (decodedText) => processQR(decodedText),
-  (error) => {}
-).catch(err => {
-  document.getElementById("result").innerText = "⚠️ خطأ تشغيل الكاميرا: " + err;
-});
+  (error) => { /* ignore minor errors */ }
+);
 
-// ----- تسجيل دخول / خروج -----
+// ---------- Process QR ----------
 async function processQR(code) {
-  console.log("Scanned:", code);
+  const instructionEl = document.getElementById("instruction");
+  const resultEl = document.getElementById("result");
 
-  // تحقق من أن الكود موجود
-  if (!USERS[code]) {
-    document.getElementById("result").innerHTML =
-      `❌ كود غير معروف<br>${code}`;
+  if (!users[code]) {
+    instructionEl.innerText = "⚠️ كود غير معروف. امسح البطاقة التالية";
+    instructionEl.className = "in-error";
+    resultEl.innerText = code;
     return;
   }
 
-  const name = USERS[code];
+  const name = users[code];
   const now = new Date();
   const date = now.toLocaleDateString("en-CA");
   const time = now.toLocaleTimeString();
 
-  // الحصول على آخر حركة
+  // تحقق من آخر دخول/خروج لنفس اليوم
   const q = await db.collection("attendance")
     .where("code", "==", code)
     .where("date", "==", date)
@@ -95,10 +95,13 @@ async function processQR(code) {
     .get();
 
   let status = "دخول";
+  let classStatus = "in-success";
   if (!q.empty && q.docs[0].data().status === "دخول") {
     status = "خروج";
+    classStatus = "in-exit";
   }
 
+  // إضافة إلى Firebase
   await db.collection("attendance").add({
     code: code,
     name: name,
@@ -108,8 +111,9 @@ async function processQR(code) {
     timestamp: Date.now()
   });
 
-  document.getElementById("result").innerHTML =
-    `✔️ <b>${name}</b><br>تم تسجيل <b>${status}</b><br>${date} - ${time}`;
+  instructionEl.innerText = `✔️ تم تسجيل ${status}. امسح البطاقة التالية`;
+  instructionEl.className = classStatus;
+  resultEl.innerHTML = `${name}<br>${date} - ${time}`;
 }
 </script>
 
