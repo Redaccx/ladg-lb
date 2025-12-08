@@ -64,13 +64,22 @@ scanner.start(
   { facingMode: "environment" },
   { fps: 10, qrbox: 250 },
   (decodedText) => processQR(decodedText),
-  (error) => { /* minor errors ignored */ }
+  (error) => { /* ignore minor errors */ }
 );
 
 // ---------- معالجة QR ----------
-async function processQR(code) {
+async function processQR(decodedText) {
   const instructionEl = document.getElementById("instruction");
   const resultEl = document.getElementById("result");
+
+  // محاولة استخراج id من الرابط
+  let code = decodedText;
+  try {
+    const url = new URL(decodedText);
+    code = url.searchParams.get("id") || decodedText; 
+  } catch (e) {
+    // إذا لم يكن رابط URL، نأخذ النص كما هو
+  }
 
   if (!users[code]) {
     instructionEl.innerText = "⚠️ كود غير معروف. امسح البطاقة التالية";
@@ -99,7 +108,7 @@ async function processQR(code) {
     classStatus = "in-exit";
   }
 
-  // تسجيل الدخول/الخروج في Firebase
+  // تسجيل الدخول/الخروج
   await db.collection("attendance").add({
     code: code,
     name: name,
