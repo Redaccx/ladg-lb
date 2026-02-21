@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant POS Pro</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#f4f4f4;}
+.header{background:#111;color:white;padding:15px;text-align:center;font-size:20px;}
+.container{display:flex;height:90vh;}
+.products{width:65%;padding:10px;}
+.categories{display:flex;gap:5px;margin-bottom:10px;}
+.categories button{flex:1;padding:10px;background:#ff9800;border:none;color:white;cursor:pointer;font-weight:bold;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.product-box{background:#4CAF50;color:white;padding:10px;text-align:center;}
+.product-box button{margin-top:5px;padding:5px;font-size:12px;border:none;cursor:pointer;}
+.edit-btn{background:#607d8b;color:white;}
+.product-btn{width:100%;padding:10px;background:transparent;border:none;color:white;font-size:14px;cursor:pointer;}
+.cart{width:35%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
+.cart-items{flex:1;overflow:auto;font-size:14px;}
+.total{font-weight:bold;margin-top:5px;}
+button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
+.print{background:#2196F3;}
+.clear{background:#e53935;}
+.report{background:#9c27b0;}
+.login-box{max-width:300px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
+input,select{padding:5px;margin:5px 0;width:100%;}
+@media print{
+body *{visibility:hidden;}
+#invoice,#invoice *{visibility:visible;}
+#invoice{position:absolute;left:0;top:0;width:58mm;font-size:12px;}
+}
+</style>
+</head>
+
+<body>
+
+<div id="loginPage" class="login-box">
+<h3>تسجيل دخول الكاشير</h3>
+<input type="text" id="cashierName" placeholder="اسم الكاشير">
+<button onclick="login()">دخول</button>
+</div>
+
+<div id="posSystem" style="display:none;">
+<div class="header">نظام مطعم احترافي</div>
+<div class="container">
+
+<div class="products">
+<div class="categories" id="categories"></div>
+<div class="grid" id="productGrid"></div>
+<button onclick="addProduct()">➕ إضافة منتج</button>
+</div>
+
+<div class="cart">
+<h3>الطلب</h3>
+<div class="cart-items" id="cartItems"></div>
+<div class="total" id="total">المجموع: 0</div>
+
+<select id="paymentMethod">
+<option>كاش</option>
+<option>فيزا</option>
+</select>
+
+<button class="print" onclick="printInvoice()">طباعة</button>
+<button class="clear" onclick="clearCart()">مسح</button>
+<button class="report" onclick="dailyReport()">تقرير اليوم</button>
+</div>
+
+</div>
+</div>
+
+<div id="invoice" style="display:none;"></div>
+
+<script>
+
+let products={
+"سندويشات":[{name:"شاورما دجاج",price:15},{name:"شاورما لحم",price:18}],
+"وجبات":[{name:"وجبة برغر",price:25}],
+"مشروبات":[{name:"بيبسي",price:5}],
+"أراكيل":[{name:"أركيلة تفاحتين",price:20}],
+"لحوم":[{name:"لحم غنم",price:0}]
+};
+
+let currentCategory="سندويشات";
+let cart=[];
+let cashier="";
+let orderNumber=localStorage.getItem("orderNumber")||1;
+let dailySales=JSON.parse(localStorage.getItem("dailySales"))||[];
+
+function login(){
+cashier=document.getElementById("cashierName").value;
+if(!cashier){alert("ادخل الاسم");return;}
+loginPage.style.display="none";
+posSystem.style.display="block";
+loadCategories();
+showProducts(currentCategory);
+}
+
+function loadCategories(){
+categories.innerHTML="";
+for(let cat in products){
+categories.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>`;
+}
+}
+
+function showProducts(cat){
+currentCategory=cat;
+productGrid.innerHTML="";
+products[cat].forEach((p,i)=>{
+productGrid.innerHTML+=`
+<div class="product-box">
+<button class="product-btn" onclick="addToCart(${i})">
+${p.name}<br>${p.price>0?p.price:"حدد السعر"}
+</button>
+<button class="edit-btn" onclick="editProduct(${i})">✏ تعديل</button>
+</div>`;
+});
+}
+
+function editProduct(index){
+let p=products[currentCategory][index];
+let newName=prompt("اسم جديد:",p.name);
+let newPrice=parseFloat(prompt("سعر جديد:",p.price));
+if(!newName || isNaN(newPrice)) return;
+p.name=newName;
+p.price=newPrice;
+showProducts(currentCategory);
+}
+
+function addToCart(index){
+let p=products[currentCategory][index];
+let qty=1;
+let price=p.price;
+
+if(currentCategory==="لحوم"){
+qty=parseFloat(prompt("ادخل الوزن بالكيلو:"));
+price=parseFloat(prompt("ادخل سعر الكيلو:"));
+if(!qty||!price)return;
+}
+
+let totalItem=qty*price;
+cart.push({name:p.name,qty,price,totalItem});
+renderCart();
+}
+
+function renderCart(){
+let totalAmount=0;
+cartItems.innerHTML="";
+cart.forEach((item,i)=>{
+cartItems.innerHTML+=`${item.name} × ${item.qty} = ${item.totalItem}
+<button onclick="removeItem(${i})">❌</button><br>`;
+totalAmount+=item.totalItem;
+});
+document.getElementById("total").innerText="المجموع: "+totalAmount;
+}
+
+function removeItem(i){
+cart.splice(i,1);
+renderCart();
+}
+
+function clearCart(){cart=[];renderCart();}
+
+function generateCode(){
+return Math.random().toString(36).substring(2,6).toUpperCase();
+}
+
+function printInvoice(){
+if(cart.length===0){alert("لا يوجد طلب");return;}
+
+let total=0;
+let code=generateCode();
+let payment=document.getElementById("paymentMethod").value;
+
+let html=`<div style="text-align:center">
+<h3>مطعم السندويشات</h3>
+<p>رقم الطلب: ${orderNumber}</p>
+<p>الكود: ${code}</p>
+<p>الكاشير: ${cashier}</p>
+<hr>`;
+
+cart.forEach(item=>{
+html+=`<p>${item.name} × ${item.qty} = ${item.totalItem}</p>`;
+total+=item.totalItem;
+});
+
+html+=`<hr>
+<h4>الإجمالي: ${total}</h4>
+<p>الدفع: ${payment}</p>
+<p>شكراً لزيارتكم</p>
+</div>`;
+
+invoice.innerHTML=html;
+invoice.style.display="block";
+
+dailySales.push(total);
+localStorage.setItem("dailySales",JSON.stringify(dailySales));
+localStorage.setItem("orderNumber",++orderNumber);
+
+window.print();
+clearCart();
+}
+
+function dailyReport(){
+let sum=0;
+dailySales.forEach(s=>sum+=s);
+alert("إجمالي مبيعات اليوم: "+sum);
+}
+
+function addProduct(){
+let name=prompt("اسم المنتج:");
+let price=parseFloat(prompt("السعر:"));
+if(!name||isNaN(price))return;
+products[currentCategory].push({name,price});
+showProducts(currentCategory);
+}
+
+</script>
+
+</body>
+</html>
