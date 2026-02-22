@@ -27,8 +27,8 @@ button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
 .report{background:#9c27b0;}
 .shift{background:#ff5722;}
 .logout{background:#e53935;}
-.login-box{max-width:300px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
-input,select{padding:5px;margin:5px 0;width:100%;}
+.login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
+input,select{padding:8px;margin:5px 0;width:100%;font-size:14px;}
 @media print{
 body *{visibility:hidden;}
 #invoice,#invoice *{visibility:visible;}
@@ -40,8 +40,9 @@ body *{visibility:hidden;}
 <body>
 
 <div id="loginPage" class="login-box">
-<h3>تسجيل دخول الكاشير</h3>
-<input type="text" id="cashierName" placeholder="اسم الكاشير">
+<h3>تسجيل دخول</h3>
+<input type="text" id="cashierName" placeholder="اسم الموظف">
+<input type="password" id="cashierPin" placeholder="PIN">
 <button onclick="login()">دخول</button>
 </div>
 
@@ -84,8 +85,8 @@ body *{visibility:hidden;}
 
 <script>
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
   projectId: "YOUR_PROJECT_ID"
 };
 firebase.initializeApp(firebaseConfig);
@@ -98,19 +99,24 @@ let cashier = "";
 let role = "";
 let shiftStart;
 
+// 🔐 تسجيل دخول مضبوط
 async function login(){
-  const name = document.getElementById("cashierName").value;
-  const pin = prompt("ادخل PIN:");
-  if(!name || !pin) return alert("ادخل البيانات");
+  const name = document.getElementById("cashierName").value.trim();
+  const pin = document.getElementById("cashierPin").value.trim();
+
+  if(!name || !pin) return alert("ادخل الاسم والـ PIN");
 
   const snap = await db.collection("cashiers")
     .where("name","==",name)
-    .where("pin","==",pin)
     .get();
 
-  if(snap.empty) return alert("بيانات غير صحيحة");
+  if(snap.empty) return alert("المستخدم غير موجود");
 
   const data = snap.docs[0].data();
+
+  if(String(data.pin) !== pin)
+    return alert("PIN غير صحيح");
+
   cashier = data.name;
   role = data.role;
   shiftStart = new Date();
@@ -125,13 +131,18 @@ async function login(){
   await loadProducts();
 }
 
+// 🔓 تسجيل خروج
 function logout(){
   cashier="";
+  role="";
   cart=[];
   document.getElementById("posSystem").style.display="none";
   document.getElementById("loginPage").style.display="block";
+  document.getElementById("cashierName").value="";
+  document.getElementById("cashierPin").value="";
 }
 
+// 📂 تحميل الفئات
 async function loadCategories(){
   const div=document.getElementById("categories");
   div.innerHTML="";
@@ -140,11 +151,9 @@ async function loadCategories(){
     const cat=doc.data().name;
     div.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>`;
   });
-  if(role==="manager"){
-    div.innerHTML+=`<button onclick="addCategory()">➕ فئة</button>`;
-  }
 }
 
+// 📦 تحميل المنتجات
 async function loadProducts(){
   products={};
   const snap=await db.collection("products").get();
@@ -155,44 +164,21 @@ async function loadProducts(){
   });
 }
 
+// 🛒 عرض منتجات
 function showProducts(cat){
   currentCategory=cat;
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
   if(!products[cat]) return;
+
   products[cat].forEach((p,i)=>{
     grid.innerHTML+=`
     <div class="product-box">
-      <button class="product-btn" onclick="addToCart(${i})">${p.name}<br>${p.price}</button>
-      ${role==="manager"?
-      `<button class="edit-btn" onclick="editProduct(${i})">تعديل</button>
-       <button class="delete-btn" onclick="deleteProduct(${i})">حذف</button>`:""}
+      <button class="product-btn" onclick="addToCart(${i})">
+      ${p.name}<br>${p.price}
+      </button>
     </div>`;
   });
-}
-
-async function addCategory(){
-  let name=prompt("اسم الفئة:");
-  if(!name) return;
-  await db.collection("categories").add({name});
-  await loadCategories();
-}
-
-async function editProduct(i){
-  let p=products[currentCategory][i];
-  let name=prompt("اسم:",p.name);
-  let price=parseFloat(prompt("سعر:",p.price));
-  if(!name||isNaN(price))return;
-  await db.collection("products").doc(p.id).update({name,price});
-  await loadProducts();
-  showProducts(currentCategory);
-}
-
-async function deleteProduct(i){
-  let p=products[currentCategory][i];
-  await db.collection("products").doc(p.id).delete();
-  await loadProducts();
-  showProducts(currentCategory);
 }
 
 function addToCart(i){
@@ -206,7 +192,8 @@ function renderCart(){
   div.innerHTML="";
   let total=0;
   cart.forEach((item,i)=>{
-    div.innerHTML+=`${item.name} = ${item.total} <button onclick="removeItem(${i})">❌</button><br>`;
+    div.innerHTML+=`${item.name} = ${item.total} 
+    <button onclick="removeItem(${i})">❌</button><br>`;
     total+=item.total;
   });
   document.getElementById("total").innerText="المجموع: "+total;
@@ -221,6 +208,7 @@ function generateCode(){
 
 async function printInvoice(){
   if(cart.length===0) return alert("لا يوجد طلب");
+
   let total=0;
   let payment=document.getElementById("paymentMethod").value;
   let code=generateCode();
@@ -231,21 +219,14 @@ async function printInvoice(){
   if(snap.exists) orderNumber=snap.data().lastOrder+1;
   await counterRef.set({lastOrder:orderNumber});
 
-  let html=`<div style="text-align:center">
-  <h3>مطعم السندويشات</h3>
-  <p>رقم الطلب: ${orderNumber}</p>
-  <p>الكاشير: ${cashier}</p><hr>`;
-  cart.forEach(item=>{html+=`<p>${item.name} = ${item.total}</p>`; total+=item.total;});
-  html+=`<hr><h4>الإجمالي: ${total}</h4><p>${payment}</p></div>`;
-  document.getElementById("invoice").innerHTML=html;
-  document.getElementById("invoice").style.display="block";
+  cart.forEach(item=> total+=item.total);
 
   await db.collection("sales").add({
     cashier,role,orderNumber,total,payment,items:cart,
     timestamp:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  window.print();
+  alert("تم حفظ الطلب رقم "+orderNumber);
   clearCart();
 }
 
