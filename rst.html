@@ -7,33 +7,23 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f4f4f4;}
-.header{background:#111;color:white;padding:15px;font-size:18px;display:flex;justify-content:space-between;align-items:center;}
+.header{background:#111;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;}
 .container{display:flex;height:90vh;}
 .products{width:65%;padding:10px;}
 .categories{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
 .categories button{padding:10px;background:#ff9800;border:none;color:white;cursor:pointer;font-weight:bold;}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .product-box{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;}
-.product-box button{margin-top:5px;padding:5px;font-size:12px;border:none;cursor:pointer;}
-.edit-btn{background:#607d8b;color:white;}
-.delete-btn{background:#e53935;color:white;}
 .product-btn{width:100%;padding:10px;background:transparent;border:none;color:white;font-size:14px;cursor:pointer;}
 .cart{width:35%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
-.cart-items{flex:1;overflow:auto;font-size:14px;}
+.cart-items{flex:1;overflow:auto;}
 .total{font-weight:bold;margin-top:5px;}
 button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
 .print{background:#2196F3;}
 .clear{background:#e53935;}
-.report{background:#9c27b0;}
-.shift{background:#ff5722;}
 .logout{background:#e53935;}
 .login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
-input,select{padding:8px;margin:5px 0;width:100%;font-size:14px;}
-@media print{
-body *{visibility:hidden;}
-#invoice,#invoice *{visibility:visible;}
-#invoice{position:absolute;left:0;top:0;width:58mm;font-size:12px;}
-}
+input{padding:8px;margin:5px 0;width:100%;}
 </style>
 </head>
 
@@ -41,14 +31,14 @@ body *{visibility:hidden;}
 
 <div id="loginPage" class="login-box">
 <h3>تسجيل دخول</h3>
-<input type="text" id="cashierName" placeholder="اسم الموظف">
-<input type="password" id="cashierPin" placeholder="PIN">
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
 <button onclick="login()">دخول</button>
 </div>
 
 <div id="posSystem" style="display:none;">
 <div class="header">
-<div id="cashierDisplay"></div>
+<div id="userInfo"></div>
 <button class="logout" onclick="logout()">تسجيل خروج</button>
 </div>
 
@@ -63,86 +53,130 @@ body *{visibility:hidden;}
 <h3>الطلب</h3>
 <div class="cart-items" id="cartItems"></div>
 <div class="total" id="total">المجموع: 0</div>
-
-<select id="paymentMethod">
-<option>كاش</option>
-<option>فيزا</option>
-</select>
-
-<button class="print" onclick="printInvoice()">طباعة</button>
+<button class="print" onclick="saveOrder()">حفظ الطلب</button>
 <button class="clear" onclick="clearCart()">مسح</button>
-<button class="report" onclick="dailyReport()">تقرير اليوم</button>
-<button class="shift" onclick="closeShift()">إغلاق شيفت</button>
 </div>
 
 </div>
 </div>
-
-<div id="invoice" style="display:none;"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-  const firebaseConfig = {
-  apiKey: "AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",
-  authDomain: "store-app-d05fa.firebaseapp.com",
-  projectId: "store-app-d05fa",
-  storageBucket: "store-app-d05fa.firebasestorage.app",
-  messagingSenderId: "257385912042",
-  appId: "1:257385912042:web:bc30397b745340e31e2993"
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant POS Pro</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#f4f4f4;}
+.header{background:#111;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;}
+.container{display:flex;height:90vh;}
+.products{width:65%;padding:10px;}
+.categories{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.categories button{padding:10px;background:#ff9800;border:none;color:white;cursor:pointer;font-weight:bold;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.product-box{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;}
+.product-btn{width:100%;padding:10px;background:transparent;border:none;color:white;font-size:14px;cursor:pointer;}
+.cart{width:35%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
+.cart-items{flex:1;overflow:auto;}
+.total{font-weight:bold;margin-top:5px;}
+button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
+.print{background:#2196F3;}
+.clear{background:#e53935;}
+.logout{background:#e53935;}
+.login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
+input{padding:8px;margin:5px 0;width:100%;}
+</style>
+</head>
+
+<body>
+
+<div id="loginPage" class="login-box">
+<h3>تسجيل دخول</h3>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
+<button onclick="login()">دخول</button>
+</div>
+
+<div id="posSystem" style="display:none;">
+<div class="header">
+<div id="userInfo"></div>
+<button class="logout" onclick="logout()">تسجيل خروج</button>
+</div>
+
+<div class="container">
+
+<div class="products">
+<div class="categories" id="categories"></div>
+<div class="grid" id="productGrid"></div>
+</div>
+
+<div class="cart">
+<h3>الطلب</h3>
+<div class="cart-items" id="cartItems"></div>
+<div class="total" id="total">المجموع: 0</div>
+<button class="print" onclick="saveOrder()">حفظ الطلب</button>
+<button class="clear" onclick="clearCart()">مسح</button>
+</div>
+
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
 };
 firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-let products = {};
-let currentCategory = "";
-let cart = [];
-let cashier = "";
+let currentUser = null;
 let role = "";
-let shiftStart;
+let products = {};
+let cart = [];
 
-// 🔐 تسجيل دخول مضبوط
+// 🔐 تسجيل دخول رسمي
 async function login(){
-  const name = document.getElementById("cashierName").value.trim();
-  const pin = document.getElementById("cashierPin").value.trim();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  if(!name || !pin) return alert("ادخل الاسم والـ PIN");
+  try{
+    const userCredential = await auth.signInWithEmailAndPassword(email,password);
+    currentUser = userCredential.user;
 
-  const snap = await db.collection("cashiers")
-    .where("name","==",name)
-    .get();
+    const userDoc = await db.collection("users").doc(currentUser.uid).get();
+    role = userDoc.data().role;
 
-  if(snap.empty) return alert("المستخدم غير موجود");
+    document.getElementById("userInfo").innerText =
+      currentUser.email + " | الصلاحية: " + role;
 
-  const data = snap.docs[0].data();
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("posSystem").style.display="block";
 
-  if(String(data.pin) !== pin)
-    return alert("PIN غير صحيح");
+    await loadCategories();
+    await loadProducts();
 
-  cashier = data.name;
-  role = data.role;
-  shiftStart = new Date();
-
-  document.getElementById("cashierDisplay").innerText =
-    "الموظف: "+cashier+" | الصلاحية: "+role;
-
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("posSystem").style.display="block";
-
-  await loadCategories();
-  await loadProducts();
+  }catch(e){
+    alert("بيانات الدخول غير صحيحة");
+  }
 }
 
 // 🔓 تسجيل خروج
 function logout(){
-  cashier="";
-  role="";
-  cart=[];
-  document.getElementById("posSystem").style.display="none";
-  document.getElementById("loginPage").style.display="block";
-  document.getElementById("cashierName").value="";
-  document.getElementById("cashierPin").value="";
+  auth.signOut();
+  location.reload();
 }
 
 // 📂 تحميل الفئات
@@ -163,41 +197,38 @@ async function loadProducts(){
   snap.forEach(doc=>{
     const d=doc.data();
     if(!products[d.category]) products[d.category]=[];
-    products[d.category].push({id:doc.id,name:d.name,price:d.price});
+    products[d.category].push(d);
   });
 }
 
-// 🛒 عرض منتجات
 function showProducts(cat){
-  currentCategory=cat;
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
   if(!products[cat]) return;
 
-  products[cat].forEach((p,i)=>{
+  products[cat].forEach(p=>{
     grid.innerHTML+=`
-    <div class="product-box">
-      <button class="product-btn" onclick="addToCart(${i})">
-      ${p.name}<br>${p.price}
-      </button>
-    </div>`;
+      <div class="product-box">
+        <button class="product-btn" onclick="addToCart('${p.name}',${p.price})">
+          ${p.name}<br>${p.price}
+        </button>
+      </div>`;
   });
 }
 
-function addToCart(i){
-  let p=products[currentCategory][i];
-  cart.push({name:p.name,qty:1,price:p.price,total:p.price});
+function addToCart(name,price){
+  cart.push({name,price});
   renderCart();
 }
 
 function renderCart(){
-  let div=document.getElementById("cartItems");
+  const div=document.getElementById("cartItems");
   div.innerHTML="";
   let total=0;
   cart.forEach((item,i)=>{
-    div.innerHTML+=`${item.name} = ${item.total} 
-    <button onclick="removeItem(${i})">❌</button><br>`;
-    total+=item.total;
+    div.innerHTML+=`${item.name} - ${item.price}
+      <button onclick="removeItem(${i})">❌</button><br>`;
+    total+=item.price;
   });
   document.getElementById("total").innerText="المجموع: "+total;
 }
@@ -205,50 +236,144 @@ function renderCart(){
 function removeItem(i){ cart.splice(i,1); renderCart(); }
 function clearCart(){ cart=[]; renderCart(); }
 
-function generateCode(){
-  return Math.random().toString(36).substring(2,6).toUpperCase();
-}
-
-async function printInvoice(){
+// 💾 حفظ الطلب
+async function saveOrder(){
   if(cart.length===0) return alert("لا يوجد طلب");
 
-  let total=0;
-  let payment=document.getElementById("paymentMethod").value;
-  let code=generateCode();
-
-  let counterRef=db.collection("counters").doc("orders");
-  let snap=await counterRef.get();
-  let orderNumber=1;
-  if(snap.exists) orderNumber=snap.data().lastOrder+1;
-  await counterRef.set({lastOrder:orderNumber});
-
-  cart.forEach(item=> total+=item.total);
+  let total=cart.reduce((sum,item)=>sum+item.price,0);
 
   await db.collection("sales").add({
-    cashier,role,orderNumber,total,payment,items:cart,
-    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    user: currentUser.uid,
+    email: currentUser.email,
+    role: role,
+    total: total,
+    items: cart,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  alert("تم حفظ الطلب رقم "+orderNumber);
+  alert("تم حفظ الطلب");
   clearCart();
 }
+</script>
 
-async function dailyReport(){
-  const today=new Date(); today.setHours(0,0,0,0);
-  const snap=await db.collection("sales")
-    .where("timestamp",">=",today).get();
-  let total=0;
-  snap.forEach(doc=> total+=doc.data().total);
-  alert("إجمالي اليوم: "+total);
+</body>
+</html>
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let role = "";
+let products = {};
+let cart = [];
+
+// 🔐 تسجيل دخول رسمي
+async function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try{
+    const userCredential = await auth.signInWithEmailAndPassword(email,password);
+    currentUser = userCredential.user;
+
+    const userDoc = await db.collection("users").doc(currentUser.uid).get();
+    role = userDoc.data().role;
+
+    document.getElementById("userInfo").innerText =
+      currentUser.email + " | الصلاحية: " + role;
+
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("posSystem").style.display="block";
+
+    await loadCategories();
+    await loadProducts();
+
+  }catch(e){
+    alert("بيانات الدخول غير صحيحة");
+  }
 }
 
-async function closeShift(){
-  const snap=await db.collection("sales")
-    .where("cashier","==",cashier)
-    .where("timestamp",">=",shiftStart).get();
+// 🔓 تسجيل خروج
+function logout(){
+  auth.signOut();
+  location.reload();
+}
+
+// 📂 تحميل الفئات
+async function loadCategories(){
+  const div=document.getElementById("categories");
+  div.innerHTML="";
+  const snap=await db.collection("categories").get();
+  snap.forEach(doc=>{
+    const cat=doc.data().name;
+    div.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>`;
+  });
+}
+
+// 📦 تحميل المنتجات
+async function loadProducts(){
+  products={};
+  const snap=await db.collection("products").get();
+  snap.forEach(doc=>{
+    const d=doc.data();
+    if(!products[d.category]) products[d.category]=[];
+    products[d.category].push(d);
+  });
+}
+
+function showProducts(cat){
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  if(!products[cat]) return;
+
+  products[cat].forEach(p=>{
+    grid.innerHTML+=`
+      <div class="product-box">
+        <button class="product-btn" onclick="addToCart('${p.name}',${p.price})">
+          ${p.name}<br>${p.price}
+        </button>
+      </div>`;
+  });
+}
+
+function addToCart(name,price){
+  cart.push({name,price});
+  renderCart();
+}
+
+function renderCart(){
+  const div=document.getElementById("cartItems");
+  div.innerHTML="";
   let total=0;
-  snap.forEach(doc=> total+=doc.data().total);
-  alert("إغلاق الشيفت\nالإجمالي: "+total);
+  cart.forEach((item,i)=>{
+    div.innerHTML+=`${item.name} - ${item.price}
+      <button onclick="removeItem(${i})">❌</button><br>`;
+    total+=item.price;
+  });
+  document.getElementById("total").innerText="المجموع: "+total;
+}
+
+function removeItem(i){ cart.splice(i,1); renderCart(); }
+function clearCart(){ cart=[]; renderCart(); }
+
+// 💾 حفظ الطلب
+async function saveOrder(){
+  if(cart.length===0) return alert("لا يوجد طلب");
+
+  let total=cart.reduce((sum,item)=>sum+item.price,0);
+
+  await db.collection("sales").add({
+    user: currentUser.uid,
+    email: currentUser.email,
+    role: role,
+    total: total,
+    items: cart,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert("تم حفظ الطلب");
+  clearCart();
 }
 </script>
 
