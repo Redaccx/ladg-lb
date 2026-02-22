@@ -7,15 +7,16 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f4f4f4;}
-.header{background:#111;color:white;padding:15px;text-align:center;font-size:20px;}
+.header{background:#111;color:white;padding:15px;font-size:18px;display:flex;justify-content:space-between;align-items:center;}
 .container{display:flex;height:90vh;}
 .products{width:65%;padding:10px;}
-.categories{display:flex;gap:5px;margin-bottom:10px;}
-.categories button{flex:1;padding:10px;background:#ff9800;border:none;color:white;cursor:pointer;font-weight:bold;}
+.categories{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.categories button{padding:10px;background:#ff9800;border:none;color:white;cursor:pointer;font-weight:bold;}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.product-box{background:#4CAF50;color:white;padding:10px;text-align:center;}
+.product-box{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;}
 .product-box button{margin-top:5px;padding:5px;font-size:12px;border:none;cursor:pointer;}
 .edit-btn{background:#607d8b;color:white;}
+.delete-btn{background:#e53935;color:white;}
 .product-btn{width:100%;padding:10px;background:transparent;border:none;color:white;font-size:14px;cursor:pointer;}
 .cart{width:35%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
 .cart-items{flex:1;overflow:auto;font-size:14px;}
@@ -24,6 +25,8 @@ button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
 .print{background:#2196F3;}
 .clear{background:#e53935;}
 .report{background:#9c27b0;}
+.shift{background:#ff5722;}
+.logout{background:#e53935;}
 .login-box{max-width:300px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
 input,select{padding:5px;margin:5px 0;width:100%;}
 @media print{
@@ -43,13 +46,16 @@ body *{visibility:hidden;}
 </div>
 
 <div id="posSystem" style="display:none;">
-<div class="header">نظام مطعم احترافي</div>
+<div class="header">
+<div id="cashierDisplay"></div>
+<button class="logout" onclick="logout()">تسجيل خروج</button>
+</div>
+
 <div class="container">
 
 <div class="products">
 <div class="categories" id="categories"></div>
 <div class="grid" id="productGrid"></div>
-<button onclick="addProduct()">➕ إضافة منتج</button>
 </div>
 
 <div class="cart">
@@ -65,6 +71,7 @@ body *{visibility:hidden;}
 <button class="print" onclick="printInvoice()">طباعة</button>
 <button class="clear" onclick="clearCart()">مسح</button>
 <button class="report" onclick="dailyReport()">تقرير اليوم</button>
+<button class="shift" onclick="closeShift()">إغلاق شيفت</button>
 </div>
 
 </div>
@@ -72,194 +79,192 @@ body *{visibility:hidden;}
 
 <div id="invoice" style="display:none;"></div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// 🔹 ضع هنا Firebase config الخاص بك
 const firebaseConfig = {
-  apiKey: "AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",
-  authDomain: "store-app-d05fa.firebaseapp.com",
-  projectId: "store-app-d05fa",
-  storageBucket: "store-app-d05fa.firebasestorage.app",
-  messagingSenderId: "257385912042",
-  appId: "1:257385912042:web:bc30397b745340e31e2993"
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// بيانات المنتجات الافتراضية
-let products={
-"سندويشات":[{name:"شاورما دجاج",price:15},{name:"شاورما لحم",price:18}],
-"وجبات":[{name:"وجبة برغر",price:25}],
-"مشروبات":[{name:"بيبسي",price:5}],
-"أراكيل":[{name:"أركيلة تفاحتين",price:20}],
-"لحوم":[{name:"لحم غنم",price:0}]
-};
+let products = {};
+let currentCategory = "";
+let cart = [];
+let cashier = "";
+let role = "";
+let shiftStart;
 
-let currentCategory="سندويشات";
-let cart=[];
-let cashier="";
+async function login(){
+  const name = document.getElementById("cashierName").value;
+  const pin = prompt("ادخل PIN:");
+  if(!name || !pin) return alert("ادخل البيانات");
 
-// 🔹 تسجيل دخول الكاشير باستخدام اسم و PIN
-async function login() {
-  const cashierName = document.getElementById("cashierName").value;
-  const cashierPin = prompt("ادخل رمز PIN:");
-  if(!cashierName || !cashierPin){ alert("ادخل الاسم والرمز"); return; }
+  const snap = await db.collection("cashiers")
+    .where("name","==",name)
+    .where("pin","==",pin)
+    .get();
 
-  try {
-    const snapshot = await db.collection("cashiers")
-                             .where("name","==",cashierName)
-                             .where("pin","==",cashierPin)
-                             .get();
-    if(snapshot.empty){ alert("اسم أو رمز غير صحيح"); return; }
+  if(snap.empty) return alert("بيانات غير صحيحة");
 
-    cashier = cashierName;
-    document.getElementById("loginPage").style.display="none";
-    document.getElementById("posSystem").style.display="block";
+  const data = snap.docs[0].data();
+  cashier = data.name;
+  role = data.role;
+  shiftStart = new Date();
 
-    loadCategories();
-    showProducts(currentCategory);
-  } catch(e){ console.error(e); alert("حدث خطأ أثناء تسجيل الدخول"); }
+  document.getElementById("cashierDisplay").innerText =
+    "الموظف: "+cashier+" | الصلاحية: "+role;
+
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("posSystem").style.display="block";
+
+  await loadCategories();
+  await loadProducts();
 }
 
-// 🔹 تحميل الفئات
-function loadCategories(){
-  const categoriesDiv = document.getElementById("categories");
-  categoriesDiv.innerHTML="";
-  for(let cat in products){
-    categoriesDiv.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>`;
+function logout(){
+  cashier="";
+  cart=[];
+  document.getElementById("posSystem").style.display="none";
+  document.getElementById("loginPage").style.display="block";
+}
+
+async function loadCategories(){
+  const div=document.getElementById("categories");
+  div.innerHTML="";
+  const snap=await db.collection("categories").get();
+  snap.forEach(doc=>{
+    const cat=doc.data().name;
+    div.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>`;
+  });
+  if(role==="manager"){
+    div.innerHTML+=`<button onclick="addCategory()">➕ فئة</button>`;
   }
 }
 
-// 🔹 عرض المنتجات
+async function loadProducts(){
+  products={};
+  const snap=await db.collection("products").get();
+  snap.forEach(doc=>{
+    const d=doc.data();
+    if(!products[d.category]) products[d.category]=[];
+    products[d.category].push({id:doc.id,name:d.name,price:d.price});
+  });
+}
+
 function showProducts(cat){
   currentCategory=cat;
-  const productGrid = document.getElementById("productGrid");
-  productGrid.innerHTML="";
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  if(!products[cat]) return;
   products[cat].forEach((p,i)=>{
-    productGrid.innerHTML+=`
+    grid.innerHTML+=`
     <div class="product-box">
-      <button class="product-btn" onclick="addToCart(${i})">${p.name}<br>${p.price>0?p.price:"حدد السعر"}</button>
-      <button class="edit-btn" onclick="editProduct(${i})">✏ تعديل</button>
+      <button class="product-btn" onclick="addToCart(${i})">${p.name}<br>${p.price}</button>
+      ${role==="manager"?
+      `<button class="edit-btn" onclick="editProduct(${i})">تعديل</button>
+       <button class="delete-btn" onclick="deleteProduct(${i})">حذف</button>`:""}
     </div>`;
   });
 }
 
-// 🔹 تعديل المنتج
-function editProduct(index){
-  let p=products[currentCategory][index];
-  let newName=prompt("اسم جديد:",p.name);
-  let newPrice=parseFloat(prompt("سعر جديد:",p.price));
-  if(!newName || isNaN(newPrice)) return;
-  p.name=newName;
-  p.price=newPrice;
+async function addCategory(){
+  let name=prompt("اسم الفئة:");
+  if(!name) return;
+  await db.collection("categories").add({name});
+  await loadCategories();
+}
+
+async function editProduct(i){
+  let p=products[currentCategory][i];
+  let name=prompt("اسم:",p.name);
+  let price=parseFloat(prompt("سعر:",p.price));
+  if(!name||isNaN(price))return;
+  await db.collection("products").doc(p.id).update({name,price});
+  await loadProducts();
   showProducts(currentCategory);
 }
 
-// 🔹 إضافة للطلب
-function addToCart(index){
-  let p=products[currentCategory][index];
-  let qty=1;
-  let price=p.price;
+async function deleteProduct(i){
+  let p=products[currentCategory][i];
+  await db.collection("products").doc(p.id).delete();
+  await loadProducts();
+  showProducts(currentCategory);
+}
 
-  if(currentCategory==="لحوم"){
-    qty=parseFloat(prompt("ادخل الوزن بالكيلو:"));
-    price=parseFloat(prompt("ادخل سعر الكيلو:"));
-    if(!qty||!price)return;
-  }
-
-  let totalItem=qty*price;
-  cart.push({name:p.name,qty,price,totalItem});
+function addToCart(i){
+  let p=products[currentCategory][i];
+  cart.push({name:p.name,qty:1,price:p.price,total:p.price});
   renderCart();
 }
 
-// 🔹 عرض الطلب
 function renderCart(){
-  const cartItems = document.getElementById("cartItems");
-  let totalAmount=0;
-  cartItems.innerHTML="";
+  let div=document.getElementById("cartItems");
+  div.innerHTML="";
+  let total=0;
   cart.forEach((item,i)=>{
-    cartItems.innerHTML+=`${item.name} × ${item.qty} = ${item.totalItem} <button onclick="removeItem(${i})">❌</button><br>`;
-    totalAmount+=item.totalItem;
+    div.innerHTML+=`${item.name} = ${item.total} <button onclick="removeItem(${i})">❌</button><br>`;
+    total+=item.total;
   });
-  document.getElementById("total").innerText="المجموع: "+totalAmount;
+  document.getElementById("total").innerText="المجموع: "+total;
 }
 
-// 🔹 إزالة منتج
 function removeItem(i){ cart.splice(i,1); renderCart(); }
 function clearCart(){ cart=[]; renderCart(); }
 
-// 🔹 توليد كود عشوائي
-function generateCode(){ return Math.random().toString(36).substring(2,6).toUpperCase(); }
+function generateCode(){
+  return Math.random().toString(36).substring(2,6).toUpperCase();
+}
 
-// 🔹 طباعة الفاتورة وحفظها في Firestore مع رقم طلب متتابع
 async function printInvoice(){
-  if(cart.length===0){alert("لا يوجد طلب"); return;}
+  if(cart.length===0) return alert("لا يوجد طلب");
   let total=0;
-  let code=generateCode();
   let payment=document.getElementById("paymentMethod").value;
+  let code=generateCode();
 
-  // 🔹 الحصول على رقم الطلب التالي من Firestore
-  let orderDoc = db.collection("counters").doc("orders");
-  let orderSnapshot = await orderDoc.get();
-  let orderNumber = 1;
-  if(orderSnapshot.exists){
-    orderNumber = orderSnapshot.data().lastOrder + 1;
-  }
-
-  // تحديث رقم الطلب في Firestore
-  await orderDoc.set({ lastOrder: orderNumber });
+  let counterRef=db.collection("counters").doc("orders");
+  let snap=await counterRef.get();
+  let orderNumber=1;
+  if(snap.exists) orderNumber=snap.data().lastOrder+1;
+  await counterRef.set({lastOrder:orderNumber});
 
   let html=`<div style="text-align:center">
-<h3>مطعم السندويشات</h3>
-<p>رقم الطلب: ${orderNumber}</p>
-<p>الكود: ${code}</p>
-<p>الكاشير: ${cashier}</p>
-<hr>`;
-
-  cart.forEach(item => { html+=`<p>${item.name} × ${item.qty} = ${item.totalItem}</p>`; total+=item.totalItem; });
-
-  html+=`<hr><h4>الإجمالي: ${total}</h4><p>الدفع: ${payment}</p><p>شكراً لزيارتكم</p></div>`;
+  <h3>مطعم السندويشات</h3>
+  <p>رقم الطلب: ${orderNumber}</p>
+  <p>الكاشير: ${cashier}</p><hr>`;
+  cart.forEach(item=>{html+=`<p>${item.name} = ${item.total}</p>`; total+=item.total;});
+  html+=`<hr><h4>الإجمالي: ${total}</h4><p>${payment}</p></div>`;
   document.getElementById("invoice").innerHTML=html;
   document.getElementById("invoice").style.display="block";
 
-  try{
-    await db.collection("sales").add({
-      cashier,
-      orderNumber,
-      code,
-      total,
-      payment,
-      items: cart,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch(e){ console.error(e); alert("خطأ في حفظ الفاتورة"); }
+  await db.collection("sales").add({
+    cashier,role,orderNumber,total,payment,items:cart,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  });
 
   window.print();
   clearCart();
 }
 
-// 🔹 تقرير اليوم
 async function dailyReport(){
-  const today = new Date(); today.setHours(0,0,0,0);
-  try{
-    const snapshot = await db.collection("sales").where("timestamp", ">=", today).get();
-    let sum=0;
-    snapshot.forEach(doc => sum += doc.data().total);
-    alert("إجمالي مبيعات اليوم: " + sum);
-  } catch(e){ console.error(e); alert("خطأ في تحميل تقرير اليوم"); }
+  const today=new Date(); today.setHours(0,0,0,0);
+  const snap=await db.collection("sales")
+    .where("timestamp",">=",today).get();
+  let total=0;
+  snap.forEach(doc=> total+=doc.data().total);
+  alert("إجمالي اليوم: "+total);
 }
 
-// 🔹 إضافة منتج جديد
-function addProduct(){
-  let name=prompt("اسم المنتج:");
-  let price=parseFloat(prompt("السعر:"));
-  if(!name||isNaN(price))return;
-  products[currentCategory].push({name,price});
-  showProducts(currentCategory);
+async function closeShift(){
+  const snap=await db.collection("sales")
+    .where("cashier","==",cashier)
+    .where("timestamp",">=",shiftStart).get();
+  let total=0;
+  snap.forEach(doc=> total+=doc.data().total);
+  alert("إغلاق الشيفت\nالإجمالي: "+total);
 }
 </script>
 
