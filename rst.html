@@ -133,131 +133,13 @@ input{padding:8px;margin:5px 0;width:100%;}
 
 <script>
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID"
+  apiKey: "AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",
+  authDomain: "store-app-d05fa.firebaseapp.com",
+  projectId: "store-app-d05fa",
+  storageBucket: "store-app-d05fa.firebasestorage.app",
+  messagingSenderId: "257385912042",
+  appId: "1:257385912042:web:bc30397b745340e31e2993"
 };
-firebase.initializeApp(firebaseConfig);
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-let currentUser = null;
-let role = "";
-let products = {};
-let cart = [];
-
-// 🔐 تسجيل دخول رسمي
-async function login(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  try{
-    const userCredential = await auth.signInWithEmailAndPassword(email,password);
-    currentUser = userCredential.user;
-
-    const userDoc = await db.collection("users").doc(currentUser.uid).get();
-    role = userDoc.data().role;
-
-    document.getElementById("userInfo").innerText =
-      currentUser.email + " | الصلاحية: " + role;
-
-    document.getElementById("loginPage").style.display="none";
-    document.getElementById("posSystem").style.display="block";
-
-    await loadCategories();
-    await loadProducts();
-
-  }catch(e){
-    alert("بيانات الدخول غير صحيحة");
-  }
-}
-
-// 🔓 تسجيل خروج
-function logout(){
-  auth.signOut();
-  location.reload();
-}
-
-// 📂 تحميل الفئات
-async function loadCategories(){
-  const div=document.getElementById("categories");
-  div.innerHTML="";
-  const snap=await db.collection("categories").get();
-  snap.forEach(doc=>{
-    const cat=doc.data().name;
-    div.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>`;
-  });
-}
-
-// 📦 تحميل المنتجات
-async function loadProducts(){
-  products={};
-  const snap=await db.collection("products").get();
-  snap.forEach(doc=>{
-    const d=doc.data();
-    if(!products[d.category]) products[d.category]=[];
-    products[d.category].push(d);
-  });
-}
-
-function showProducts(cat){
-  const grid=document.getElementById("productGrid");
-  grid.innerHTML="";
-  if(!products[cat]) return;
-
-  products[cat].forEach(p=>{
-    grid.innerHTML+=`
-      <div class="product-box">
-        <button class="product-btn" onclick="addToCart('${p.name}',${p.price})">
-          ${p.name}<br>${p.price}
-        </button>
-      </div>`;
-  });
-}
-
-function addToCart(name,price){
-  cart.push({name,price});
-  renderCart();
-}
-
-function renderCart(){
-  const div=document.getElementById("cartItems");
-  div.innerHTML="";
-  let total=0;
-  cart.forEach((item,i)=>{
-    div.innerHTML+=`${item.name} - ${item.price}
-      <button onclick="removeItem(${i})">❌</button><br>`;
-    total+=item.price;
-  });
-  document.getElementById("total").innerText="المجموع: "+total;
-}
-
-function removeItem(i){ cart.splice(i,1); renderCart(); }
-function clearCart(){ cart=[]; renderCart(); }
-
-// 💾 حفظ الطلب
-async function saveOrder(){
-  if(cart.length===0) return alert("لا يوجد طلب");
-
-  let total=cart.reduce((sum,item)=>sum+item.price,0);
-
-  await db.collection("sales").add({
-    user: currentUser.uid,
-    email: currentUser.email,
-    role: role,
-    total: total,
-    items: cart,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  alert("تم حفظ الطلب");
-  clearCart();
-}
-</script>
-
-</body>
-</html>
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
