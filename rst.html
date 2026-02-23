@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POS Advanced</title>
+<title>POS مطعم كامل</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#f4f4f4;}
@@ -18,8 +18,8 @@ body{margin:0;font-family:Arial;background:#f4f4f4;}
 button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
 .save{background:#2196F3;}
 .clear{background:#e53935;}
-.report{background:#ff9800;}
 .logout{background:#e53935;}
+.report{background:#ff9800;}
 input{padding:6px;margin-top:5px;width:100%;}
 .login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
 @media print{
@@ -50,6 +50,13 @@ input{padding:6px;margin-top:5px;width:100%;}
 <div class="container">
 <div class="products">
 <h3>المنتجات</h3>
+
+<h4>إضافة منتج جديد</h4>
+<input type="text" id="newName" placeholder="اسم المنتج">
+<input type="number" id="newPrice" placeholder="السعر">
+<button onclick="addProduct()" style="background:#ff9800;">إضافة</button>
+<hr>
+
 <div class="grid" id="productGrid"></div>
 </div>
 
@@ -125,26 +132,56 @@ async function loadProducts(){
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
   const snap=await db.collection("products").get();
+
   snap.forEach(doc=>{
     const p=doc.data();
-    grid.innerHTML+=`
-      <div class="product" onclick="addToCart('${p.name}',${p.price})">
+
+    const div=document.createElement("div");
+    div.className="product";
+    div.innerHTML=`
       ${p.name}<br>${p.price}
-      </div>`;
+      <br><button onclick="deleteProduct('${doc.id}')" style="background:red;">X</button>
+    `;
+
+    div.onclick=function(e){
+      if(e.target.tagName==="BUTTON") return;
+      addToCart(p.name,p.price);
+    };
+
+    grid.appendChild(div);
   });
 }
 
+// إضافة منتج جديد
+async function addProduct(){
+  const name=document.getElementById("newName").value.trim();
+  const price=parseFloat(document.getElementById("newPrice").value);
+  if(!name || !price) return alert("املأ البيانات");
+
+  await db.collection("products").add({name, price});
+  document.getElementById("newName").value="";
+  document.getElementById("newPrice").value="";
+  loadProducts();
+}
+
+// حذف منتج
+async function deleteProduct(id){
+  await db.collection("products").doc(id).delete();
+  loadProducts();
+}
+
+// إضافة للسلة
 function addToCart(name,price){
   cart.push({name,price});
   renderCart();
 }
 
+// عرض السلة
 function renderCart(){
-  let subtotal=cart.reduce((s,i)=>s+i.price,0);
+  const subtotal=cart.reduce((s,i)=>s+i.price,0);
   const tax=parseFloat(document.getElementById("tax").value)||0;
   const discount=parseFloat(document.getElementById("discount").value)||0;
-
-  let total=subtotal+(subtotal*tax/100)-discount;
+  const total=subtotal+(subtotal*tax/100)-discount;
 
   cartItems.innerHTML="";
   cart.forEach((item,i)=>{
@@ -155,17 +192,10 @@ function renderCart(){
   totalDiv.innerText="المجموع: "+total.toFixed(2);
 }
 
-function removeItem(i){
-  cart.splice(i,1);
-  renderCart();
-}
+function removeItem(i){ cart.splice(i,1); renderCart(); }
+function clearCart(){ cart=[]; renderCart(); }
 
-function clearCart(){
-  cart=[];
-  renderCart();
-}
-
-// رقم فاتورة
+// رقم فاتورة متسلسل
 async function getNextNumber(){
   const ref=db.collection("counters").doc("orderCounter");
   return db.runTransaction(async t=>{
@@ -182,7 +212,6 @@ async function saveOrder(){
   if(cart.length===0) return alert("السلة فارغة");
 
   const number=await getNextNumber();
-
   const subtotal=cart.reduce((s,i)=>s+i.price,0);
   const tax=parseFloat(taxInput.value)||0;
   const discount=parseFloat(discountInput.value)||0;
@@ -222,9 +251,7 @@ async function dailyReport(){
   const today=new Date();
   today.setHours(0,0,0,0);
 
-  const snap=await db.collection("sales")
-    .where("createdAt",">=",today)
-    .get();
+  const snap=await db.collection("sales").where("createdAt",">=",today).get();
 
   let total=0,count=0;
   snap.forEach(doc=>{
