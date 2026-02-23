@@ -451,17 +451,26 @@ async function login(){
 function logout(){auth.signOut(); location.reload();}
 
 // --------- الأقسام ---------
-async function loadCategories(){
-  const div=document.getElementById("categories");
-  const select=document.getElementById("categorySelect");
-  div.innerHTML=`<button onclick="showProducts('all', this)" style="background:#333;color:white;">الكل</button>`;
-  select.innerHTML="";
-  const snap=await db.collection("categories").get();
-  snap.forEach(doc=>{
-    const cat=doc.data().name;
-    div.innerHTML+=`<button onclick="showProducts('${cat}', this)">${cat}</button>
-    <button onclick="editCategory('${doc.id}')">✏</button>`;
-    select.innerHTML+=`<option value="${cat}">${cat}</option>`;
+async function loadCategories() {
+  const div = document.getElementById("categories");
+  div.innerHTML = ""; // مسح أي شيء سابق
+  
+  // زر الكل دائماً يظهر
+  const allBtn = document.createElement("button");
+  allBtn.textContent = "الكل";
+  allBtn.style.background = "#333";
+  allBtn.style.color = "white";
+  allBtn.onclick = function() { showProducts('all', allBtn); };
+  div.appendChild(allBtn);
+  
+  // باقي الأقسام من Firebase
+  const snap = await db.collection("categories").get();
+  snap.forEach(doc => {
+    const cat = doc.data().name;
+    const btn = document.createElement("button");
+    btn.textContent = cat;
+    btn.onclick = function() { showProducts(cat, btn); };
+    div.appendChild(btn);
   });
 }
 async function addCategory(){
