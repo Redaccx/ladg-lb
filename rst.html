@@ -281,19 +281,10 @@ input, select, .products button.extra {
 
 <!-- قسم المنتجات -->
 <div class="products">
-<h3>الفئات</h3>
-<div class="categories" id="categories"></div>
-
-<h4>إضافة قسم جديد</h4>
-<input type="text" id="newCategory" placeholder="اسم القسم">
-<button onclick="addCategory()" style="background:#ff9800;">إضافة قسم</button>
-<hr>
-
-<h3>المنتجات</h3>
-<input type="text" id="newName" placeholder="اسم المنتج">
-<input type="number" id="newPrice" placeholder="السعر بالدولار">
-<select id="categorySelect"></select>
-<button onclick="addProduct()" style="background:#ff9800;">إضافة منتج</button>
+    <h3>الفئات</h3>
+    <div class="categories" id="categories"></div>
+    <div class="grid" id="productGrid"></div>
+</div>
 <br><br>
 <button class="extra" onclick="addExtra()">اكسترا</button>
 <hr>
