@@ -5,30 +5,232 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POS مطعم نهائي</title>
 <style>
-body{margin:0;font-family:Arial;background:#f4f4f4;}
-.header{background:#111;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;}
-.container{display:flex;height:90vh;}
-.products{width:60%;padding:10px;}
-.categories{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
-.categories button{padding:8px;background:#ff9800;border:none;color:white;cursor:pointer;}
-.categories button.active{opacity:0.6;} 
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.product{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;cursor:pointer;}
-.cart{width:40%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
-.cart-items{flex:1;overflow:auto;}
-.total{font-weight:bold;margin-top:10px;}
-button{padding:6px;margin-top:5px;border:none;color:white;cursor:pointer;}
-.save{background:#2196F3;}
-.clear{background:#e53935;}
-.logout{background:#e53935;}
-.report{background:#ff9800;}
-.extra{background:#607d8b;}
-input{padding:5px;margin:3px 0;width:100%;}
-.login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
-#invoice,#dailyReport{display:none;}
+/* --------- Global --------- */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f2f3f7;
+  color: #333;
+}
+h3, h4 {
+  margin: 5px 0;
+}
+
+/* --------- Header --------- */
+.header {
+  background: #2c3e50;
+  color: #fff;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.header button {
+  margin-left: 5px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.header .report { background: #3498db; }
+.header .logout { background: #e74c3c; }
+.header button:hover { opacity: 0.8; }
+
+/* --------- Container --------- */
+.container {
+  display: flex;
+  height: 90vh;
+  padding: 10px;
+  gap: 10px;
+}
+
+/* --------- Products Section --------- */
+.products {
+  width: 65%;
+  padding: 10px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+/* Categories */
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.categories button {
+  padding: 8px 12px;
+  background: #ff9800;
+  color: #fff;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.categories button.active, .categories button:hover {
+  opacity: 0.7;
+}
+
+/* Product Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.product {
+  background: #27ae60;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.product:hover {
+  transform: translateY(-3px);
+}
+.product button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #c0392b;
+  color: #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-weight: bold;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Input & Add Buttons */
+input, select, .products button.extra {
+  padding: 7px;
+  margin: 3px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+  box-sizing: border-box;
+}
+.products button.extra {
+  background: #34495e;
+  color: #fff;
+  font-weight: bold;
+  transition: 0.2s;
+}
+.products button.extra:hover { opacity: 0.8; }
+
+/* --------- Cart Section --------- */
+.cart {
+  width: 35%;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.cart h3 { margin-bottom: 10px; }
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 60vh;
+  margin-bottom: 10px;
+}
+.cart-items p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+.cart-items button {
+  background: #e74c3c;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: 5px;
+  font-size: 12px;
+}
+.cart label {
+  font-weight: bold;
+  margin-top: 5px;
+  display: block;
+}
+.cart input {
+  padding: 5px;
+  margin: 2px 0 5px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+.cart .total {
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 10px;
+  text-align: center;
+}
+.cart button.save { background: #3498db; }
+.cart button.clear { background: #e74c3c; }
+.cart button:hover { opacity: 0.8; }
+
+/* --------- Login Box --------- */
+.login-box {
+  max-width: 350px;
+  margin: 120px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.login-box input {
+  padding: 10px;
+  margin: 5px 0;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+.login-box button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: #3498db;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+.login-box button:hover { opacity: 0.8; }
+
+/* --------- Invoice & Print --------- */
+#invoice, #dailyReport {
+  display: none;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  font-family: monospace;
+  font-size: 12px;
+}
 @media print{
   body *{visibility:hidden;}
-  #invoice,#dailyReport{visibility:visible;position:absolute;left:0;top:0;width:58mm;font-size:12px;}
+  #invoice,#dailyReport{
+    visibility:visible;
+    position:absolute;
+    left:0;
+    top:0;
+    width:58mm;
+    font-size:12px;
+  }
 }
 </style>
 </head>
@@ -148,39 +350,16 @@ function logout(){auth.signOut(); location.reload();}
 async function loadCategories(){
   const div=document.getElementById("categories");
   const select=document.getElementById("categorySelect");
-  div.innerHTML="";
+  div.innerHTML=`<button onclick="showProducts('all', this)" style="background:#333;color:white;">الكل</button>`;
   select.innerHTML="";
-
-  // زر الكل
-  const btnAll = document.createElement("button");
-  btnAll.textContent = "الكل";
-  btnAll.style.background="#333";
-  btnAll.style.color="white";
-  btnAll.addEventListener("click", ()=>showProducts('all', btnAll));
-  div.appendChild(btnAll);
-
   const snap=await db.collection("categories").get();
   snap.forEach(doc=>{
     const cat=doc.data().name;
-
-    const btnCat = document.createElement("button");
-    btnCat.textContent = cat;
-    btnCat.addEventListener("click", ()=>showProducts(cat, btnCat));
-    div.appendChild(btnCat);
-
-    const btnEdit = document.createElement("button");
-    btnEdit.textContent = "✏";
-    btnEdit.addEventListener("click", ()=>editCategory(doc.id));
-    div.appendChild(btnEdit);
-
-    // إضافة الخيار للقائمة المنسدلة
-    const option = document.createElement("option");
-    option.value = cat;
-    option.textContent = cat;
-    select.appendChild(option);
+    div.innerHTML+=`<button onclick="showProducts('${cat}', this)">${cat}</button>
+    <button onclick="editCategory('${doc.id}')">✏</button>`;
+    select.innerHTML+=`<option value="${cat}">${cat}</option>`;
   });
 }
-
 async function addCategory(){
   const name=document.getElementById("newCategory").value.trim();
   if(!name) return alert("ادخل اسم القسم");
