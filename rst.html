@@ -34,6 +34,7 @@ input{padding:5px;margin:3px 0;width:100%;}
 
 <body>
 
+<!-- تسجيل دخول -->
 <div id="loginPage" class="login-box">
 <h3>تسجيل دخول</h3>
 <input type="email" id="email" placeholder="Email">
@@ -41,16 +42,24 @@ input{padding:5px;margin:3px 0;width:100%;}
 <button onclick="login()">دخول</button>
 </div>
 
+<!-- التطبيق بعد تسجيل الدخول -->
 <div id="app" style="display:none;">
+
+<!-- الهيدر -->
 <div class="header">
-<div id="userInfo"></div>
-<div>
-<button class="report" onclick="showDailyReport()">تقرير اليوم</button>
-<button class="logout" onclick="logout()">خروج</button>
-</div>
+  <div id="userInfo"></div>
+  <div>
+    <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
+    <button class="logout" onclick="logout()">خروج</button>
+  </div>
 </div>
 
+<!-- التقرير اليومي -->
+<div id="dailyReport" style="display:none; padding:10px; background:white; border:1px solid #ddd; max-height:300px; overflow:auto;"></div>
+
 <div class="container">
+
+<!-- قسم المنتجات -->
 <div class="products">
 <h3>الفئات</h3>
 <div class="categories" id="categories"></div>
@@ -65,7 +74,6 @@ input{padding:5px;margin:3px 0;width:100%;}
 <input type="number" id="newPrice" placeholder="السعر بالدولار">
 <select id="categorySelect"></select>
 <button onclick="addProduct()" style="background:#ff9800;">إضافة منتج</button>
-
 <br><br>
 <button class="extra" onclick="addExtra()">اكسترا</button>
 <hr>
@@ -73,6 +81,7 @@ input{padding:5px;margin:3px 0;width:100%;}
 <div class="grid" id="productGrid"></div>
 </div>
 
+<!-- السلة -->
 <div class="cart">
 <h3>الطلب</h3>
 <div class="cart-items" id="cartItems"></div>
@@ -87,14 +96,12 @@ input{padding:5px;margin:3px 0;width:100%;}
 
 <button class="save" onclick="saveOrder()">طباعة فاتورة</button>
 <button class="clear" onclick="clearCart()">مسح</button>
-<button class="report" onclick="showDailyReport()">تقرير اليوم</button>
-<button class="clear" onclick="deleteAllSales()">حذف كل التقرير</button>
 </div>
 </div>
 </div>
 
+<!-- الفاتورة للطباعة -->
 <div id="invoice"></div>
-<div id="dailyReport"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -241,7 +248,7 @@ function addExtra(){
   renderCart();
 }
 
-// فاتورة + حفظ
+// فاتورة وحفظ
 async function getNextNumber(){
   const ref=db.collection("counters").doc("orderCounter");
   return db.runTransaction(async t=>{
@@ -307,66 +314,54 @@ function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   invoice.innerHTML=html;
 }
 
-// تقرير اليوم + طباعة حرارية + حذف
-async function showDailyReport(){
+// تقرير اليوم مستقل + طباعة وحذف
+async function toggleDailyReport(){
+  const div=document.getElementById("dailyReport");
+  if(div.style.display==="block"){ div.style.display="none"; return; }
   const today = new Date().toISOString().split('T')[0];
   const snap = await db.collection("sales").where("date","==",today).get();
-
-  if(snap.empty){
-    alert("لا توجد مبيعات اليوم");
-    return;
-  }
-
-  let totalUSD = 0, totalLBP = 0;
-  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-    <h3>تقرير مبيعات اليوم</h3>
-    <p>${today}</p>
-    <hr>`;
-
+  if(snap.empty){ div.innerHTML="<p>لا توجد طلبات اليوم</p>"; div.style.display="block"; return; }
+  div.innerHTML="";
   snap.forEach(doc=>{
-    const d = doc.data();
-    html += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;">
-      <p>طلب #${d.orderNumber}</p>
-      ${d.items.map(item=>{
-        const lbp=(item.total*USD_TO_LBP).toLocaleString();
-        return `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
-      }).join('')}
+    const d=doc.data();
+    let html=`<div style="border-bottom:1px dashed #000;margin-bottom:5px;padding:5px;">
+      <p>طلب #${d.orderNumber} | ${d.user}</p>
+      ${d.items.map(item=>`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>`).join('')}
       <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
-      <button onclick="deleteSale('${doc.id}')"
-      style="background:red;color:white;padding:3px;margin:2px;">حذف هذا الطلب</button>
-      <hr>
+      <button onclick="printSale('${doc.id}')" style="background:#2196F3;color:white;padding:3px;margin:2px;">طباعة هذا الطلب</button>
+      <button onclick="deleteSale('${doc.id}')" style="background:red;color:white;padding:3px;margin:2px;">حذف هذا الطلب</button>
     </div>`;
-    totalUSD += d.totalUSD;
-    totalLBP += d.totalLBP;
+    div.innerHTML+=html;
   });
-
-  html += `<p><strong>إجمالي اليوم: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>`;
-  html += `<hr><p>شكراً لتعاونكم</p></div>`;
-
-  const dailyDiv = document.getElementById("dailyReport");
-  dailyDiv.innerHTML = html;
-  dailyDiv.style.display = "block";
-  window.print();
-  dailyDiv.style.display = "none";
+  div.style.display="block";
 }
 
-// حذف طلب فردي
+async function printSale(id){
+  const doc=await db.collection("sales").doc(id).get();
+  if(!doc.exists) return alert("الطلب غير موجود");
+  const d=doc.data();
+  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+  <h3>مطعم السندويشات</h3>
+  <p>رقم الطلب: ${d.orderNumber}</p>
+  <p>الكاشير: ${d.user}</p>
+  <hr>`;
+  d.items.forEach(item=>{
+    const lbp=(item.total*USD_TO_LBP).toLocaleString();
+    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+  });
+  html+=`<hr><p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr><p>شكراً لتعاونكم</p></div>`;
+  const inv=document.getElementById("invoice");
+  inv.innerHTML=html;
+  inv.style.display="block";
+  window.print();
+  inv.style.display="none";
+}
+
 async function deleteSale(id){
   if(confirm("هل تريد حذف هذا الطلب؟")){
     await db.collection("sales").doc(id).delete();
     alert("تم حذف الطلب");
-  }
-}
-
-// حذف كل الطلبات اليوم
-async function deleteAllSales(){
-  if(confirm("هل تريد حذف كل الطلبات اليوم؟")){
-    const today = new Date().toISOString().split('T')[0];
-    const snap = await db.collection("sales").where("date","==",today).get();
-    const batch = db.batch();
-    snap.forEach(doc=>batch.delete(doc.ref));
-    await batch.commit();
-    alert("تم حذف جميع الطلبات اليوم");
+    toggleDailyReport(); // اعادة تحميل التقرير
   }
 }
 </script>
