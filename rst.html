@@ -4,27 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POS مطعم نهائي</title>
-
 <style>
 body{margin:0;font-family:Arial;background:#f4f4f4;}
 .header{background:#111;color:white;padding:15px;display:flex;justify-content:space-between;}
 .container{display:flex;height:90vh;}
 .products{width:60%;padding:10px;}
+.categories{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.categories button{padding:8px;background:#ff9800;border:none;color:white;cursor:pointer;}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.product{background:#4CAF50;color:white;padding:15px;text-align:center;border-radius:8px;cursor:pointer;}
+.product{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;cursor:pointer;}
 .cart{width:40%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
 .cart-items{flex:1;overflow:auto;}
 .total{font-weight:bold;margin-top:10px;}
-button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
+button{padding:6px;margin-top:5px;border:none;color:white;cursor:pointer;}
 .save{background:#2196F3;}
 .clear{background:#e53935;}
 .logout{background:#e53935;}
 .report{background:#ff9800;}
-input{padding:6px;margin-top:5px;width:100%;}
+input{padding:5px;margin:3px 0;width:100%;}
 .login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
+#invoice,#dailyReport{display:none;}
 @media print{
   body *{visibility:hidden;}
-  #invoice{visibility:visible;position:absolute;left:0;top:0;width:58mm;font-size:12px;}
+  #invoice,#dailyReport{visibility:visible;position:absolute;left:0;top:0;width:58mm;font-size:12px;}
 }
 </style>
 </head>
@@ -42,18 +44,26 @@ input{padding:6px;margin-top:5px;width:100%;}
 <div class="header">
 <div id="userInfo"></div>
 <div>
+<button class="report" onclick="showDailyReport()">تقرير اليوم</button>
 <button class="logout" onclick="logout()">خروج</button>
 </div>
 </div>
 
 <div class="container">
 <div class="products">
-<h3>المنتجات</h3>
+<h3>الفئات</h3>
+<div class="categories" id="categories"></div>
 
-<h4>إضافة منتج جديد</h4>
+<h4>إضافة قسم جديد</h4>
+<input type="text" id="newCategory" placeholder="اسم القسم">
+<button onclick="addCategory()" style="background:#ff9800;">إضافة قسم</button>
+<hr>
+
+<h3>المنتجات</h3>
 <input type="text" id="newName" placeholder="اسم المنتج">
 <input type="number" id="newPrice" placeholder="السعر بالدولار">
-<button onclick="addProduct()" style="background:#ff9800;">إضافة</button>
+<select id="categorySelect"></select>
+<button onclick="addProduct()" style="background:#ff9800;">إضافة منتج</button>
 <hr>
 
 <div class="grid" id="productGrid"></div>
@@ -78,13 +88,14 @@ input{padding:6px;margin-top:5px;width:100%;}
 </div>
 
 <div id="invoice"></div>
+<div id="dailyReport"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// config Firebase
+// Firebase Config
 const firebaseConfig={
   apiKey: "AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",
   authDomain: "store-app-d05fa.firebaseapp.com",
@@ -94,39 +105,62 @@ const firebaseConfig={
   appId: "1:257385912042:web:bc30397b745340e31e2993"
 };
 firebase.initializeApp(firebaseConfig);
-
 const auth=firebase.auth();
 const db=firebase.firestore();
 
 let currentUser=null;
 let cart=[];
-
-// تحويل الدولار لليرة
-const USD_TO_LBP = 89000;
+let currentCategory=null;
+const USD_TO_LBP=89000;
 
 // تسجيل دخول
 async function login(){
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value.trim();
-
   let userCred;
-  try{
-    userCred=await auth.signInWithEmailAndPassword(email,password);
-  }catch{
-    userCred=await auth.createUserWithEmailAndPassword(email,password);
-  }
-
+  try{userCred=await auth.signInWithEmailAndPassword(email,password);}
+  catch{userCred=await auth.createUserWithEmailAndPassword(email,password);}
   currentUser=userCred.user;
   document.getElementById("userInfo").innerText=currentUser.email+" | كاشير";
   loginPage.style.display="none";
   app.style.display="block";
-
+  loadCategories();
   loadProducts();
 }
 
-function logout(){
-  auth.signOut();
-  location.reload();
+// تسجيل خروج
+function logout(){auth.signOut(); location.reload();}
+
+// الفئات
+async function loadCategories(){
+  const div=document.getElementById("categories");
+  const select=document.getElementById("categorySelect");
+  div.innerHTML=""; select.innerHTML="";
+  const snap=await db.collection("categories").get();
+  snap.forEach(doc=>{
+    const cat=doc.data().name;
+    const id=doc.id;
+    div.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>
+    <button onclick="editCategory('${id}')">✏</button>`;
+    select.innerHTML+=`<option value="${cat}">${cat}</option>`;
+  });
+}
+
+// إضافة قسم
+async function addCategory(){
+  const name=document.getElementById("newCategory").value.trim();
+  if(!name) return alert("ادخل اسم القسم");
+  await db.collection("categories").add({name});
+  document.getElementById("newCategory").value="";
+  loadCategories();
+}
+
+// تعديل قسم
+async function editCategory(id){
+  const newName=prompt("اسم جديد للقسم:");
+  if(!newName) return;
+  await db.collection("categories").doc(id).update({name:newName});
+  loadCategories();
 }
 
 // تحميل المنتجات
@@ -134,15 +168,13 @@ async function loadProducts(){
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
   const snap=await db.collection("products").get();
-
   snap.forEach(doc=>{
     const p=doc.data();
     const div=document.createElement("div");
     div.className="product";
-    div.innerHTML=`
-      ${p.name}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
-      <br><button onclick="deleteProduct('${doc.id}')" style="background:red;">X</button>
-    `;
+    div.innerHTML=`${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
+      <br><button onclick="deleteProduct('${doc.id}')"
+      style="background:red;">X</button>`;
     div.onclick=function(e){
       if(e.target.tagName==="BUTTON") return;
       addToCart(p.name,p.price);
@@ -155,41 +187,62 @@ async function loadProducts(){
 async function addProduct(){
   const name=document.getElementById("newName").value.trim();
   const price=parseFloat(document.getElementById("newPrice").value);
-  if(!name || !price) return alert("املأ البيانات");
-  await db.collection("products").add({name, price});
+  const category=document.getElementById("categorySelect").value;
+  if(!name || !price || !category) return alert("املأ البيانات");
+  await db.collection("products").add({name,price,category});
   document.getElementById("newName").value="";
   document.getElementById("newPrice").value="";
   loadProducts();
 }
 
 // حذف منتج
-async function deleteProduct(id){
-  await db.collection("products").doc(id).delete();
-  loadProducts();
+async function deleteProduct(id){await db.collection("products").doc(id).delete(); loadProducts();}
+
+// عرض منتجات قسم محدد
+async function showProducts(cat){
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  const snap=await db.collection("products").where("category","==",cat).get();
+  snap.forEach(doc=>{
+    const p=doc.data();
+    const div=document.createElement("div");
+    div.className="product";
+    div.innerHTML=`${p.name}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
+      <br><button onclick="deleteProduct('${doc.id}')"
+      style="background:red;">X</button>`;
+    div.onclick=function(e){if(e.target.tagName==="BUTTON") return; addToCart(p.name,p.price);}
+    grid.appendChild(div);
+  });
 }
 
-// إضافة للسلة
+// السلة
 function addToCart(name,price){
-  cart.push({name,price});
+  let existing=cart.find(i=>i.name===name);
+  if(existing){existing.qty+=1; existing.total=existing.price*existing.qty;}
+  else{cart.push({name,price,qty:1,total:price});}
   renderCart();
 }
 
-// عرض السلة (يعرض الأسعار بالدولار والليرة)
 function renderCart(){
   const div=document.getElementById("cartItems");
   div.innerHTML="";
+  let subtotal=0;
   cart.forEach((item,i)=>{
-    div.innerHTML+=`${item.name} - ${item.price}$ (${(item.price*USD_TO_LBP).toLocaleString()} ل.ل)
-    <button onclick="removeItem(${i})">❌</button><br>`;
+    subtotal+=item.total;
+    div.innerHTML+=`${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)
+      <button onclick="removeItem(${i})">❌</button><br>`;
   });
-
-  totalDiv.innerText="المجموع: عند الطباعة فقط";
+  const tax=parseFloat(document.getElementById("tax").value)||0;
+  const discount=parseFloat(document.getElementById("discount").value)||0;
+  const totalUSD=subtotal+(subtotal*tax/100)-discount;
+  const totalLBP=totalUSD*USD_TO_LBP;
+  document.getElementById("total").innerText=`المجموع: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)`;
 }
 
-function removeItem(i){ cart.splice(i,1); renderCart(); }
-function clearCart(){ cart=[]; renderCart(); }
+function removeItem(i){cart.splice(i,1); renderCart();}
+function clearCart(){cart=[]; renderCart();}
 
-// رقم فاتورة متسلسل
+// رقم فاتورة
 async function getNextNumber(){
   const ref=db.collection("counters").doc("orderCounter");
   return db.runTransaction(async t=>{
@@ -201,18 +254,16 @@ async function getNextNumber(){
   });
 }
 
-// طباعة فاتورة + حفظ
+// حفظ وطباعة
 async function saveOrder(){
   if(cart.length===0) return alert("السلة فارغة");
-
   const number=await getNextNumber();
-  const subtotal=cart.reduce((s,i)=>s+i.price,0);
+  const subtotal=cart.reduce((s,i)=>s+i.total,0);
   const tax=parseFloat(document.getElementById("tax").value)||0;
   const discount=parseFloat(document.getElementById("discount").value)||0;
   const totalUSD=subtotal+(subtotal*tax/100)-discount;
   const totalLBP=totalUSD*USD_TO_LBP;
 
-  // حفظ في Firestore
   await db.collection("sales").add({
     orderNumber:number,
     user:currentUser.email,
@@ -230,37 +281,49 @@ async function saveOrder(){
   clearCart();
 }
 
-// توليد فاتورة للطباعة الحرارية
+// فاتورة حرارية
 function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   const now=new Date();
   const dateStr=now.toLocaleString("ar-EG",{hour12:false});
-
-  let html=`
-  <div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-    <h3>مطعم السندويشات</h3>
-    <p>رقم الطلب: ${number}</p>
-    <p>التاريخ: ${dateStr}</p>
-    <p>الكاشير: ${currentUser.email}</p>
-    <hr>
-  `;
-
+  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+  <h3>مطعم السندويشات</h3>
+  <p>رقم الطلب: ${number}</p>
+  <p>التاريخ: ${dateStr}</p>
+  <p>الكاشير: ${currentUser.email}</p>
+  <hr>`;
   cart.forEach(item=>{
-    const lbp=(item.price*USD_TO_LBP).toLocaleString();
-    html+=`<p>${item.name} - ${item.price}$ (${lbp} ل.ل)</p>`;
+    const lbp=(item.total*USD_TO_LBP).toLocaleString();
+    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-
-  html+=`
-    <hr>
-    <p>Subtotal: ${subtotal.toFixed(2)}$ (${(subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
-    <p>Tax: ${tax}%</p>
-    <p>Discount: ${discount}</p>
-    <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
-    <hr>
-    <p>شكراً لزيارتكم</p>
-  </div>
-  `;
-
+  html+=`<hr>
+  <p>Subtotal: ${subtotal.toFixed(2)}$ (${(subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+  <p>Tax: ${tax}%</p>
+  <p>Discount: ${discount}</p>
+  <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
+  <hr>
+  <p>شكراً لزيارتكم</p>
+  </div>`;
   invoice.innerHTML=html;
+}
+
+// تقرير اليوم
+async function showDailyReport(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const snap=await db.collection("sales").where("createdAt",">=",today).get();
+  let totalUSD=0,totalLBP=0;
+  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+  <h3>تقرير مبيعات اليوم</h3><hr>`;
+  snap.forEach(doc=>{
+    const d=doc.data();
+    html+=`<p>طلب #${d.orderNumber} - ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</p>`;
+    totalUSD+=d.totalUSD;
+    totalLBP+=d.totalLBP;
+  });
+  html+=`<hr><p>إجمالي اليوم: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</p></div>`;
+  dailyReport.innerHTML=html;
+  dailyReport.style.display="block";
+  window.print();
+  dailyReport.style.display="none";
 }
 </script>
 
