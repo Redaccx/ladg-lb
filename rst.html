@@ -12,95 +12,245 @@ body {
   background: #f2f3f7;
   color: #333;
 }
-h3,h4 { margin:5px 0; }
-
-/* --------- Toolbar --------- */
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  padding: 10px;
-  background: #34495e;
-  color: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-.toolbar input, .toolbar select {
-  padding: 6px;
-  border-radius: 5px;
-  border: none;
-  outline: none;
-}
-.toolbar button {
-  padding: 6px 12px;
-  border-radius: 5px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition:0.2s;
-}
-.toolbar .report { background:#3498db; color:white; }
-.toolbar button:hover { opacity:0.8; }
-.add-category-box { display:flex; gap:5px; }
+h3, h4 { margin: 5px 0; }
 
 /* --------- Header --------- */
 .header {
   background: #2c3e50;
   color: #fff;
-  padding: 10px 20px;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
-.header button { margin-left:5px; padding:6px 10px; border-radius:4px; font-weight:bold; border:none; cursor:pointer; transition:0.2s; }
-.header .logout { background:#e74c3c; }
-.header button:hover { opacity:0.8; }
+.header button {
+  margin-left: 5px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.header .new-section { background:#8e44ad; color:white; }
+.header .report { background: #3498db; }
+.header .logout { background: #e74c3c; }
+.header button:hover { opacity: 0.8; }
 
 /* --------- Container --------- */
-.container { display:flex; height:90vh; padding:10px; gap:10px; }
+.container {
+  display: flex;
+  height: 90vh;
+  padding: 10px;
+  gap: 10px;
+}
 
 /* --------- Products Section --------- */
-.products { width:65%; padding:10px; background:#fff; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); overflow-y:auto; }
-.categories { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
-.categories button { padding:8px 12px; background:#ff9800; color:#fff; border-radius:5px; border:none; font-weight:bold; cursor:pointer; transition:0.2s; }
-.categories button.active, .categories button:hover { opacity:0.7; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:10px; margin-top:10px; }
-.product { background:#27ae60; color:#fff; padding:10px; text-align:center; border-radius:8px; cursor:pointer; transition:0.2s; position:relative; box-shadow:0 2px 5px rgba(0,0,0,0.2); }
-.product:hover { transform:translateY(-3px); }
-.product button { position:absolute; top:5px; right:5px; background:#c0392b; color:#fff; border-radius:50%; width:22px; height:22px; font-weight:bold; font-size:14px; border:none; cursor:pointer; }
+.products {
+  width: 65%;
+  padding: 10px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+/* Categories */
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.categories button {
+  padding: 8px 12px;
+  background: #ff9800;
+  color: #fff;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.categories button.active, .categories button:hover { opacity: 0.7; }
+
+/* Product Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.product {
+  background: #27ae60;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.product:hover { transform: translateY(-3px); }
+.product button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #c0392b;
+  color: #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-weight: bold;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+}
 
 /* Input & Add Buttons */
 input, select, .products button.extra {
-  padding:7px; margin:3px 0; border-radius:5px; border:1px solid #ccc; width:100%; box-sizing:border-box;
+  padding: 7px;
+  margin: 3px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+  box-sizing: border-box;
 }
-.products button.extra { background:#34495e; color:#fff; font-weight:bold; transition:0.2s; }
-.products button.extra:hover { opacity:0.8; }
+.products button.extra {
+  background: #34495e;
+  color: #fff;
+  font-weight: bold;
+  transition: 0.2s;
+}
+.products button.extra:hover { opacity: 0.8; }
 
 /* --------- Cart Section --------- */
-.cart { width:35%; background:#fff; padding:15px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; flex-direction:column; overflow-y:auto; }
-.cart h3 { margin-bottom:10px; }
-.cart-items { flex:1; overflow-y:auto; max-height:60vh; margin-bottom:10px; }
-.cart-items p { margin:4px 0; font-size:14px; }
-.cart-items button { background:#e74c3c; border-radius:4px; padding:2px 6px; margin-left:5px; font-size:12px; }
-.cart label { font-weight:bold; margin-top:5px; display:block; }
-.cart input { padding:5px; margin:2px 0 5px 0; border-radius:5px; border:1px solid #ccc; width:100%; }
-.cart .total { font-weight:bold; font-size:16px; margin-top:10px; text-align:center; }
-.cart button.save { background:#3498db; }
-.cart button.clear { background:#e74c3c; }
-.cart button:hover { opacity:0.8; }
+.cart {
+  width: 35%;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.cart h3 { margin-bottom: 10px; }
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 60vh;
+  margin-bottom: 10px;
+}
+.cart-items p { margin: 4px 0; font-size: 14px; }
+.cart-items button {
+  background: #e74c3c;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: 5px;
+  font-size: 12px;
+}
+.cart label { font-weight: bold; margin-top: 5px; display: block; }
+.cart input { padding: 5px; margin: 2px 0 5px 0; border-radius: 5px; border: 1px solid #ccc; width: 100%; }
+.cart .total { font-weight: bold; font-size: 16px; margin-top: 10px; text-align: center; }
+.cart button.save { background: #3498db; }
+.cart button.clear { background: #e74c3c; }
+.cart button:hover { opacity: 0.8; }
 
 /* --------- Login Box --------- */
-.login-box { max-width:350px; margin:120px auto; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2); text-align:center; }
-.login-box input { padding:10px; margin:5px 0; width:100%; border-radius:8px; border:1px solid #ccc; }
-.login-box button { margin-top:10px; padding:10px 20px; background:#3498db; color:#fff; border-radius:8px; font-weight:bold; border:none; cursor:pointer; }
-.login-box button:hover { opacity:0.8; }
+.login-box {
+  max-width: 350px;
+  margin: 120px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.login-box input {
+  padding: 10px;
+  margin: 5px 0;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+.login-box button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: #3498db;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+.login-box button:hover { opacity: 0.8; }
 
 /* --------- Invoice & Print --------- */
-#invoice, #dailyReport { display:none; background:#fff; padding:10px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.2); font-family:monospace; font-size:12px; }
-@media print{ body *{visibility:hidden;} #invoice,#dailyReport{visibility:visible; position:absolute; left:0; top:0; width:58mm; font-size:12px;} }
+#invoice, #dailyReport {
+  display: none;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  font-family: monospace;
+  font-size: 12px;
+}
+@media print{
+  body *{visibility:hidden;}
+  #invoice,#dailyReport{
+    visibility:visible;
+    position:absolute;
+    left:0;
+    top:0;
+    width:58mm;
+    font-size:12px;
+  }
+}
+
+/* --------- Modal --------- */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+  background-color: #fefefe;
+  margin: 80px auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  text-align: center;
+  position: relative;
+  animation: fadeIn 0.3s;
+}
+.modal-content input, .modal-content select, .modal-content button {
+  margin: 5px 0;
+  width: 100%;
+  padding: 8px;
+  border-radius: 5px;
+}
+.modal-content .close {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  font-size: 22px;
+  cursor: pointer;
+  color: #333;
+}
+
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 </style>
 </head>
+
 <body>
 
 <!-- تسجيل دخول -->
@@ -114,23 +264,12 @@ input, select, .products button.extra {
 <!-- التطبيق بعد تسجيل الدخول -->
 <div id="app" style="display:none;">
 
-<!-- شريط الأدوات فوق الهيدر -->
-<div class="toolbar">
-  <div class="add-category-box">
-    <input type="text" id="newCategoryToolbar" placeholder="➕ اسم قسم جديد">
-    <button onclick="addCategoryToolbar()">إضافة قسم</button>
-  </div>
-  <select id="categorySelectToolbar"><option value="">اختر القسم</option></select>
-  <input type="text" id="newNameToolbar" placeholder="اسم المنتج">
-  <input type="number" id="newPriceToolbar" placeholder="السعر بالدولار">
-  <button onclick="addProductToolbar()">إضافة منتج</button>
-  <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
-</div>
-
 <!-- الهيدر -->
 <div class="header">
   <div id="userInfo"></div>
   <div>
+    <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
+    <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
     <button class="logout" onclick="logout()">خروج</button>
   </div>
 </div>
@@ -139,28 +278,65 @@ input, select, .products button.extra {
 <div id="dailyReport" style="display:none; padding:10px; background:white; border:1px solid #ddd; max-height:300px; overflow:auto;"></div>
 
 <div class="container">
-  <!-- قسم المنتجات -->
-  <div class="products">
-    <h3>الفئات</h3>
-    <div class="categories" id="categories"></div>
-    <hr>
-    <h3>المنتجات</h3>
-    <div class="grid" id="productGrid"></div>
-  </div>
 
-  <!-- السلة -->
-  <div class="cart">
-    <h3>الطلب</h3>
-    <div class="cart-items" id="cartItems"></div>
-    <label>ضريبة %</label>
-    <input type="number" id="tax" value="0">
-    <label>خصم</label>
-    <input type="number" id="discount" value="0">
-    <div class="total" id="total">المجموع: 0</div>
-    <button class="save" onclick="saveOrder()">طباعة فاتورة</button>
-    <button class="clear" onclick="clearCart()">مسح</button>
-  </div>
+<!-- قسم المنتجات -->
+<div class="products">
+<h3>الفئات</h3>
+<div class="categories" id="categories"></div>
+
+<h4>إضافة قسم جديد</h4>
+<input type="text" id="newCategory" placeholder="اسم القسم">
+<button onclick="addCategory()" style="background:#ff9800;">إضافة قسم</button>
+<hr>
+
+<h3>المنتجات</h3>
+<input type="text" id="newName" placeholder="اسم المنتج">
+<input type="number" id="newPrice" placeholder="السعر بالدولار">
+<select id="categorySelect"></select>
+<button onclick="addProduct()" style="background:#ff9800;">إضافة منتج</button>
+<br><br>
+<button class="extra" onclick="addExtra()">اكسترا</button>
+<hr>
+
+<div class="grid" id="productGrid"></div>
 </div>
+
+<!-- السلة -->
+<div class="cart">
+<h3>الطلب</h3>
+<div class="cart-items" id="cartItems"></div>
+
+<label>ضريبة %</label>
+<input type="number" id="tax" value="0">
+
+<label>خصم</label>
+<input type="number" id="discount" value="0">
+
+<div class="total" id="total">المجموع: 0</div>
+
+<button class="save" onclick="saveOrder()">طباعة فاتورة</button>
+<button class="clear" onclick="clearCart()">مسح</button>
+</div>
+</div>
+</div>
+
+<!-- مودال إدارة الأقسام والمنتجات -->
+<div id="sectionModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeSectionModal()">&times;</span>
+    <h3>إدارة الأقسام والمنتجات</h3>
+
+    <h4>إضافة قسم جديد</h4>
+    <input type="text" id="modalNewCategory" placeholder="اسم القسم">
+    <button onclick="addCategoryModal()" style="background:#ff9800;">إضافة قسم</button>
+
+    <hr>
+    <h4>إضافة منتج جديد</h4>
+    <input type="text" id="modalNewName" placeholder="اسم المنتج">
+    <input type="number" id="modalNewPrice" placeholder="السعر بالدولار">
+    <select id="modalCategorySelect"></select>
+    <button onclick="addProductModal()" style="background:#ff9800;">إضافة منتج</button>
+  </div>
 </div>
 
 <!-- الفاتورة للطباعة -->
@@ -188,7 +364,7 @@ let currentUser=null;
 let cart=[];
 const USD_TO_LBP=89000;
 
-// تسجيل دخول
+// --------- تسجيل دخول وخروج ---------
 async function login(){
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value.trim();
@@ -202,16 +378,14 @@ async function login(){
   loadCategories();
   loadProducts();
 }
-
-// تسجيل خروج
 function logout(){auth.signOut(); location.reload();}
 
-// أقسام
+// --------- الأقسام ---------
 async function loadCategories(){
   const div=document.getElementById("categories");
-  const select=document.getElementById("categorySelectToolbar");
+  const select=document.getElementById("categorySelect");
   div.innerHTML=`<button onclick="showProducts('all', this)" style="background:#333;color:white;">الكل</button>`;
-  select.innerHTML=`<option value="">اختر القسم</option>`;
+  select.innerHTML="";
   const snap=await db.collection("categories").get();
   snap.forEach(doc=>{
     const cat=doc.data().name;
@@ -220,17 +394,21 @@ async function loadCategories(){
     select.innerHTML+=`<option value="${cat}">${cat}</option>`;
   });
 }
-
-async function addCategory(){ 
-  const name=document.getElementById("newCategoryToolbar").value.trim(); 
-  if(!name) return alert("ادخل اسم القسم"); 
-  await db.collection("categories").add({name}); 
-  document.getElementById("newCategoryToolbar").value=""; 
-  loadCategories(); 
+async function addCategory(){
+  const name=document.getElementById("newCategory").value.trim();
+  if(!name) return alert("ادخل اسم القسم");
+  await db.collection("categories").add({name});
+  document.getElementById("newCategory").value="";
+  loadCategories();
 }
-function addCategoryToolbar(){ addCategory(); }
+async function editCategory(id){
+  const newName=prompt("اسم جديد للقسم:");
+  if(!newName) return;
+  await db.collection("categories").doc(id).update({name:newName});
+  loadCategories();
+}
 
-// المنتجات
+// --------- المنتجات ---------
 async function loadProducts(){
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
@@ -246,27 +424,23 @@ async function loadProducts(){
     grid.appendChild(div);
   });
 }
-
-async function addProductToolbar(){
-  const name=document.getElementById("newNameToolbar").value.trim();
-  const price=parseFloat(document.getElementById("newPriceToolbar").value);
-  const category=document.getElementById("categorySelectToolbar").value;
+async function addProduct(){
+  const name=document.getElementById("newName").value.trim();
+  const price=parseFloat(document.getElementById("newPrice").value);
+  const category=document.getElementById("categorySelect").value;
   if(!name || !price || !category) return alert("املأ البيانات");
   await db.collection("products").add({name,price,category});
-  document.getElementById("newNameToolbar").value="";
-  document.getElementById("newPriceToolbar").value="";
+  document.getElementById("newName").value="";
+  document.getElementById("newPrice").value="";
   loadProducts();
 }
-
 async function deleteProduct(id){await db.collection("products").doc(id).delete(); loadProducts();}
 async function showProducts(cat, button){
   document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
   if(button) button.classList.add("active");
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
-  let snap;
-  if(cat==='all'){ snap=await db.collection("products").get(); }
-  else{ snap=await db.collection("products").where("category","==",cat).get(); }
+  let snap = (cat==='all') ? await db.collection("products").get() : await db.collection("products").where("category","==",cat).get();
   snap.forEach(doc=>{
     const p=doc.data();
     const div=document.createElement("div");
@@ -278,7 +452,7 @@ async function showProducts(cat, button){
   });
 }
 
-// السلة
+// --------- السلة ---------
 function addToCart(name,price){
   let existing=cart.find(i=>i.name===name);
   if(existing){existing.qty+=1; existing.total=existing.price*existing.qty;}
@@ -302,8 +476,6 @@ function renderCart(){
 }
 function removeItem(i){cart.splice(i,1); renderCart();}
 function clearCart(){cart=[]; renderCart();}
-
-// اكسترا
 function addExtra(){
   const name=prompt("اسم المنتج:");
   const weight=parseFloat(prompt("أدخل الوزن بالكيلو:"));
@@ -313,7 +485,42 @@ function addExtra(){
   renderCart();
 }
 
-// فاتورة وحفظ
+// --------- إدارة الأقسام والمنتجات بالمودال ---------
+function openSectionModal(){
+  document.getElementById("sectionModal").style.display = "block";
+  loadCategoriesModal();
+}
+function closeSectionModal(){ document.getElementById("sectionModal").style.display = "none"; }
+
+async function loadCategoriesModal(){
+  const select = document.getElementById("modalCategorySelect");
+  select.innerHTML = "";
+  const snap = await db.collection("categories").get();
+  snap.forEach(doc=>{
+    const cat = doc.data().name;
+    select.innerHTML += `<option value="${cat}">${cat}</option>`;
+  });
+}
+async function addCategoryModal(){
+  const name = document.getElementById("modalNewCategory").value.trim();
+  if(!name) return alert("ادخل اسم القسم");
+  await db.collection("categories").add({name});
+  document.getElementById("modalNewCategory").value="";
+  loadCategoriesModal();
+  loadCategories();
+}
+async function addProductModal(){
+  const name = document.getElementById("modalNewName").value.trim();
+  const price = parseFloat(document.getElementById("modalNewPrice").value);
+  const category = document.getElementById("modalCategorySelect").value;
+  if(!name || !price || !category) return alert("املأ البيانات");
+  await db.collection("products").add({name,price,category});
+  document.getElementById("modalNewName").value="";
+  document.getElementById("modalNewPrice").value="";
+  loadProducts();
+}
+
+// --------- الفاتورة ---------
 async function getNextNumber(){
   const ref=db.collection("counters").doc("orderCounter");
   return db.runTransaction(async t=>{
@@ -324,7 +531,6 @@ async function getNextNumber(){
     return num;
   });
 }
-
 async function saveOrder(){
   if(cart.length===0) return alert("السلة فارغة");
   const number=await getNextNumber();
@@ -355,7 +561,6 @@ async function saveOrder(){
   clearCart();
 }
 
-// فاتورة
 function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   const now=new Date();
   const dateStr=now.toLocaleString("ar-EG",{hour12:false});
@@ -380,7 +585,7 @@ function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   invoice.innerHTML=html;
 }
 
-// تقرير اليوم
+// --------- تقرير اليوم ---------
 async function toggleDailyReport(){
   const div=document.getElementById("dailyReport");
   if(div.style.display==="block"){ div.style.display="none"; return; }
@@ -401,6 +606,7 @@ async function toggleDailyReport(){
   });
   div.style.display="block";
 }
+
 async function printSale(id){
   const doc=await db.collection("sales").doc(id).get();
   if(!doc.exists) return alert("الطلب غير موجود");
@@ -421,6 +627,7 @@ async function printSale(id){
   window.print();
   inv.style.display="none";
 }
+
 async function deleteSale(id){
   if(confirm("هل تريد حذف هذا الطلب؟")){
     await db.collection("sales").doc(id).delete();
