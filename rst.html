@@ -3,27 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Restaurant POS Pro</title>
+<title>POS System</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#f4f4f4;}
-.header{background:#111;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;}
+.login-box{max-width:350px;margin:120px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
+input{width:100%;padding:10px;margin:5px 0;}
+button{padding:10px;border:none;color:white;cursor:pointer;margin-top:5px;}
+.login-btn{background:#4CAF50;}
+.logout{background:#e53935;}
 .container{display:flex;height:90vh;}
 .products{width:65%;padding:10px;}
-.categories{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
-.categories button{padding:10px;background:#ff9800;border:none;color:white;cursor:pointer;font-weight:bold;}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.product-box{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;}
-.product-btn{width:100%;padding:10px;background:transparent;border:none;color:white;font-size:14px;cursor:pointer;}
-.cart{width:35%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
-.cart-items{flex:1;overflow:auto;}
-.total{font-weight:bold;margin-top:5px;}
-button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
-.print{background:#2196F3;}
-.clear{background:#e53935;}
-.logout{background:#e53935;}
-.login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
-input{padding:8px;margin:5px 0;width:100%;}
+.product{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;cursor:pointer;}
+.cart{width:35%;background:white;padding:10px;border-left:2px solid #ddd;}
+.header{background:#111;color:white;padding:15px;display:flex;justify-content:space-between;}
 </style>
 </head>
 
@@ -33,97 +27,28 @@ input{padding:8px;margin:5px 0;width:100%;}
 <h3>تسجيل دخول</h3>
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Password">
-<button onclick="login()">دخول</button>
+<button class="login-btn" onclick="login()">دخول</button>
+<p id="error" style="color:red;"></p>
 </div>
 
-<div id="posSystem" style="display:none;">
+<div id="app" style="display:none;">
 <div class="header">
 <div id="userInfo"></div>
 <button class="logout" onclick="logout()">تسجيل خروج</button>
 </div>
 
 <div class="container">
-
 <div class="products">
-<div class="categories" id="categories"></div>
+<h3>المنتجات</h3>
 <div class="grid" id="productGrid"></div>
 </div>
 
 <div class="cart">
-<h3>الطلب</h3>
-<div class="cart-items" id="cartItems"></div>
-<div class="total" id="total">المجموع: 0</div>
-<button class="print" onclick="saveOrder()">حفظ الطلب</button>
-<button class="clear" onclick="clearCart()">مسح</button>
+<h3>السلة</h3>
+<div id="cart"></div>
+<h4 id="total">المجموع: 0</h4>
+<button onclick="saveOrder()" style="background:#2196F3;">حفظ الطلب</button>
 </div>
-
-</div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Restaurant POS Pro</title>
-
-<style>
-body{margin:0;font-family:Arial;background:#f4f4f4;}
-.header{background:#111;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;}
-.container{display:flex;height:90vh;}
-.products{width:65%;padding:10px;}
-.categories{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
-.categories button{padding:10px;background:#ff9800;border:none;color:white;cursor:pointer;font-weight:bold;}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.product-box{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;}
-.product-btn{width:100%;padding:10px;background:transparent;border:none;color:white;font-size:14px;cursor:pointer;}
-.cart{width:35%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
-.cart-items{flex:1;overflow:auto;}
-.total{font-weight:bold;margin-top:5px;}
-button{padding:8px;margin-top:5px;border:none;color:white;cursor:pointer;}
-.print{background:#2196F3;}
-.clear{background:#e53935;}
-.logout{background:#e53935;}
-.login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
-input{padding:8px;margin:5px 0;width:100%;}
-</style>
-</head>
-
-<body>
-
-<div id="loginPage" class="login-box">
-<h3>تسجيل دخول</h3>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<button onclick="login()">دخول</button>
-</div>
-
-<div id="posSystem" style="display:none;">
-<div class="header">
-<div id="userInfo"></div>
-<button class="logout" onclick="logout()">تسجيل خروج</button>
-</div>
-
-<div class="container">
-
-<div class="products">
-<div class="categories" id="categories"></div>
-<div class="grid" id="productGrid"></div>
-</div>
-
-<div class="cart">
-<h3>الطلب</h3>
-<div class="cart-items" id="cartItems"></div>
-<div class="total" id="total">المجموع: 0</div>
-<button class="print" onclick="saveOrder()">حفظ الطلب</button>
-<button class="clear" onclick="clearCart()">مسح</button>
-</div>
-
 </div>
 </div>
 
@@ -133,12 +58,9 @@ input{padding:8px;margin:5px 0;width:100%;}
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",
-  authDomain: "store-app-d05fa.firebaseapp.com",
-  projectId: "store-app-d05fa",
-  storageBucket: "store-app-d05fa.firebasestorage.app",
-  messagingSenderId: "257385912042",
-  appId: "1:257385912042:web:bc30397b745340e31e2993"
+  apiKey: "PUT_YOUR_API_KEY",
+  authDomain: "PUT_YOUR_AUTH_DOMAIN",
+  projectId: "PUT_YOUR_PROJECT_ID",
 };
 firebase.initializeApp(firebaseConfig);
 
@@ -146,116 +68,97 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
-let role = "";
-let products = {};
 let cart = [];
 
-// 🔐 تسجيل دخول رسمي
+// تسجيل دخول
 async function login(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorBox = document.getElementById("error");
+
+  errorBox.innerText = "";
 
   try{
     const userCredential = await auth.signInWithEmailAndPassword(email,password);
     currentUser = userCredential.user;
 
-    const userDoc = await db.collection("users").doc(currentUser.uid).get();
-    role = userDoc.data().role;
-
-    document.getElementById("userInfo").innerText =
-      currentUser.email + " | الصلاحية: " + role;
-
     document.getElementById("loginPage").style.display="none";
-    document.getElementById("posSystem").style.display="block";
+    document.getElementById("app").style.display="block";
+    document.getElementById("userInfo").innerText = currentUser.email;
 
-    await loadCategories();
-    await loadProducts();
+    loadProducts();
 
   }catch(e){
-    alert("بيانات الدخول غير صحيحة");
+    errorBox.innerText = e.message;
   }
 }
 
-// 🔓 تسجيل خروج
+// تسجيل خروج
 function logout(){
   auth.signOut();
   location.reload();
 }
 
-// 📂 تحميل الفئات
-async function loadCategories(){
-  const div=document.getElementById("categories");
-  div.innerHTML="";
-  const snap=await db.collection("categories").get();
-  snap.forEach(doc=>{
-    const cat=doc.data().name;
-    div.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>`;
-  });
-}
-
-// 📦 تحميل المنتجات
+// تحميل المنتجات
 async function loadProducts(){
-  products={};
-  const snap=await db.collection("products").get();
-  snap.forEach(doc=>{
-    const d=doc.data();
-    if(!products[d.category]) products[d.category]=[];
-    products[d.category].push(d);
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = "";
+
+  const snapshot = await db.collection("products").get();
+
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    grid.innerHTML += `
+      <div class="product" onclick="addToCart('${data.name}',${data.price})">
+        ${data.name}<br>${data.price}
+      </div>
+    `;
   });
 }
 
-function showProducts(cat){
-  const grid=document.getElementById("productGrid");
-  grid.innerHTML="";
-  if(!products[cat]) return;
-
-  products[cat].forEach(p=>{
-    grid.innerHTML+=`
-      <div class="product-box">
-        <button class="product-btn" onclick="addToCart('${p.name}',${p.price})">
-          ${p.name}<br>${p.price}
-        </button>
-      </div>`;
-  });
-}
-
+// إضافة للسلة
 function addToCart(name,price){
   cart.push({name,price});
   renderCart();
 }
 
 function renderCart(){
-  const div=document.getElementById("cartItems");
+  const div = document.getElementById("cart");
   div.innerHTML="";
-  let total=0;
+  let total = 0;
+
   cart.forEach((item,i)=>{
-    div.innerHTML+=`${item.name} - ${item.price}
-      <button onclick="removeItem(${i})">❌</button><br>`;
-    total+=item.price;
+    div.innerHTML += `
+      ${item.name} - ${item.price}
+      <button onclick="removeItem(${i})">❌</button><br>
+    `;
+    total += item.price;
   });
-  document.getElementById("total").innerText="المجموع: "+total;
+
+  document.getElementById("total").innerText = "المجموع: " + total;
 }
 
-function removeItem(i){ cart.splice(i,1); renderCart(); }
-function clearCart(){ cart=[]; renderCart(); }
+function removeItem(i){
+  cart.splice(i,1);
+  renderCart();
+}
 
-// 💾 حفظ الطلب
+// حفظ الطلب
 async function saveOrder(){
-  if(cart.length===0) return alert("لا يوجد طلب");
+  if(cart.length===0) return alert("السلة فارغة");
 
-  let total=cart.reduce((sum,item)=>sum+item.price,0);
+  let total = cart.reduce((sum,item)=>sum+item.price,0);
 
   await db.collection("sales").add({
-    user: currentUser.uid,
-    email: currentUser.email,
-    role: role,
+    user: currentUser.email,
     total: total,
     items: cart,
     timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
 
   alert("تم حفظ الطلب");
-  clearCart();
+  cart=[];
+  renderCart();
 }
 </script>
 
