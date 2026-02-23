@@ -315,6 +315,15 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <!-- الهيدر -->
 <div class="header">
   <div id="userInfo"></div>
+  
+<div style="margin:15px 0;">
+  <input 
+    type="text" 
+    id="searchProduct" 
+    placeholder="🔎 بحث سريع عن منتج..."
+    oninput="searchProducts()"
+    style="width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:14px;">
+</div>
   <div>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
@@ -352,6 +361,8 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <br><br>
 <button class="extra" onclick="addExtra()">اكسترا</button>
 <hr>
+
+
 
 <div class="grid" id="productGrid"></div>
 </div>
@@ -463,21 +474,55 @@ async function editCategory(id){
   loadCategories();
 }
 
-// --------- المنتجات ---------
-async function loadProducts(){
-  const grid=document.getElementById("productGrid");
-  grid.innerHTML="";
-  const snap=await db.collection("products").get();
-  snap.forEach(doc=>{
-    const p=doc.data();
-    const div=document.createElement("div");
-    div.className="product";
-    div.innerHTML=`${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
-      <br><button onclick="deleteProduct('${doc.id}')"
-      style="background:red;">X</button>`;
-    div.onclick=function(e){if(e.target.tagName==="BUTTON") return; addToCart(p.name,p.price);}
+let allProducts = [];
+
+async function loadProducts() {
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = "";
+  allProducts = [];
+  
+  const snap = await db.collection("products").get();
+  snap.forEach(doc => {
+    const p = doc.data();
+    p.id = doc.id;
+    allProducts.push(p);
+  });
+  
+  renderProducts(allProducts);
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = "";
+  
+  products.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "product";
+    div.innerHTML = `
+      ${p.name} - ${p.category}<br>
+      ${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
+      <br>
+      <button onclick="deleteProduct('${p.id}')" style="background:red;">X</button>
+    `;
+    
+    div.onclick = function(e) {
+      if (e.target.tagName === "BUTTON") return;
+      addToCart(p.name, p.price);
+    };
+    
     grid.appendChild(div);
   });
+}
+
+function searchProducts() {
+  const value = document.getElementById("searchProduct").value.toLowerCase();
+  
+  const filtered = allProducts.filter(p =>
+    p.name.toLowerCase().includes(value) ||
+    p.category.toLowerCase().includes(value)
+  );
+  
+  renderProducts(filtered);
 }
 async function addProduct(){
   const name=document.getElementById("newName").value.trim();
