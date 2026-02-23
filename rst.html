@@ -6,103 +6,143 @@
 <title>POS مطعم نهائي</title>
 <style>
 /* --------- Global --------- */
+/* --------- Global --------- */
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f2f3f7;
-  color: #333;
+  background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+  color: #f0f0f0;
+  overflow-x: hidden;
+  transition: background 0.5s ease;
 }
-h3, h4 { margin: 5px 0; }
+
+h3, h4 {
+  margin: 5px 0;
+  text-shadow: 1px 1px 5px #000;
+}
 
 /* --------- Header --------- */
 .header {
-  background: #2c3e50;
+  background: linear-gradient(90deg, #1f1c2c, #928dab);
   color: #fff;
   padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  animation: slideDown 0.5s ease;
 }
+
+@keyframes slideDown {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 .header button {
-  margin-left: 5px;
-  padding: 6px 10px;
-  border-radius: 4px;
+  margin-left: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
   font-weight: bold;
   border: none;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
 }
-.header .new-section { background:#8e44ad; color:white; }
+.header button:hover {
+  transform: scale(1.1) rotate(-2deg);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+/* Color Variants */
+.header .new-section { background: #9b59b6; }
 .header .report { background: #3498db; }
 .header .logout { background: #e74c3c; }
-.header button:hover { opacity: 0.8; }
 
 /* --------- Container --------- */
 .container {
   display: flex;
   height: 90vh;
-  padding: 10px;
-  gap: 10px;
+  padding: 15px;
+  gap: 15px;
+  animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* --------- Products Section --------- */
 .products {
   width: 65%;
-  padding: 10px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 15px;
+  background: rgba(30,30,40,0.9);
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
   overflow-y: auto;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
 }
+.products:hover { transform: scale(1.02); }
 
 /* Categories */
 .categories {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 .categories button {
-  padding: 8px 12px;
-  background: #ff9800;
+  padding: 10px 16px;
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
   color: #fff;
-  border-radius: 5px;
+  border-radius: 8px;
   border: none;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
 }
-.categories button.active, .categories button:hover { opacity: 0.7; }
+.categories button.active, .categories button:hover {
+  opacity: 0.85;
+  transform: scale(1.1) rotate(-2deg);
+}
 
 /* Product Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
 }
 .product {
-  background: #27ae60;
+  background: linear-gradient(145deg, #1abc9c, #16a085);
   color: #fff;
-  padding: 10px;
+  padding: 15px;
   text-align: center;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.4s ease;
   position: relative;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  transform-style: preserve-3d;
 }
-.product:hover { transform: translateY(-3px); }
+.product:hover {
+  transform: rotateY(15deg) translateY(-10px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+}
 .product button {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 8px;
+  right: 8px;
   background: #c0392b;
   color: #fff;
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   font-weight: bold;
   font-size: 14px;
   border: none;
@@ -111,103 +151,107 @@ h3, h4 { margin: 5px 0; }
 
 /* Input & Add Buttons */
 input, select, .products button.extra {
-  padding: 7px;
-  margin: 3px 0;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 8px;
+  border: none;
   width: 100%;
   box-sizing: border-box;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  transition: all 0.3s ease;
 }
+input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 .products button.extra {
-  background: #34495e;
+  background: #8e44ad;
   color: #fff;
   font-weight: bold;
-  transition: 0.2s;
 }
-.products button.extra:hover { opacity: 0.8; }
+.products button.extra:hover { transform: scale(1.05); }
 
 /* --------- Cart Section --------- */
 .cart {
   width: 35%;
-  background: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: rgba(40,40,50,0.95);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  backdrop-filter: blur(8px);
+  transition: transform 0.3s ease;
 }
-.cart h3 { margin-bottom: 10px; }
-.cart-items {
-  flex: 1;
-  overflow-y: auto;
-  max-height: 60vh;
-  margin-bottom: 10px;
+.cart:hover { transform: scale(1.02); }
+.cart h3 { margin-bottom: 15px; text-shadow: 1px 1px 4px #000; }
+.cart-items p {
+  margin: 5px 0;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
-.cart-items p { margin: 4px 0; font-size: 14px; }
 .cart-items button {
   background: #e74c3c;
-  border-radius: 4px;
-  padding: 2px 6px;
+  border-radius: 6px;
+  padding: 3px 6px;
   margin-left: 5px;
   font-size: 12px;
+  transition: all 0.3s ease;
 }
-.cart label { font-weight: bold; margin-top: 5px; display: block; }
-.cart input { padding: 5px; margin: 2px 0 5px 0; border-radius: 5px; border: 1px solid #ccc; width: 100%; }
-.cart .total { font-weight: bold; font-size: 16px; margin-top: 10px; text-align: center; }
-.cart button.save { background: #3498db; }
-.cart button.clear { background: #e74c3c; }
-.cart button:hover { opacity: 0.8; }
+.cart-items button:hover { transform: scale(1.2); }
+.cart label {
+  font-weight: bold;
+  margin-top: 8px;
+  display: block;
+}
+.cart input { padding: 6px; margin: 3px 0 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: #fff; }
+.cart .total {
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 15px;
+  text-align: center;
+  text-shadow: 1px 1px 4px #000;
+}
+.cart button.save { background: #27ae60; }
+.cart button.clear { background: #c0392b; }
+.cart button:hover { opacity: 0.9; }
 
 /* --------- Login Box --------- */
 .login-box {
-  max-width: 350px;
-  margin: 120px auto;
-  background: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  max-width: 380px;
+  margin: 150px auto;
+  background: rgba(20,20,30,0.95);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
   text-align: center;
+  color: #fff;
+  animation: fadeIn 1s ease;
 }
 .login-box input {
-  padding: 10px;
-  margin: 5px 0;
+  padding: 12px;
+  margin: 8px 0;
   width: 100%;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-.login-box button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background: #3498db;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.1);
   color: #fff;
-  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+.login-box input:focus { background: rgba(255,255,255,0.2); outline: none; }
+.login-box button {
+  margin-top: 12px;
+  padding: 12px 20px;
+  background: linear-gradient(45deg, #2980b9, #6dd5fa);
+  color: #fff;
+  border-radius: 10px;
   font-weight: bold;
   border: none;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
-.login-box button:hover { opacity: 0.8; }
-
-/* --------- Invoice & Print --------- */
-#invoice, #dailyReport {
-  display: none;
-  background: #fff;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  font-family: monospace;
-  font-size: 12px;
-}
-@media print{
-  body *{visibility:hidden;}
-  #invoice,#dailyReport{
-    visibility:visible;
-    position:absolute;
-    left:0;
-    top:0;
-    width:58mm;
-    font-size:12px;
-  }
+.login-box button:hover {
+  transform: scale(1.05) rotate(-2deg);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
 }
 
 /* --------- Modal --------- */
@@ -218,36 +262,40 @@ input, select, .products button.extra {
   left: 0; top: 0;
   width: 100%; height: 100%;
   overflow: auto;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0,0,0,0.8);
 }
 .modal-content {
-  background-color: #fefefe;
+  background-color: rgba(25,25,35,0.95);
   margin: 80px auto;
-  padding: 20px;
-  border-radius: 10px;
-  width: 400px;
+  padding: 25px;
+  border-radius: 15px;
+  width: 450px;
   max-width: 90%;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
   text-align: center;
   position: relative;
-  animation: fadeIn 0.3s;
+  animation: modalFade 0.4s ease;
+  color: #fff;
 }
 .modal-content input, .modal-content select, .modal-content button {
-  margin: 5px 0;
+  margin: 8px 0;
   width: 100%;
-  padding: 8px;
-  border-radius: 5px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
 }
 .modal-content .close {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 15px;
-  font-size: 22px;
+  font-size: 24px;
   cursor: pointer;
-  color: #333;
+  color: #fff;
 }
 
-@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+@keyframes modalFade { from {opacity:0; transform: scale(0.9);} to {opacity:1; transform: scale(1);} }
 </style>
 </head>
 
