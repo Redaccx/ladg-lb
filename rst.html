@@ -148,16 +148,39 @@ function logout(){auth.signOut(); location.reload();}
 async function loadCategories(){
   const div=document.getElementById("categories");
   const select=document.getElementById("categorySelect");
-  div.innerHTML=`<button onclick="showProducts('all', this)" style="background:#333;color:white;">الكل</button>`;
+  div.innerHTML="";
   select.innerHTML="";
+
+  // زر الكل
+  const btnAll = document.createElement("button");
+  btnAll.textContent = "الكل";
+  btnAll.style.background="#333";
+  btnAll.style.color="white";
+  btnAll.addEventListener("click", ()=>showProducts('all', btnAll));
+  div.appendChild(btnAll);
+
   const snap=await db.collection("categories").get();
   snap.forEach(doc=>{
     const cat=doc.data().name;
-    div.innerHTML+=`<button onclick="showProducts('${cat}', this)">${cat}</button>
-    <button onclick="editCategory('${doc.id}')">✏</button>`;
-    select.innerHTML+=`<option value="${cat}">${cat}</option>`;
+
+    const btnCat = document.createElement("button");
+    btnCat.textContent = cat;
+    btnCat.addEventListener("click", ()=>showProducts(cat, btnCat));
+    div.appendChild(btnCat);
+
+    const btnEdit = document.createElement("button");
+    btnEdit.textContent = "✏";
+    btnEdit.addEventListener("click", ()=>editCategory(doc.id));
+    div.appendChild(btnEdit);
+
+    // إضافة الخيار للقائمة المنسدلة
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    select.appendChild(option);
   });
 }
+
 async function addCategory(){
   const name=document.getElementById("newCategory").value.trim();
   if(!name) return alert("ادخل اسم القسم");
