@@ -11,6 +11,7 @@ body{margin:0;font-family:Arial;background:#f4f4f4;}
 .products{width:60%;padding:10px;}
 .categories{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
 .categories button{padding:8px;background:#ff9800;border:none;color:white;cursor:pointer;}
+.categories button.active{opacity:0.6;} 
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .product{background:#4CAF50;color:white;padding:10px;text-align:center;border-radius:8px;cursor:pointer;}
 .cart{width:40%;background:white;padding:10px;border-left:2px solid #ddd;display:flex;flex-direction:column;}
@@ -108,7 +109,7 @@ input{padding:5px;margin:3px 0;width:100%;}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// Config
+// Firebase config
 const firebaseConfig={
   apiKey: "AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",
   authDomain: "store-app-d05fa.firebaseapp.com",
@@ -143,29 +144,19 @@ async function login(){
 // تسجيل خروج
 function logout(){auth.signOut(); location.reload();}
 
-// الفئات
-async function loadCategories() {
-    const div = document.getElementById("categories");
-    const select = document.getElementById("categorySelect");
-    div.innerHTML = "";
-    select.innerHTML = "";
-    
-    // زر عرض الكل
-    div.innerHTML += `<button onclick="loadProducts()" style="background:#333;color:white;">الكل</button>`;
-    
-    const snap = await db.collection("categories").get();
-    snap.forEach(doc => {
-        const cat = doc.data().name;
-        
-        div.innerHTML += `
-      <button onclick="filterCategory('${cat}')">
-        ${cat}
-      </button>
-      <button onclick="editCategory('${doc.id}')">✏</button>
-    `;
-        
-        select.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
+// أقسام
+async function loadCategories(){
+  const div=document.getElementById("categories");
+  const select=document.getElementById("categorySelect");
+  div.innerHTML=`<button onclick="showProducts('all', this)" style="background:#333;color:white;">الكل</button>`;
+  select.innerHTML="";
+  const snap=await db.collection("categories").get();
+  snap.forEach(doc=>{
+    const cat=doc.data().name;
+    div.innerHTML+=`<button onclick="showProducts('${cat}', this)">${cat}</button>
+    <button onclick="editCategory('${doc.id}')">✏</button>`;
+    select.innerHTML+=`<option value="${cat}">${cat}</option>`;
+  });
 }
 async function addCategory(){
   const name=document.getElementById("newCategory").value.trim();
@@ -197,6 +188,7 @@ async function loadProducts(){
     grid.appendChild(div);
   });
 }
+
 async function addProduct(){
   const name=document.getElementById("newName").value.trim();
   const price=parseFloat(document.getElementById("newPrice").value);
@@ -207,22 +199,29 @@ async function addProduct(){
   document.getElementById("newPrice").value="";
   loadProducts();
 }
+
 async function deleteProduct(id){await db.collection("products").doc(id).delete(); loadProducts();}
-async function filterCategory(cat) {
-    const grid = document.getElementById("productGrid");
-    grid.innerHTML = "";
-    
-    const snap = await db.collection("products").where("category", "==", cat).get();
-    
-    snap.forEach(doc => {
-        const p = doc.data();
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `${p.name}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)`;
-        div.onclick = function() { addToCart(p.name, p.price); };
-        grid.appendChild(div);
-    });
+
+async function showProducts(cat, button){
+  document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
+  if(button) button.classList.add("active");
+
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  let snap;
+  if(cat==='all'){ snap=await db.collection("products").get(); }
+  else{ snap=await db.collection("products").where("category","==",cat).get(); }
+  snap.forEach(doc=>{
+    const p=doc.data();
+    const div=document.createElement("div");
+    div.className="product";
+    div.innerHTML=`${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
+      <br><button onclick="deleteProduct('${doc.id}')" style="background:red;">X</button>`;
+    div.onclick=function(e){if(e.target.tagName==="BUTTON") return; addToCart(p.name,p.price);}
+    grid.appendChild(div);
+  });
 }
+
 // السلة
 function addToCart(name,price){
   let existing=cart.find(i=>i.name===name);
@@ -324,7 +323,7 @@ function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   invoice.innerHTML=html;
 }
 
-// تقرير اليوم مستقل + طباعة وحذف
+// تقرير اليوم
 async function toggleDailyReport(){
   const div=document.getElementById("dailyReport");
   if(div.style.display==="block"){ div.style.display="none"; return; }
@@ -338,8 +337,8 @@ async function toggleDailyReport(){
       <p>طلب #${d.orderNumber} | ${d.user}</p>
       ${d.items.map(item=>`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>`).join('')}
       <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
-      <button onclick="printSale('${doc.id}')" style="background:#2196F3;color:white;padding:3px;margin:2px;">طباعة هذا الطلب</button>
-      <button onclick="deleteSale('${doc.id}')" style="background:red;color:white;padding:3px;margin:2px;">حذف هذا الطلب</button>
+      <button onclick="printSale('${doc.id}')" style="background:#2196F3;color:white;padding:3px;margin:2px;">طباعة</button>
+      <button onclick="deleteSale('${doc.id}')" style="background:red;color:white;padding:3px;margin:2px;">حذف</button>
     </div>`;
     div.innerHTML+=html;
   });
@@ -371,10 +370,9 @@ async function deleteSale(id){
   if(confirm("هل تريد حذف هذا الطلب؟")){
     await db.collection("sales").doc(id).delete();
     alert("تم حذف الطلب");
-    toggleDailyReport(); // اعادة تحميل التقرير
+    toggleDailyReport();
   }
 }
 </script>
-
 </body>
 </html>
