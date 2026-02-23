@@ -323,7 +323,14 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 </div>
 
 <!-- التقرير اليومي -->
-<div id="dailyReport" style="display:none; padding:10px; background:white; border:1px solid #ddd; max-height:300px; overflow:auto;"></div>
+<!-- مودال تقرير اليوم -->
+<div id="dailyReportModal" class="modal">
+  <div class="modal-content" style="width:600px; max-width:95%;">
+    <span class="close" onclick="closeDailyReport()">&times;</span>
+    <h3>تقرير اليوم</h3>
+    <div id="dailyReportContent" style="max-height:400px; overflow:auto; text-align:right;"></div>
+  </div>
+</div>
 
 <div class="container">
 
@@ -634,27 +641,48 @@ function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
 }
 
 // --------- تقرير اليوم ---------
-async function toggleDailyReport(){
-  const div=document.getElementById("dailyReport");
-  if(div.style.display==="block"){ div.style.display="none"; return; }
+async function toggleDailyReport() {
+  const modal = document.getElementById("dailyReportModal");
+  const content = document.getElementById("dailyReportContent");
+  
   const today = new Date().toISOString().split('T')[0];
-  const snap = await db.collection("sales").where("date","==",today).get();
-  if(snap.empty){ div.innerHTML="<p>لا توجد طلبات اليوم</p>"; div.style.display="block"; return; }
-  div.innerHTML="";
-  snap.forEach(doc=>{
-    const d=doc.data();
-    let html=`<div style="border-bottom:1px dashed #000;margin-bottom:5px;padding:5px;">
-      <p>طلب #${d.orderNumber} | ${d.user}</p>
-      ${d.items.map(item=>`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>`).join('')}
-      <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
-      <button onclick="printSale('${doc.id}')" style="background:#2196F3;color:white;padding:3px;margin:2px;">طباعة</button>
-      <button onclick="deleteSale('${doc.id}')" style="background:red;color:white;padding:3px;margin:2px;">حذف</button>
+  const snap = await db.collection("sales").where("date", "==", today).get();
+  
+  if (snap.empty) {
+    content.innerHTML = "<p>لا توجد طلبات اليوم</p>";
+    modal.style.display = "block";
+    return;
+  }
+  
+  content.innerHTML = "";
+  snap.forEach(doc => {
+    const d = doc.data();
+    let html = `<div style="border-bottom:1px dashed #555;margin-bottom:8px;padding:8px;">
+      <p><strong>طلب #${d.orderNumber}</strong> | ${d.user}</p>
+      ${d.items.map(item=>`
+        <p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ 
+        (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+      `).join('')}
+      <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ 
+      (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
+      <button onclick="printSale('${doc.id}')" 
+        style="background:#2196F3;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
+        طباعة
+      </button>
+      <button onclick="deleteSale('${doc.id}')" 
+        style="background:red;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
+        حذف
+      </button>
     </div>`;
-    div.innerHTML+=html;
+    content.innerHTML += html;
   });
-  div.style.display="block";
+  
+  modal.style.display = "block";
 }
 
+function closeDailyReport() {
+  document.getElementById("dailyReportModal").style.display = "none";
+}
 async function printSale(id){
   const doc=await db.collection("sales").doc(id).get();
   if(!doc.exists) return alert("الطلب غير موجود");
