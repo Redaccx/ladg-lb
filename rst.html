@@ -717,29 +717,38 @@ async function toggleDailyReport() {
   
   content.innerHTML = "";
   snap.forEach(doc => {
-    const d = doc.data();
-    totalUSD += d.totalUSD;
-    totalLBP += d.totalLBP;
-    
-    let html = `<div style="border-bottom:1px dashed #555;margin-bottom:8px;padding:8px;">
-      <p><strong>طلب #${d.orderNumber}</strong> | ${d.user}</p>
-      ${d.items.map(item=>`
-        <p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ 
-        (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>
-      `).join('')}
-      <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ 
-      (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
-      <button onclick="printSale('${doc.id}')" 
-        style="background:#2196F3;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
-        طباعة
-      </button>
-      <button onclick="deleteSale('${doc.id}')" 
-        style="background:red;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
-        حذف
-      </button>
+  const d = doc.data();
+  totalUSD += d.totalUSD;
+  totalLBP += d.totalLBP;
+  
+  // الحصول على التاريخ والوقت
+  let dateTime = d.createdAt && d.createdAt.toDate ?
+    d.createdAt.toDate().toLocaleString("ar-EG", { hour12: false }) :
+    d.date;
+  
+  // بناء HTML للطلب
+  let html = `<div style="border-bottom:1px dashed #555;margin-bottom:8px;padding:8px;">
+        <p><strong>طلب #${d.orderNumber}</strong> | ${d.user}</p>
+        <p>تاريخ ووقت الطلب: ${dateTime}</p>
+        ${d.items.map(item => `
+            <p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ 
+            (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+        `).join('')}
+        <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ 
+        (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
+        <button onclick="printSale('${doc.id}')" 
+            style="background:#2196F3;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
+            طباعة
+        </button>
+        <button onclick="deleteSale('${doc.id}')" 
+            style="background:red;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
+            حذف
+        </button>
     </div>`;
-    content.innerHTML += html;
-  });
+  
+  // إضافة HTML للمودال
+  content.innerHTML += html;
+});
 // إضافة المجموع الكلي وزر طباعة الكل وزر حذف الكل
 content.innerHTML = `<div style="text-align:center; margin-bottom:10px;">
   <strong>المجموع الكلي لليوم: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong>
@@ -816,7 +825,8 @@ async function printSale(id){
   let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
   <h3>مطعم السندويشات</h3>
   <p>رقم الطلب: ${d.orderNumber}</p>
-  <p>الكاشير: ${d.user}</p>
+  let dateTime = d.createdAt ? d.createdAt.toDate().toLocaleString("ar-EG", {hour12:false}) : d.date;
+<p>الكاشير: ${d.user} | ${dateTime}</p>
   <hr>`;
   d.items.forEach(item=>{
     const lbp=(item.total*USD_TO_LBP).toLocaleString();
