@@ -21,6 +21,7 @@ button{padding:6px;margin-top:5px;border:none;color:white;cursor:pointer;}
 .clear{background:#e53935;}
 .logout{background:#e53935;}
 .report{background:#ff9800;}
+.extra{background:#607d8b;}
 input{padding:5px;margin:3px 0;width:100%;}
 .login-box{max-width:320px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
 #invoice,#dailyReport{display:none;}
@@ -64,6 +65,10 @@ input{padding:5px;margin:3px 0;width:100%;}
 <input type="number" id="newPrice" placeholder="السعر بالدولار">
 <select id="categorySelect"></select>
 <button onclick="addProduct()" style="background:#ff9800;">إضافة منتج</button>
+
+<br><br>
+<!-- زر اكسترا واحد -->
+<button class="extra" onclick="addExtra()">اكسترا</button>
 <hr>
 
 <div class="grid" id="productGrid"></div>
@@ -110,7 +115,6 @@ const db=firebase.firestore();
 
 let currentUser=null;
 let cart=[];
-let currentCategory=null;
 const USD_TO_LBP=89000;
 
 // تسجيل دخول
@@ -131,7 +135,7 @@ async function login(){
 // تسجيل خروج
 function logout(){auth.signOut(); location.reload();}
 
-// الفئات
+// إدارة الفئات
 async function loadCategories(){
   const div=document.getElementById("categories");
   const select=document.getElementById("categorySelect");
@@ -139,14 +143,11 @@ async function loadCategories(){
   const snap=await db.collection("categories").get();
   snap.forEach(doc=>{
     const cat=doc.data().name;
-    const id=doc.id;
     div.innerHTML+=`<button onclick="showProducts('${cat}')">${cat}</button>
-    <button onclick="editCategory('${id}')">✏</button>`;
+    <button onclick="editCategory('${doc.id}')">✏</button>`;
     select.innerHTML+=`<option value="${cat}">${cat}</option>`;
   });
 }
-
-// إضافة قسم
 async function addCategory(){
   const name=document.getElementById("newCategory").value.trim();
   if(!name) return alert("ادخل اسم القسم");
@@ -154,8 +155,6 @@ async function addCategory(){
   document.getElementById("newCategory").value="";
   loadCategories();
 }
-
-// تعديل قسم
 async function editCategory(id){
   const newName=prompt("اسم جديد للقسم:");
   if(!newName) return;
@@ -163,7 +162,7 @@ async function editCategory(id){
   loadCategories();
 }
 
-// تحميل المنتجات
+// إدارة المنتجات
 async function loadProducts(){
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
@@ -175,15 +174,11 @@ async function loadProducts(){
     div.innerHTML=`${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
       <br><button onclick="deleteProduct('${doc.id}')"
       style="background:red;">X</button>`;
-    div.onclick=function(e){
-      if(e.target.tagName==="BUTTON") return;
-      addToCart(p.name,p.price);
-    };
+    div.onclick=function(e){if(e.target.tagName==="BUTTON") return; addToCart(p.name,p.price);}
     grid.appendChild(div);
   });
 }
 
-// إضافة منتج
 async function addProduct(){
   const name=document.getElementById("newName").value.trim();
   const price=parseFloat(document.getElementById("newPrice").value);
@@ -194,11 +189,8 @@ async function addProduct(){
   document.getElementById("newPrice").value="";
   loadProducts();
 }
-
-// حذف منتج
 async function deleteProduct(id){await db.collection("products").doc(id).delete(); loadProducts();}
 
-// عرض منتجات قسم محدد
 async function showProducts(cat){
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
@@ -222,7 +214,6 @@ function addToCart(name,price){
   else{cart.push({name,price,qty:1,total:price});}
   renderCart();
 }
-
 function renderCart(){
   const div=document.getElementById("cartItems");
   div.innerHTML="";
@@ -238,11 +229,20 @@ function renderCart(){
   const totalLBP=totalUSD*USD_TO_LBP;
   document.getElementById("total").innerText=`المجموع: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)`;
 }
-
 function removeItem(i){cart.splice(i,1); renderCart();}
 function clearCart(){cart=[]; renderCart();}
 
-// رقم فاتورة
+// زر اكسترا واحد فقط
+function addExtra(){
+  const name=prompt("اسم المنتج:");
+  const weight=parseFloat(prompt("أدخل الوزن بالكيلو:"));
+  const price=parseFloat(prompt("أدخل السعر الإجمالي لهذا الوزن:"));
+  if(!name || !weight || !price) return;
+  cart.push({name, price, qty: weight, total: price});
+  renderCart();
+}
+
+// فاتورة متسلسلة وحفظ
 async function getNextNumber(){
   const ref=db.collection("counters").doc("orderCounter");
   return db.runTransaction(async t=>{
@@ -254,7 +254,6 @@ async function getNextNumber(){
   });
 }
 
-// حفظ وطباعة
 async function saveOrder(){
   if(cart.length===0) return alert("السلة فارغة");
   const number=await getNextNumber();
@@ -281,7 +280,6 @@ async function saveOrder(){
   clearCart();
 }
 
-// فاتورة حرارية
 function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   const now=new Date();
   const dateStr=now.toLocaleString("ar-EG",{hour12:false});
