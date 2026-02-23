@@ -368,22 +368,26 @@ function searchProducts() {
   );
   renderProducts(filtered);
 }
-function showProducts(cat, button){
-  document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
-  if(button) button.classList.add("active");
-  const grid=document.getElementById("productGrid");
-  grid.innerHTML="";
-  let snap = (cat==='all') ? await db.collection("products").get() : await db.collection("products").where("category","==",cat).get();
-  snap.forEach(doc=>{
-    const p=doc.data();
-    const div=document.createElement("div");
-    div.className="product";
-    div.innerHTML=`${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)`;
-    div.onclick=function(){ addToCart(p.name,p.price); };
+async function showProducts(cat, button) {
+  document.querySelectorAll(".categories button").forEach(b => b.classList.remove("active"));
+  if (button) button.classList.add("active");
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = "";
+  let snap;
+  if (cat === 'all') {
+    snap = await db.collection("products").get();
+  } else {
+    snap = await db.collection("products").where("category", "==", cat).get();
+  }
+  snap.forEach(doc => {
+    const p = doc.data();
+    const div = document.createElement("div");
+    div.className = "product";
+    div.innerHTML = `${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)`;
+    div.onclick = function() { addToCart(p.name, p.price); };
     grid.appendChild(div);
   });
 }
-
 // --------- السلة ---------
 function addToCart(name,price){
   let existing=cart.find(i=>i.name===name);
