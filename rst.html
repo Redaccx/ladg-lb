@@ -712,9 +712,15 @@ async function toggleDailyReport() {
     return;
   }
   
+  let totalUSD = 0;
+  let totalLBP = 0;
+  
   content.innerHTML = "";
   snap.forEach(doc => {
     const d = doc.data();
+    totalUSD += d.totalUSD;
+    totalLBP += d.totalLBP;
+    
     let html = `<div style="border-bottom:1px dashed #555;margin-bottom:8px;padding:8px;">
       <p><strong>طلب #${d.orderNumber}</strong> | ${d.user}</p>
       ${d.items.map(item=>`
@@ -735,9 +741,53 @@ async function toggleDailyReport() {
     content.innerHTML += html;
   });
   
+  // إضافة المجموع الكلي وزر طباعة الكل
+  content.innerHTML = `<div style="text-align:center; margin-bottom:10px;">
+    <strong>المجموع الكلي لليوم: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong>
+    <br>
+    <button onclick="printDailyTotal()" style="background:#27ae60;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
+      طباعة الكل
+    </button>
+  </div>` + content.innerHTML;
+  
   modal.style.display = "block";
 }
-
+async function printDailyTotal() {
+  const today = new Date().toISOString().split('T')[0];
+  const snap = await db.collection("sales").where("date", "==", today).get();
+  if (snap.empty) return alert("لا توجد طلبات اليوم");
+  
+  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+    <h3>مطعم السندويشات</h3>
+    <p>تقرير اليوم</p>
+    <p>${today}</p>
+    <hr>`;
+  
+  let totalUSD = 0;
+  let totalLBP = 0;
+  
+  snap.forEach(doc => {
+    const d = doc.data();
+    totalUSD += d.totalUSD;
+    totalLBP += d.totalLBP;
+    
+    html += `<p><strong>طلب #${d.orderNumber}</strong> | ${d.user}</p>`;
+    d.items.forEach(item => {
+      const lbp = (item.total * USD_TO_LBP).toLocaleString();
+      html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+    });
+    html += `<p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr>`;
+  });
+  
+  html += `<p><strong>المجموع الكلي لليوم: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>`;
+  html += `<p>شكراً لتعاونكم</p></div>`;
+  
+  const inv = document.getElementById("invoice");
+  inv.innerHTML = html;
+  inv.style.display = "block";
+  window.print();
+  inv.style.display = "none";
+}
 function closeDailyReport() {
   document.getElementById("dailyReportModal").style.display = "none";
 }
