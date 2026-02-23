@@ -296,15 +296,20 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 }
 
 @keyframes modalFade { from {opacity:0; transform: scale(0.9);} to {opacity:1; transform: scale(1);} }
+.search-container {
+    flex: 1;          /* يسمح للبحث بأخذ كل المساحة الممكنة */
+    margin: 0 10px;   /* مسافة جانبية بين العناصر */
+}
 
 #searchProduct {
-    color: #fff;
-    width: 100%;
-    padding: 10px;
+    width: 100%;      /* الآن يأخذ كامل عرض div */
+    padding: 8px 12px;
     border-radius: 10px;
     border: 1px solid #ccc;
     font-size: 14px;
-    background: rgba(255,255,255,0.1); /* اختياري لتناسق مع باقي التصميم */
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+/* اختياري لتناسق مع باقي التصميم */
     transition: all 0.3s ease;
 }
 
@@ -332,13 +337,9 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <div class="header">
   <div id="userInfo"></div>
   
-<div style="margin:10px 0;">
-  <input 
-    type="text" 
-    id="searchProduct" 
-    placeholder="🔎 بحث سريع عن منتج..."
-    oninput="searchProducts()">
-</div>
+  <div class="search-container">
+    <input type="text" id="searchProduct" placeholder="🔎 بحث سريع عن منتج..." oninput="searchProducts()">
+  </div>
   <div>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
