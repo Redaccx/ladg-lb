@@ -67,7 +67,6 @@ input{padding:5px;margin:3px 0;width:100%;}
 <button onclick="addProduct()" style="background:#ff9800;">إضافة منتج</button>
 
 <br><br>
-<!-- زر اكسترا واحد -->
 <button class="extra" onclick="addExtra()">اكسترا</button>
 <hr>
 
@@ -263,6 +262,9 @@ async function saveOrder(){
   const totalUSD=subtotal+(subtotal*tax/100)-discount;
   const totalLBP=totalUSD*USD_TO_LBP;
 
+  const now=new Date();
+  const dateStr=now.toISOString().split('T')[0];
+
   await db.collection("sales").add({
     orderNumber:number,
     user:currentUser.email,
@@ -272,6 +274,7 @@ async function saveOrder(){
     discount,
     totalUSD,
     totalLBP,
+    date:dateStr,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
@@ -306,18 +309,27 @@ function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
 
 // تقرير اليوم
 async function showDailyReport(){
-  const today=new Date(); today.setHours(0,0,0,0);
-  const snap=await db.collection("sales").where("createdAt",">=",today).get();
-  let totalUSD=0,totalLBP=0;
+  const today=new Date().toISOString().split('T')[0];
+  const snap = await db.collection("sales").where("date","==",today).get();
+
+  if(snap.empty){
+    alert("لا توجد مبيعات اليوم");
+    return;
+  }
+
+  let totalUSD = 0, totalLBP = 0;
   let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
   <h3>تقرير مبيعات اليوم</h3><hr>`;
+
   snap.forEach(doc=>{
     const d=doc.data();
     html+=`<p>طلب #${d.orderNumber} - ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</p>`;
     totalUSD+=d.totalUSD;
     totalLBP+=d.totalLBP;
   });
+
   html+=`<hr><p>إجمالي اليوم: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</p></div>`;
+
   dailyReport.innerHTML=html;
   dailyReport.style.display="block";
   window.print();
