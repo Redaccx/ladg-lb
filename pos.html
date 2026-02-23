@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POS موظف</title>
+<title>POS مطعم - موظف</title>
 <style>
 /* --------- Global --------- */
 body {
@@ -14,6 +14,7 @@ body {
   overflow-x: hidden;
   transition: background 0.5s ease;
 }
+
 h3, h4 { margin: 5px 0; text-shadow: 1px 1px 5px #000; }
 
 /* --------- Header --------- */
@@ -30,10 +31,9 @@ h3, h4 { margin: 5px 0; text-shadow: 1px 1px 5px #000; }
   z-index: 100;
   animation: slideDown 0.5s ease;
 }
-@keyframes slideDown {
-  from { transform: translateY(-50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
+
+@keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
 .header button {
   margin-left: 8px;
   padding: 8px 14px;
@@ -46,7 +46,6 @@ h3, h4 { margin: 5px 0; text-shadow: 1px 1px 5px #000; }
 }
 .header button:hover { transform: scale(1.1) rotate(-2deg); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-/* Color Variants */
 .header .report { background: #3498db; }
 .header .logout { background: #e74c3c; }
 
@@ -58,10 +57,8 @@ h3, h4 { margin: 5px 0; text-shadow: 1px 1px 5px #000; }
   gap: 15px;
   animation: fadeIn 0.8s ease;
 }
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
+
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
 /* --------- Products Section --------- */
 .products {
@@ -93,10 +90,7 @@ h3, h4 { margin: 5px 0; text-shadow: 1px 1px 5px #000; }
   transition: all 0.3s ease;
   box-shadow: 0 3px 8px rgba(0,0,0,0.4);
 }
-.categories button.active, .categories button:hover {
-  opacity: 0.85;
-  transform: scale(1.1) rotate(-2deg);
-}
+.categories button.active, .categories button:hover { opacity: 0.85; transform: scale(1.1) rotate(-2deg); }
 
 .grid {
   display: grid;
@@ -116,13 +110,9 @@ h3, h4 { margin: 5px 0; text-shadow: 1px 1px 5px #000; }
   box-shadow: 0 8px 20px rgba(0,0,0,0.5);
   transform-style: preserve-3d;
 }
-.product:hover {
-  transform: rotateY(15deg) translateY(-10px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.7);
-}
+.product:hover { transform: rotateY(15deg) translateY(-10px); box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
 
-/* Input & Add Buttons */
-input, select {
+input, select, .products button.extra {
   padding: 8px;
   margin: 5px 0;
   border-radius: 8px;
@@ -134,6 +124,12 @@ input, select {
   transition: all 0.3s ease;
 }
 input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
+.products button.extra {
+  background: #8e44ad;
+  color: #fff;
+  font-weight: bold;
+}
+.products button.extra:hover { transform: scale(1.05); }
 
 /* --------- Cart Section --------- */
 .cart {
@@ -151,24 +147,11 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 .cart:hover { transform: scale(1.02); }
 .cart h3 { margin-bottom: 15px; text-shadow: 1px 1px 4px #000; }
 .cart-items p { margin: 5px 0; font-size: 14px; transition: all 0.2s ease; }
-.cart-items button {
-  background: #e74c3c;
-  border-radius: 6px;
-  padding: 3px 6px;
-  margin-left: 5px;
-  font-size: 12px;
-  transition: all 0.3s ease;
-}
+.cart-items button { background: #e74c3c; border-radius: 6px; padding: 3px 6px; margin-left: 5px; font-size: 12px; transition: all 0.3s ease; }
 .cart-items button:hover { transform: scale(1.2); }
 .cart label { font-weight: bold; margin-top: 8px; display: block; }
 .cart input { padding: 6px; margin: 3px 0 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: #fff; }
-.cart .total {
-  font-weight: bold;
-  font-size: 18px;
-  margin-top: 15px;
-  text-align: center;
-  text-shadow: 1px 1px 4px #000;
-}
+.cart .total { font-weight: bold; font-size: 18px; margin-top: 15px; text-align: center; text-shadow: 1px 1px 4px #000; }
 .cart button.save { background: #27ae60; }
 .cart button.clear { background: #c0392b; }
 .cart button:hover { opacity: 0.9; }
@@ -209,27 +192,18 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 }
 .login-box button:hover { transform: scale(1.05) rotate(-2deg); box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
 
-/* --------- Modal --------- */
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
-.modal-content {
-  background-color: rgba(25,25,35,0.95);
-  margin: 80px auto;
-  padding: 25px;
-  border-radius: 15px;
-  width: 450px;
-  max-width: 90%;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-  text-align: center;
-  position: relative;
-  animation: modalFade 0.4s ease;
-  color: #fff;
-}
-.modal-content input, .modal-content select, .modal-content button { margin: 8px 0; width: 100%; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: #fff; }
-.modal-content .close { position: absolute; top: 12px; left: 15px; font-size: 24px; cursor: pointer; color: #fff; }
-@keyframes modalFade { from {opacity:0; transform: scale(0.9);} to {opacity:1; transform: scale(1);} }
-
+/* --------- Search --------- */
 .search-container { flex: 1; margin: 0 10px; }
-#searchProduct { width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; color: #fff; background: rgba(255,255,255,0.1); transition: all 0.3s ease; }
+#searchProduct {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+}
 #searchProduct:focus { background: rgba(255,255,255,0.2); outline: none; }
 </style>
 </head>
@@ -258,15 +232,6 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   </div>
 </div>
 
-<!-- التقرير اليومي -->
-<div id="dailyReportModal" class="modal">
-  <div class="modal-content" style="width:600px; max-width:95%;">
-    <span class="close" onclick="closeDailyReport()">&times;</span>
-    <h3>تقرير اليوم</h3>
-    <div id="dailyReportContent" style="max-height:400px; overflow:auto; text-align:right;"></div>
-  </div>
-</div>
-
 <div class="container">
 
 <!-- قسم المنتجات -->
@@ -276,6 +241,9 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   
   <h3>المنتجات</h3>
   <div class="grid" id="productGrid"></div>
+  
+  <br><br>
+  <button class="extra" onclick="addExtra()">اكسترا</button>
 </div>
 
 <!-- السلة -->
@@ -297,19 +265,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 </div>
 </div>
 
-<!-- مودال عرض الأقسام والمنتجات فقط للموظف -->
-<div id="sectionModalEmployee" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeSectionModalEmployee()">&times;</span>
-    <h3>عرض الأقسام والمنتجات</h3>
-    <h4>الأقسام</h4>
-    <div id="employeeCategories"></div>
-    <hr>
-    <h4>المنتجات</h4>
-    <div id="employeeProducts"></div>
-  </div>
-</div>
-
+<!-- الفاتورة للطباعة -->
 <div id="invoice"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -317,8 +273,15 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase
-const firebaseConfig={apiKey:"AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",authDomain:"store-app-d05fa.firebaseapp.com",projectId:"store-app-d05fa",storageBucket:"store-app-d05fa.firebasestorage.app",messagingSenderId:"257385912042",appId:"1:257385912042:web:bc30397b745340e31e2993"};
+// Firebase config
+const firebaseConfig={
+  apiKey: "AIzaSyBQBGGtON-RNk4qH2Pws3RBBBE3cH3J4PU",
+  authDomain: "store-app-d05fa.firebaseapp.com",
+  projectId: "store-app-d05fa",
+  storageBucket: "store-app-d05fa.firebasestorage.app",
+  messagingSenderId: "257385912042",
+  appId: "1:257385912042:web:bc30397b745340e31e2993"
+};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
@@ -347,12 +310,14 @@ function logout(){auth.signOut(); location.reload();}
 async function loadCategories() {
   const div = document.getElementById("categories");
   div.innerHTML = "";
+  
   const allBtn = document.createElement("button");
   allBtn.textContent = "الكل";
   allBtn.style.background = "#333";
   allBtn.style.color = "white";
   allBtn.onclick = function() { showProducts('all', allBtn); };
   div.appendChild(allBtn);
+  
   const snap = await db.collection("categories").get();
   snap.forEach(doc => {
     const cat = doc.data().name;
@@ -363,26 +328,45 @@ async function loadCategories() {
   });
 }
 
-// --------- المنتجات ---------
 let allProducts = [];
+
 async function loadProducts() {
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
   allProducts = [];
+  
   const snap = await db.collection("products").get();
-  snap.forEach(doc => { const p = doc.data(); p.id = doc.id; allProducts.push(p); });
+  snap.forEach(doc => {
+    const p = doc.data();
+    p.id = doc.id;
+    allProducts.push(p);
+  });
+  
   renderProducts(allProducts);
 }
+
 function renderProducts(products) {
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
+  
   products.forEach(p => {
     const div = document.createElement("div");
     div.className = "product";
     div.innerHTML = `${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)`;
-    div.onclick = function(){ addToCart(p.name, p.price); };
+    
+    div.onclick = function() { addToCart(p.name, p.price); };
+    
     grid.appendChild(div);
   });
+}
+
+function searchProducts() {
+  const value = document.getElementById("searchProduct").value.toLowerCase();
+  const filtered = allProducts.filter(p =>
+    p.name.toLowerCase().includes(value) ||
+    p.category.toLowerCase().includes(value)
+  );
+  renderProducts(filtered);
 }
 function showProducts(cat, button){
   document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
@@ -395,14 +379,9 @@ function showProducts(cat, button){
     const div=document.createElement("div");
     div.className="product";
     div.innerHTML=`${p.name} - ${p.category}<br>${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)`;
-    div.onclick=function(){ addToCart(p.name,p.price); }
+    div.onclick=function(){ addToCart(p.name,p.price); };
     grid.appendChild(div);
   });
-}
-function searchProducts(){
-  const value=document.getElementById("searchProduct").value.toLowerCase();
-  const filtered=allProducts.filter(p=>p.name.toLowerCase().includes(value)||p.category.toLowerCase().includes(value));
-  renderProducts(filtered);
 }
 
 // --------- السلة ---------
@@ -416,7 +395,10 @@ function renderCart(){
   const div=document.getElementById("cartItems");
   div.innerHTML="";
   let subtotal=0;
-  cart.forEach((item,i)=>{ subtotal+=item.total; div.innerHTML+=`${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)<br>`; });
+  cart.forEach((item,i)=>{
+    subtotal+=item.total;
+    div.innerHTML+=`${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)<br>`;
+  });
   const tax=parseFloat(document.getElementById("tax").value)||0;
   const discount=parseFloat(document.getElementById("discount").value)||0;
   const totalUSD=subtotal+(subtotal*tax/100)-discount;
@@ -424,6 +406,14 @@ function renderCart(){
   document.getElementById("total").innerText=`المجموع: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)`;
 }
 function clearCart(){cart=[]; renderCart();}
+function addExtra(){
+  const name=prompt("اسم المنتج:");
+  const weight=parseFloat(prompt("أدخل الوزن بالكيلو:"));
+  const price=parseFloat(prompt("أدخل السعر الإجمالي لهذا الوزن:"));
+  if(!name || !weight || !price) return;
+  cart.push({name, price, qty: weight, total: price});
+  renderCart();
+}
 
 // --------- الفاتورة ---------
 async function getNextNumber(){
@@ -446,6 +436,7 @@ async function saveOrder(){
   const totalLBP=totalUSD*USD_TO_LBP;
   const now=new Date();
   const dateStr=now.toISOString().split('T')[0];
+
   await db.collection("sales").add({
     orderNumber:number,
     user:currentUser.email,
@@ -458,10 +449,12 @@ async function saveOrder(){
     date:dateStr,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
+
   generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP);
   window.print();
   clearCart();
 }
+
 function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   const now=new Date();
   const dateStr=now.toLocaleString("ar-EG",{hour12:false});
@@ -471,47 +464,28 @@ function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   <p>التاريخ: ${dateStr}</p>
   <p>الموظف: ${currentUser.email}</p>
   <hr>`;
-  cart.forEach(item=>{ const lbp=(item.total*USD_TO_LBP).toLocaleString(); html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`; });
-  html+=`<hr><p><strong>المجموع: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p><hr><p>شكراً لتعاونكم</p></div>`;
+  cart.forEach(item=>{
+    const lbp=(item.total*USD_TO_LBP).toLocaleString();
+    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+  });
+  html+=`<hr>
+  <p>Subtotal: ${subtotal.toFixed(2)}$ (${(subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+  <p>Tax: ${tax}%</p>
+  <p>Discount: ${discount}</p>
+  <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
+  <hr>
+  <p>شكراً لزيارتكم</p>
+  </div>`;
   invoice.innerHTML=html;
 }
 
 // --------- تقرير اليوم ---------
 async function toggleDailyReport() {
-  const modal=document.getElementById("dailyReportModal");
-  const content=document.getElementById("dailyReportContent");
-  const today=new Date().toISOString().split('T')[0];
-  const snap=await db.collection("sales").where("date","==",today).get();
-  if(snap.empty){ content.innerHTML="<p>لا توجد طلبات اليوم</p>"; modal.style.display="block"; return; }
-  let totalUSD=0, totalLBP=0; content.innerHTML="";
-  snap.forEach(doc=>{
-    const d=doc.data(); totalUSD+=d.totalUSD; totalLBP+=d.totalLBP;
-    let dateTime=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString("ar-EG",{hour12:false}):d.date;
-    let html=`<div style="border-bottom:1px dashed #555;margin-bottom:8px;padding:8px;">
-      <p><strong>طلب #${d.orderNumber}</strong> | ${d.user}</p>
-      <p>تاريخ ووقت الطلب: ${dateTime}</p>
-      ${d.items.map(item=>`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>`).join('')}
-      <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
-      <button onclick="printSale('${doc.id}')" style="background:#2196F3;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">طباعة</button>
-    </div>`;
-    content.innerHTML+=html;
-  });
+  const modal = document.createElement("div");
+  const content = document.createElement("div");
+  document.body.appendChild(modal);
   modal.style.display="block";
-}
-function closeDailyReport(){ document.getElementById("dailyReportModal").style.display="none"; }
-async function printSale(id){
-  const doc=await db.collection("sales").doc(id).get();
-  if(!doc.exists) return alert("الطلب غير موجود");
-  const d=doc.data();
-  let dateTime=d.createdAt?d.createdAt.toDate().toLocaleString("ar-EG",{hour12:false}):d.date;
-  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-  <h3>مطعم السندويشات</h3>
-  <p>رقم الطلب: ${d.orderNumber}</p>
-  <p>الموظف: ${d.user} | ${dateTime}</p>
-  <hr>`;
-  d.items.forEach(item=>{ const lbp=(item.total*USD_TO_LBP).toLocaleString(); html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`; });
-  html+=`<hr><p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr><p>شكراً لتعاونكم</p></div>`;
-  const inv=document.getElementById("invoice"); inv.innerHTML=html; inv.style.display="block"; window.print(); inv.style.display="none";
+  alert("تقرير اليوم غير مفصل للموظف"); // يمكنك تخصيص التقرير إذا أردت
 }
 </script>
 </body>
