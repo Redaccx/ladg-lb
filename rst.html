@@ -151,7 +151,7 @@ async function loadCategories() {
     select.innerHTML = "";
     
     // زر عرض الكل
-    div.innerHTML += `<button onclick="loadProducts(); resetCategoryColors(this)" style="background:#333;">الكل</button>`;
+    div.innerHTML += `<button onclick="loadProducts()" style="background:#333;color:white;">الكل</button>`;
     
     const snap = await db.collection("categories").get();
     snap.forEach(doc => {
