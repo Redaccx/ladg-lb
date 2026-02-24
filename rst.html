@@ -321,18 +321,27 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     background: rgba(255,255,255,0.2);
     outline: none;
 }
-/* --------- ترتيب الألسنة --------- */
+/* حاوية الطلبات */
+.order-container {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* زر طلب جديد */
 #newOrderBtn {
-  padding: 12px 22px;
-  border-radius: 25px;
+  padding: 14px 28px;
+  border-radius: 30px;
   border: none;
   background: linear-gradient(135deg, #10b981, #3b82f6);
   color: #fff;
   font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(0,0,0,0.4);
   transition: all 0.3s ease;
+  align-self: flex-start; /* يبقى الزر على اليسار أو اليمين حسب RTL */
 }
 
 #newOrderBtn:hover {
@@ -344,20 +353,20 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 /* ألسنة الطلبات */
 .order-tabs-container {
   display: flex;
-  gap: 10px;
-  overflow-x: auto; /* يسمح بالتمرير إذا كثرت الطلبات */
-  padding: 6px 0;
-  justify-content: flex-start;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 0;
 }
 
 .order-tabs-container button {
-  padding: 8px 14px;
-  border-radius: 20px;
+  padding: 10px 18px;
+  border-radius: 25px;
   border: none;
   cursor: pointer;
   font-weight: bold;
-  background: linear-gradient(145deg, #1f2937, #374151);
+  background: rgba(255,255,255,0.05);
   color: #f0f0f0;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
   transition: all 0.3s ease;
   white-space: nowrap;
 }
@@ -365,11 +374,13 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 .order-tabs-container button.active {
   background: linear-gradient(135deg, #6ee7b7, #3b82f6);
   color: #fff;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  transform: scale(1.05);
 }
 
 .order-tabs-container button:hover {
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
 }
 </style>
 </head>
@@ -425,14 +436,11 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <br><br>
   <button class="extra" onclick="addExtra()">اكسترا</button>
 </div>
-
-<!-- زر طلب جديد -->
-<div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+<!-- حاوية زر الطلب الجديد وألسنة الطلبات -->
+<div class="order-container">
   <button id="newOrderBtn">➕ طلب جديد</button>
+  <div id="orderTabs" class="order-tabs-container"></div>
 </div>
-
-<!-- ألسنة الطلبات أسفل الزر -->
-<div id="orderTabs" class="order-tabs-container"></div>
 <!-- السلة -->
 <div class="cart">
 <h3>الطلب</h3>
