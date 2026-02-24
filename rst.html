@@ -347,11 +347,20 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <div>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
+<button class="extra" onclick="renderPendingInvoices()">الفواتير المعلقة</button>
     <button class="logout" onclick="logout()">خروج</button>
   </div>
 </div>
 
-<!-- التقرير اليومي -->
+
+<!-- مودال الفواتير المعلقة -->
+<div id="pendingInvoicesModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closePendingInvoices()">&times;</span>
+    <h3>الفواتير المعلقة</h3>
+    <div id="pendingInvoicesList" style="max-height:400px; overflow:auto;"></div>
+  </div>
+</div>
 <!-- مودال تقرير اليوم -->
 <div id="dailyReportModal" class="modal">
   <div class="modal-content" style="width:600px; max-width:95%;">
@@ -928,6 +937,103 @@ async function deleteSale(id){
     alert("تم حذف الطلب");
     toggleDailyReport();
   }
+}
+
+
+// مصفوفة لحفظ الفواتير المعلقة
+let pendingInvoices = [];
+
+// تعديل saveOrder لحفظ الفاتورة في المصفوفة بدل الطباعة فورًا
+async function saveOrder() {
+  if (cart.length === 0) return alert("السلة فارغة");
+  const number = await getNextNumber();
+  const subtotal = cart.reduce((s, i) => s + i.total, 0);
+  const tax = parseFloat(document.getElementById("tax").value) || 0;
+  const discount = parseFloat(document.getElementById("discount").value) || 0;
+  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
+  const totalLBP = totalUSD * USD_TO_LBP;
+  
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  
+  await db.collection("sales").add({
+    orderNumber: number,
+    user: currentUser.email,
+    items: cart,
+    subtotal,
+    tax,
+    discount,
+    totalUSD,
+    totalLBP,
+    date: dateStr,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  
+  // حفظ الفاتورة داخل المصفوفة بدل الطباعة فورًا
+  let html = generateInvoiceHTML(number, cart, subtotal, tax, discount, totalUSD, totalLBP);
+  pendingInvoices.push({ number, html });
+  renderPendingInvoices();
+  
+  clearCart();
+}
+
+// دالة توليد HTML للفاتورة
+function generateInvoiceHTML(number, items, subtotal, tax, discount, totalUSD, totalLBP) {
+  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+  <h3>مطعم السندويشات</h3>
+  <p>رقم الطلب: ${number}</p>
+  <p>الكاشير: ${currentUser.email}</p>
+  <hr>`;
+  items.forEach(item => {
+    const lbp = (item.total * USD_TO_LBP).toLocaleString();
+    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+  });
+  html += `<hr>
+  <p>Subtotal: ${subtotal.toFixed(2)}$ (${(subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+  <p>Tax: ${tax}%</p>
+  <p>Discount: ${discount}</p>
+  <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
+  <hr>
+  <p>شكراً لزيارتكم</p>
+  </div>`;
+  return html;
+}
+
+// إدارة الفواتير المعلقة
+function renderPendingInvoices() {
+  const modalContent = document.getElementById("pendingInvoicesList");
+  modalContent.innerHTML = "";
+  pendingInvoices.forEach((inv, i) => {
+    const div = document.createElement("div");
+    div.style.borderBottom = "1px dashed #555";
+    div.style.padding = "8px";
+    div.innerHTML = `
+      <p><strong>فاتورة #${inv.number}</strong></p>
+      <button onclick="printPendingInvoice(${i})" style="background:#27ae60;color:white;padding:5px 8px;border:none;border-radius:6px;">طباعة</button>
+      <button onclick="deletePendingInvoice(${i})" style="background:red;color:white;padding:5px 8px;border:none;border-radius:6px;">حذف</button>
+    `;
+    modalContent.appendChild(div);
+  });
+  document.getElementById("pendingInvoicesModal").style.display = "block";
+}
+
+function printPendingInvoice(i) {
+  const inv = pendingInvoices[i];
+  if (!inv) return;
+  const invDiv = document.getElementById("invoice");
+  invDiv.innerHTML = inv.html;
+  invDiv.style.display = "block";
+  window.print();
+  invDiv.style.display = "none";
+}
+
+function deletePendingInvoice(i) {
+  pendingInvoices.splice(i, 1);
+  renderPendingInvoices();
+}
+
+function closePendingInvoices() {
+  document.getElementById("pendingInvoicesModal").style.display = "none";
 }
 </script>
 </body>
