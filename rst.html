@@ -322,11 +322,32 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     outline: none;
 }
 /* --------- ترتيب الألسنة --------- */
+/* زر طلب جديد */
+#newOrderBtn {
+  padding: 12px 22px;
+  border-radius: 25px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  transition: all 0.3s ease;
+}
+
+#newOrderBtn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+  background: linear-gradient(135deg, #3b82f6, #10b981);
+}
+
+/* ألسنة الطلبات */
 .order-tabs-container {
   display: flex;
   gap: 10px;
-  overflow-x: auto; /* يسمح بالتمرير عند كثرة الطلبات */
-  padding: 4px;
+  overflow-x: auto; /* يسمح بالتمرير إذا كثرت الطلبات */
+  padding: 6px 0;
+  justify-content: flex-start;
 }
 
 .order-tabs-container button {
@@ -349,25 +370,6 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 
 .order-tabs-container button:hover {
   transform: translateY(-2px) scale(1.05);
-}
-
-/* --------- زر طلب جديد --------- */
-#newOrderBtn {
-  padding: 10px 20px;
-  border-radius: 25px;
-  border: none;
-  background: linear-gradient(135deg, #10b981, #3b82f6);
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-  transition: all 0.3s ease;
-}
-
-#newOrderBtn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-  background: linear-gradient(135deg, #3b82f6, #10b981);
 }
 </style>
 </head>
@@ -424,13 +426,13 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <button class="extra" onclick="addExtra()">اكسترا</button>
 </div>
 
-<div style="display:flex; gap:15px; align-items:flex-start; margin-bottom:12px;">
-  <!-- ألسنة الطلبات -->
-  <div id="orderTabs" class="order-tabs-container" style="flex:1; display:flex; gap:8px; overflow-x:auto;"></div>
-  
-  <!-- زر طلب جديد -->
+<!-- زر طلب جديد -->
+<div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
   <button id="newOrderBtn">➕ طلب جديد</button>
 </div>
+
+<!-- ألسنة الطلبات أسفل الزر -->
+<div id="orderTabs" class="order-tabs-container"></div>
 <!-- السلة -->
 <div class="cart">
 <h3>الطلب</h3>
