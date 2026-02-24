@@ -321,76 +321,52 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     background: rgba(255,255,255,0.2);
     outline: none;
 }
-/* --------- ألسنة الطلبات --------- */
+/* --------- ترتيب الألسنة --------- */
 .order-tabs-container {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 12px;
+  overflow-x: auto; /* يسمح بالتمرير عند كثرة الطلبات */
+  padding: 4px;
 }
 
 .order-tabs-container button {
-  padding: 10px 18px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
   background: linear-gradient(145deg, #1f2937, #374151);
   color: #f0f0f0;
-  font-weight: bold;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  white-space: nowrap;
 }
 
 .order-tabs-container button.active {
-  background: linear-gradient(145deg, #6ee7b7, #3b82f6);
+  background: linear-gradient(135deg, #6ee7b7, #3b82f6);
   color: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
 .order-tabs-container button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-}
-
-/* إضافة تأثير موجة عند الضغط */
-.order-tabs-container button::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.4s ease, height 0.4s ease;
-}
-
-.order-tabs-container button:active::after {
-  width: 200%;
-  height: 500%;
-  transition: 0s;
+  transform: translateY(-2px) scale(1.05);
 }
 
 /* --------- زر طلب جديد --------- */
 #newOrderBtn {
-  padding: 12px 24px;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
   background: linear-gradient(135deg, #10b981, #3b82f6);
   color: #fff;
   font-weight: bold;
-  font-size: 16px;
-  border: none;
-  border-radius: 25px;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
   transition: all 0.3s ease;
 }
 
 #newOrderBtn:hover {
-  transform: scale(1.08) rotate(-2deg);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  transform: scale(1.08);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
   background: linear-gradient(135deg, #3b82f6, #10b981);
 }
 </style>
@@ -448,9 +424,13 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <button class="extra" onclick="addExtra()">اكسترا</button>
 </div>
 
-
-<div id="orderTabs" class="order-tabs-container"></div>
-<button id="newOrderBtn" onclick="createNewOrder()">➕ طلب جديد</button>
+<div style="display:flex; gap:15px; align-items:flex-start; margin-bottom:12px;">
+  <!-- ألسنة الطلبات -->
+  <div id="orderTabs" class="order-tabs-container" style="flex:1; display:flex; gap:8px; overflow-x:auto;"></div>
+  
+  <!-- زر طلب جديد -->
+  <button id="newOrderBtn">➕ طلب جديد</button>
+</div>
 <!-- السلة -->
 <div class="cart">
 <h3>الطلب</h3>
