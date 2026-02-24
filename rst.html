@@ -735,54 +735,58 @@ async function getNextNumber(){
     return num;
   });
 }
-async function saveOrder() {
-  if (cart.length === 0) return alert("السلة فارغة");
+async function printPendingInvoice(i) {
+  const inv = pendingInvoices[i];
+  if (!inv) return alert("الفاتورة غير موجودة");
   
-  // الحصول على رقم الفاتورة التالي
+  // الحصول على رقم فاتورة جديد نهائي
   const number = await getNextNumber();
   
-  // حساب المجموع والضريبة والخصم
-  const subtotal = cart.reduce((s, i) => s + i.total, 0);
-  const tax = parseFloat(document.getElementById("tax").value) || 0;
-  const discount = parseFloat(document.getElementById("discount").value) || 0;
-  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
-  const totalLBP = totalUSD * USD_TO_LBP;
-  
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  
-  // حفظ الفاتورة في Firebase
+  // حفظ الفاتورة في Firebase لتكون جزءًا من تقرير اليوم
   await db.collection("sales").add({
     orderNumber: number,
-    user: currentUser.email,
-    items: cart,
-    subtotal,
-    tax,
-    discount,
-    totalUSD,
-    totalLBP,
-    date: dateStr,
+    user: inv.user,
+    items: inv.items,
+    subtotal: inv.subtotal,
+    tax: inv.tax,
+    discount: inv.discount,
+    totalUSD: inv.totalUSD,
+    totalLBP: inv.totalLBP,
+    date: new Date().toISOString().split('T')[0],
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
   
-  // حفظ الفاتورة في المصفوفة للفواتير المعلقة
-  pendingInvoices.push({
-    number,
-    items: [...cart],
-    subtotal,
-    tax,
-    discount,
-    totalUSD,
-    totalLBP,
-    user: currentUser.email,
-    createdAt: now
+  // إنشاء الفاتورة للطباعة
+  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+  <h3>مطعم السندويشات</h3>
+  <p>فاتورة #${number}</p>
+  <p>الكاشير: ${inv.user}</p>
+  <p>التاريخ والوقت: ${inv.createdAt.toLocaleString("ar-EG",{hour12:false})}</p>
+  <hr>`;
+  
+  inv.items.forEach(item => {
+    const lbp = (item.total * USD_TO_LBP).toLocaleString();
+    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
   
-  // تحديث قائمة الفواتير المعلقة في المودال
-  renderPendingInvoices();
+  html += `<hr>
+  <p>Subtotal: ${inv.subtotal.toFixed(2)}$ (${(inv.subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+  <p>ضريبة: ${inv.tax}%</p>
+  <p>خصم: ${inv.discount}</p>
+  <p><strong>المجموع: ${inv.totalUSD.toFixed(2)}$ (${inv.totalLBP.toLocaleString()} ل.ل)</strong></p>
+  <hr>
+  <p>شكراً لزيارتكم</p>
+  </div>`;
   
-  // مسح السلة بعد الحفظ
-  clearCart();
+  const invDiv = document.getElementById("invoice");
+  invDiv.innerHTML = html;
+  invDiv.style.display = "block";
+  window.print();
+  invDiv.style.display = "none";
+  
+  // بعد الطباعة، حذف الفاتورة من المعلقة
+  pendingInvoices.splice(i, 1);
+  renderPendingInvoices();
 }
 function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   const now=new Date();
