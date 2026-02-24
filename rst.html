@@ -265,14 +265,18 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   background-color: rgba(0,0,0,0.8);
 }
 .modal-content {
-  background-color: rgba(25,25,35,0.95);
-  margin: 80px auto;
+  background-color: rgba(25,25,35,0.98);
+  margin: 40px auto;
   padding: 25px;
   border-radius: 15px;
-  width: 450px;
-  max-width: 90%;
+  width: 500px;
+  max-width: 95%;
+  
+  max-height: 85vh;     /* أهم سطر */
+  overflow-y: auto;     /* أهم سطر */
+
   box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-  text-align: center;
+  text-align: right;
   position: relative;
   animation: modalFade 0.4s ease;
   color: #fff;
