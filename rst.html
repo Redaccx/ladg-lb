@@ -653,6 +653,7 @@ async function loadCategoriesModal() {
   modalSelect.innerHTML = categoriesData.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
 }
 
+// تعديل القسم المحدد من المودال
 async function editSelectedCategory() {
   const select = document.getElementById("categorySelectList");
   const selectedId = select.value;
@@ -675,6 +676,7 @@ async function editSelectedCategory() {
   loadCategoriesModal();
 }
 
+// حذف القسم المحدد من المودال
 async function deleteSelectedCategory() {
   const select = document.getElementById("categorySelectList");
   const selectedId = select.value;
@@ -691,50 +693,6 @@ async function deleteSelectedCategory() {
   
   alert("تم حذف القسم وكل المنتجات التابعة له");
   loadCategories();
-  loadCategoriesModal();
-}
-async function editSelectedCategory(id, oldName) {
-  const newName = prompt("اسم جديد للقسم:", oldName);
-  if (!newName || newName === oldName) return;
-  
-  // تحديث القسم
-  await db.collection("categories").doc(id).update({ name: newName });
-  
-  // تحديث المنتجات التابعة له
-  const snap = await db.collection("products")
-    .where("category", "==", oldName).get();
-  
-  const batch = db.batch();
-  snap.forEach(doc => {
-    batch.update(doc.ref, { category: newName });
-  });
-  await batch.commit();
-  
-  alert("تم تعديل القسم");
-  loadCategories();
-  loadCategoriesModal();
-}
-
-async function deleteSelectedCategory(id, name) {
-  if (!confirm("سيتم حذف القسم وكل منتجاته. هل أنت متأكد؟")) return;
-  
-  // حذف المنتجات التابعة
-  const snap = await db.collection("products")
-    .where("category", "==", name).get();
-  
-  const batch = db.batch();
-  snap.forEach(doc => {
-    batch.delete(doc.ref);
-  });
-  
-  // حذف القسم
-  batch.delete(db.collection("categories").doc(id));
-  
-  await batch.commit();
-  
-  alert("تم حذف القسم وكل المنتجات التابعة له");
-  loadCategories();
-  loadProducts();
   loadCategoriesModal();
 }
 
