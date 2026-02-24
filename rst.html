@@ -605,15 +605,82 @@ function openSectionModal(){
 }
 function closeSectionModal(){ document.getElementById("sectionModal").style.display = "none"; }
 
-async function loadCategoriesModal(){
+async function loadCategoriesModal() {
   const select = document.getElementById("modalCategorySelect");
   select.innerHTML = "";
+  
   const snap = await db.collection("categories").get();
-  snap.forEach(doc=>{
+  let html = "<h4>الأقسام الحالية</h4>";
+  
+  snap.forEach(doc => {
     const cat = doc.data().name;
+    
+    // إضافة للـ select
     select.innerHTML += `<option value="${cat}">${cat}</option>`;
+    
+    // عرض مع أزرار تعديل وحذف
+    html += `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:5px 0;padding:5px;background:#333;border-radius:6px;">
+        <span>${cat}</span>
+        <div>
+          <button onclick="editCategoryModal('${doc.id}','${cat}')" 
+            style="background:#3498db;color:white;padding:3px 6px;border:none;border-radius:5px;">✏</button>
+          
+          <button onclick="deleteCategoryModal('${doc.id}','${cat}')" 
+            style="background:red;color:white;padding:3px 6px;border:none;border-radius:5px;">🗑</button>
+        </div>
+      </div>
+    `;
   });
+  
+  document.querySelector("#sectionModal .modal-content").innerHTML =
+    document.querySelector("#sectionModal .modal-content").innerHTML.split("<h4>الأقسام الحالية</h4>")[0] + html;
 }
+async function editCategoryModal(id, oldName) {
+  const newName = prompt("اسم جديد للقسم:", oldName);
+  if (!newName || newName === oldName) return;
+  
+  // تحديث القسم
+  await db.collection("categories").doc(id).update({ name: newName });
+  
+  // تحديث المنتجات التابعة له
+  const snap = await db.collection("products")
+    .where("category", "==", oldName).get();
+  
+  const batch = db.batch();
+  snap.forEach(doc => {
+    batch.update(doc.ref, { category: newName });
+  });
+  await batch.commit();
+  
+  alert("تم تعديل القسم");
+  loadCategories();
+  loadCategoriesModal();
+}
+
+async function deleteCategoryModal(id, name) {
+  if (!confirm("سيتم حذف القسم وكل منتجاته. هل أنت متأكد؟")) return;
+  
+  // حذف المنتجات التابعة
+  const snap = await db.collection("products")
+    .where("category", "==", name).get();
+  
+  const batch = db.batch();
+  snap.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+  
+  // حذف القسم
+  batch.delete(db.collection("categories").doc(id));
+  
+  await batch.commit();
+  
+  alert("تم حذف القسم وكل المنتجات التابعة له");
+  loadCategories();
+  loadProducts();
+  loadCategoriesModal();
+}
+
 async function addCategoryModal(){
   const name = document.getElementById("modalNewCategory").value.trim();
   if(!name) return alert("ادخل اسم القسم");
