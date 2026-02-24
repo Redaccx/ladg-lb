@@ -375,10 +375,20 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <br><br>
   <button class="extra" onclick="addExtra()">اكسترا</button>
 </div>
+
+
+<div id="orderTabs" style="margin-bottom:10px;"></div>
+<button onclick="createNewOrder()" style="background:#9b59b6;color:white;padding:6px;border:none;border-radius:6px;">
+  ➕ طلب جديد
+</button>
 <!-- السلة -->
 <div class="cart">
 <h3>الطلب</h3>
 <div class="cart-items" id="cartItems"></div>
+
+<button onclick="deleteCurrentOrder()" style="background:red;color:white;padding:6px;border:none;border-radius:6px;">
+  🗑 حذف الطلب الحالي
+</button>
 
 <label>ضريبة %</label>
 <input type="number" id="tax" value="0">
@@ -460,7 +470,26 @@ auth.onAuthStateChanged(async user => {
 });
 
 let currentUser=null;
-let cart=[];
+let orders = [];
+let currentOrderIndex = 0;
+
+function createNewOrder() {
+  const order = {
+    id: Date.now(),
+    name: "طلب " + (orders.length + 1),
+    items: [],
+    tax: 0,
+    discount: 0
+  };
+  orders.push(order);
+  currentOrderIndex = orders.length - 1;
+  renderOrderTabs();
+  renderCart();
+}
+
+window.onload = function() {
+  createNewOrder();
+};
 const USD_TO_LBP=89000;
 
 // --------- تسجيل دخول وخروج ---------
@@ -595,35 +624,65 @@ async function showProducts(cat, button){
 }
 
 // --------- السلة ---------
-function addToCart(name,price){
-  let existing=cart.find(i=>i.name===name);
-  if(existing){existing.qty+=1; existing.total=existing.price*existing.qty;}
-  else{cart.push({name,price,qty:1,total:price});}
+function addToCart(name, price) {
+  const cart = orders[currentOrderIndex].items;
+  
+  let existing = cart.find(i => i.name === name);
+  if (existing) {
+    existing.qty += 1;
+    existing.total = existing.price * existing.qty;
+  } else {
+    cart.push({ name, price, qty: 1, total: price });
+  }
   renderCart();
 }
-function renderCart(){
-  const div=document.getElementById("cartItems");
-  div.innerHTML="";
-  let subtotal=0;
-  cart.forEach((item,i)=>{
-    subtotal+=item.total;
-    div.innerHTML+=`${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)
+function renderCart() {
+  const order = orders[currentOrderIndex];
+  const cart = order.items;
+  
+  const div = document.getElementById("cartItems");
+  div.innerHTML = "";
+  
+  let subtotal = 0;
+  
+  cart.forEach((item, i) => {
+    subtotal += item.total;
+    div.innerHTML += `
+      ${item.name} × ${item.qty} = ${item.total.toFixed(2)}$
       <button onclick="removeItem(${i})">❌</button><br>`;
   });
-  const tax=parseFloat(document.getElementById("tax").value)||0;
-  const discount=parseFloat(document.getElementById("discount").value)||0;
-  const totalUSD=subtotal+(subtotal*tax/100)-discount;
-  const totalLBP=totalUSD*USD_TO_LBP;
-  document.getElementById("total").innerText=`المجموع: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)`;
+  
+  const tax = order.tax;
+  const discount = order.discount;
+  
+  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
+  const totalLBP = totalUSD * USD_TO_LBP;
+  
+  document.getElementById("total").innerText =
+    `المجموع: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)`;
 }
-function removeItem(i){cart.splice(i,1); renderCart();}
-function clearCart(){cart=[]; renderCart();}
-function addExtra(){
-  const name=prompt("اسم المنتج:");
-  const weight=parseFloat(prompt("أدخل الوزن بالكيلو:"));
-  const price=parseFloat(prompt("أدخل السعر الإجمالي لهذا الوزن:"));
-  if(!name || !weight || !price) return;
-  cart.push({name, price, qty: weight, total: price});
+function removeItem(i) {
+  orders[currentOrderIndex].items.splice(i, 1);
+  renderCart();
+}
+function clearCart() {
+  orders[currentOrderIndex].items = [];
+  renderCart();
+}
+function addExtra() {
+  const name = prompt("اسم المنتج:");
+  const weight = parseFloat(prompt("أدخل الوزن بالكيلو:"));
+  const price = parseFloat(prompt("أدخل السعر الإجمالي لهذا الوزن:"));
+  
+  if (!name || !weight || !price) return;
+  
+  orders[currentOrderIndex].items.push({
+    name,
+    price,
+    qty: weight,
+    total: price
+  });
+  
   renderCart();
 }
 
@@ -726,60 +785,73 @@ async function getNextNumber(){
     return num;
   });
 }
-async function saveOrder(){
-  if(cart.length===0) return alert("السلة فارغة");
-  const number=await getNextNumber();
-  const subtotal=cart.reduce((s,i)=>s+i.total,0);
-  const tax=parseFloat(document.getElementById("tax").value)||0;
-  const discount=parseFloat(document.getElementById("discount").value)||0;
-  const totalUSD=subtotal+(subtotal*tax/100)-discount;
-  const totalLBP=totalUSD*USD_TO_LBP;
-
-  const now=new Date();
-  const dateStr=now.toISOString().split('T')[0];
-
+async function saveOrder() {
+  const order = orders[currentOrderIndex];
+  
+  if (order.items.length === 0) return alert("السلة فارغة");
+  
+  const number = await getNextNumber();
+  const subtotal = order.items.reduce((s, i) => s + i.total, 0);
+  
+  const tax = parseFloat(document.getElementById("tax").value) || 0;
+  const discount = parseFloat(document.getElementById("discount").value) || 0;
+  
+  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
+  const totalLBP = totalUSD * USD_TO_LBP;
+  
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  
   await db.collection("sales").add({
-    orderNumber:number,
-    user:currentUser.email,
-    items:cart,
+    orderNumber: number,
+    user: currentUser.email,
+    items: order.items,
     subtotal,
     tax,
     discount,
     totalUSD,
     totalLBP,
-    date:dateStr,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    date: dateStr,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
-
-  generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP);
+  
+  // ❌ أهم سطر: إنشاء نسخة مستقلة للطباعة
+  const orderToPrint = { ...order, items: [...order.items] };
+  generateInvoice(orderToPrint, number, subtotal, tax, discount, totalUSD, totalLBP);
+  
   window.print();
-  clearCart();
+  
+  // حذف الطلب بعد الحفظ
+  deleteCurrentOrder();
 }
 
-function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
-  const now=new Date();
-  const dateStr=now.toLocaleString("ar-EG",{hour12:false});
-  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+function generateInvoice(order, number, subtotal, tax, discount, totalUSD, totalLBP) {
+  const now = new Date();
+  const dateStr = now.toLocaleString("ar-EG", { hour12: false });
+  
+  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
   <h3>مطعم السندويشات</h3>
   <p>رقم الطلب: ${number}</p>
   <p>التاريخ: ${dateStr}</p>
   <p>الكاشير: ${currentUser.email}</p>
   <hr>`;
-  cart.forEach(item=>{
-    const lbp=(item.total*USD_TO_LBP).toLocaleString();
-    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+  
+  order.items.forEach(item => {
+    const lbp = (item.total * USD_TO_LBP).toLocaleString();
+    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-  html+=`<hr>
-  <p>Subtotal: ${subtotal.toFixed(2)}$ (${(subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+  
+  html += `<hr>
+  <p>Subtotal: ${subtotal.toFixed(2)}$</p>
   <p>Tax: ${tax}%</p>
   <p>Discount: ${discount}</p>
   <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
   <hr>
   <p>شكراً لزيارتكم</p>
   </div>`;
-  invoice.innerHTML=html;
+  
+  document.getElementById("invoice").innerHTML = html;
 }
-
 // --------- تقرير اليوم ---------
 async function toggleDailyReport() {
   const modal = document.getElementById("dailyReportModal");
@@ -900,26 +972,39 @@ async function printDailyTotal() {
 function closeDailyReport() {
   document.getElementById("dailyReportModal").style.display = "none";
 }
-async function printSale(id){
-  const doc=await db.collection("sales").doc(id).get();
-  if(!doc.exists) return alert("الطلب غير موجود");
-  const d=doc.data();
-  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+async function printSale(id) {
+  
+  const doc = await db.collection("sales").doc(id).get();
+  if (!doc.exists) return alert("الطلب غير موجود");
+  
+  const d = doc.data();
+  
+  const dateTime = d.createdAt && d.createdAt.toDate ?
+    d.createdAt.toDate().toLocaleString("ar-EG", { hour12: false }) :
+    d.date;
+  
+  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
   <h3>مطعم السندويشات</h3>
   <p>رقم الطلب: ${d.orderNumber}</p>
-  let dateTime = d.createdAt ? d.createdAt.toDate().toLocaleString("ar-EG", {hour12:false}) : d.date;
-<p>الكاشير: ${d.user} | ${dateTime}</p>
+  <p>الكاشير: ${d.user} | ${dateTime}</p>
   <hr>`;
-  d.items.forEach(item=>{
-    const lbp=(item.total*USD_TO_LBP).toLocaleString();
-    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+  
+  d.items.forEach(item => {
+    const lbp = (item.total * USD_TO_LBP).toLocaleString();
+    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-  html+=`<hr><p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr><p>شكراً لتعاونكم</p></div>`;
-  const inv=document.getElementById("invoice");
-  inv.innerHTML=html;
-  inv.style.display="block";
+  
+  html += `<hr>
+  <p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
+  <hr>
+  <p>شكراً لتعاونكم</p>
+  </div>`;
+  
+  const inv = document.getElementById("invoice");
+  inv.innerHTML = html;
+  inv.style.display = "block";
   window.print();
-  inv.style.display="none";
+  inv.style.display = "none";
 }
 
 async function deleteSale(id){
@@ -928,6 +1013,47 @@ async function deleteSale(id){
     alert("تم حذف الطلب");
     toggleDailyReport();
   }
+}
+
+
+function renderOrderTabs() {
+  const div = document.getElementById("orderTabs");
+  div.innerHTML = "";
+  
+  orders.forEach((order, index) => {
+    div.innerHTML += `
+      <button onclick="switchOrder(${index})"
+        style="
+          margin:3px;
+          padding:5px 8px;
+          background:${index === currentOrderIndex ? '#27ae60' : '#555'};
+          color:white;
+          border:none;
+          border-radius:6px;">
+        ${order.name}
+      </button>`;
+  });
+}
+
+function switchOrder(index) {
+  currentOrderIndex = index;
+  renderOrderTabs();
+  renderCart();
+}
+
+function deleteCurrentOrder() {
+  if (!confirm("هل تريد حذف هذا الطلب؟")) return;
+  
+  orders.splice(currentOrderIndex, 1);
+  
+  if (orders.length === 0) {
+    createNewOrder();
+  } else {
+    currentOrderIndex = 0;
+  }
+  
+  renderOrderTabs();
+  renderCart();
 }
 </script>
 </body>
