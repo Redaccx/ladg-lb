@@ -347,20 +347,11 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <div>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
-<button class="extra" onclick="renderPendingInvoices()">الفواتير المعلقة</button>
     <button class="logout" onclick="logout()">خروج</button>
   </div>
 </div>
 
-
-<!-- مودال الفواتير المعلقة -->
-<div id="pendingInvoicesModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closePendingInvoices()">&times;</span>
-    <h3>الفواتير المعلقة</h3>
-    <div id="pendingInvoicesList" style="max-height:400px; overflow:auto;"></div>
-  </div>
-</div>
+<!-- التقرير اليومي -->
 <!-- مودال تقرير اليوم -->
 <div id="dailyReportModal" class="modal">
   <div class="modal-content" style="width:600px; max-width:95%;">
@@ -735,59 +726,36 @@ async function getNextNumber(){
     return num;
   });
 }
-async function printPendingInvoice(i) {
-  const inv = pendingInvoices[i];
-  if (!inv) return alert("الفاتورة غير موجودة");
-  
-  // الحصول على رقم فاتورة جديد نهائي
-  const number = await getNextNumber();
-  
-  // حفظ الفاتورة في Firebase لتكون جزءًا من تقرير اليوم
+async function saveOrder(){
+  if(cart.length===0) return alert("السلة فارغة");
+  const number=await getNextNumber();
+  const subtotal=cart.reduce((s,i)=>s+i.total,0);
+  const tax=parseFloat(document.getElementById("tax").value)||0;
+  const discount=parseFloat(document.getElementById("discount").value)||0;
+  const totalUSD=subtotal+(subtotal*tax/100)-discount;
+  const totalLBP=totalUSD*USD_TO_LBP;
+
+  const now=new Date();
+  const dateStr=now.toISOString().split('T')[0];
+
   await db.collection("sales").add({
-    orderNumber: number,
-    user: inv.user,
-    items: inv.items,
-    subtotal: inv.subtotal,
-    tax: inv.tax,
-    discount: inv.discount,
-    totalUSD: inv.totalUSD,
-    totalLBP: inv.totalLBP,
-    date: new Date().toISOString().split('T')[0],
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    orderNumber:number,
+    user:currentUser.email,
+    items:cart,
+    subtotal,
+    tax,
+    discount,
+    totalUSD,
+    totalLBP,
+    date:dateStr,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
-  
-  // إنشاء الفاتورة للطباعة
-  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-  <h3>مطعم السندويشات</h3>
-  <p>فاتورة #${number}</p>
-  <p>الكاشير: ${inv.user}</p>
-  <p>التاريخ والوقت: ${inv.createdAt.toLocaleString("ar-EG",{hour12:false})}</p>
-  <hr>`;
-  
-  inv.items.forEach(item => {
-    const lbp = (item.total * USD_TO_LBP).toLocaleString();
-    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
-  });
-  
-  html += `<hr>
-  <p>Subtotal: ${inv.subtotal.toFixed(2)}$ (${(inv.subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
-  <p>ضريبة: ${inv.tax}%</p>
-  <p>خصم: ${inv.discount}</p>
-  <p><strong>المجموع: ${inv.totalUSD.toFixed(2)}$ (${inv.totalLBP.toLocaleString()} ل.ل)</strong></p>
-  <hr>
-  <p>شكراً لزيارتكم</p>
-  </div>`;
-  
-  const invDiv = document.getElementById("invoice");
-  invDiv.innerHTML = html;
-  invDiv.style.display = "block";
+
+  generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP);
   window.print();
-  invDiv.style.display = "none";
-  
-  // بعد الطباعة، حذف الفاتورة من المعلقة
-  pendingInvoices.splice(i, 1);
-  renderPendingInvoices();
+  clearCart();
 }
+
 function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   const now=new Date();
   const dateStr=now.toLocaleString("ar-EG",{hour12:false});
@@ -932,114 +900,34 @@ async function printDailyTotal() {
 function closeDailyReport() {
   document.getElementById("dailyReportModal").style.display = "none";
 }
-async function printSale(id) {
-  const doc = await db.collection("sales").doc(id).get();
-  if (!doc.exists) return alert("الطلب غير موجود");
-  const d = doc.data();
-  
-  const dateTime = d.createdAt && d.createdAt.toDate ?
-    d.createdAt.toDate().toLocaleString("ar-EG", { hour12: false }) : d.date;
-  
-  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-    <h3>مطعم السندويشات</h3>
-    <p>رقم الطلب: ${d.orderNumber}</p>
-    <p>الكاشير: ${d.user} | ${dateTime}</p>
-    <hr>`;
-  
-  d.items.forEach(item => {
-    const lbp = (item.total * USD_TO_LBP).toLocaleString();
-    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+async function printSale(id){
+  const doc=await db.collection("sales").doc(id).get();
+  if(!doc.exists) return alert("الطلب غير موجود");
+  const d=doc.data();
+  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+  <h3>مطعم السندويشات</h3>
+  <p>رقم الطلب: ${d.orderNumber}</p>
+  let dateTime = d.createdAt ? d.createdAt.toDate().toLocaleString("ar-EG", {hour12:false}) : d.date;
+<p>الكاشير: ${d.user} | ${dateTime}</p>
+  <hr>`;
+  d.items.forEach(item=>{
+    const lbp=(item.total*USD_TO_LBP).toLocaleString();
+    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-  
-  html += `<hr><p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr>
-    <p>شكراً لتعاونكم</p></div>`;
-  
-  const inv = document.getElementById("invoice");
-  inv.innerHTML = html;
-  inv.style.display = "block";
+  html+=`<hr><p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr><p>شكراً لتعاونكم</p></div>`;
+  const inv=document.getElementById("invoice");
+  inv.innerHTML=html;
+  inv.style.display="block";
   window.print();
-  inv.style.display = "none";
+  inv.style.display="none";
 }
+
 async function deleteSale(id){
   if(confirm("هل تريد حذف هذا الطلب؟")){
     await db.collection("sales").doc(id).delete();
     alert("تم حذف الطلب");
     toggleDailyReport();
   }
-}
-
-
-// مصفوفة لحفظ الفواتير المعلقة
-let pendingInvoices = [];
-
-
-// إدارة الفواتير المعلقة
-function renderPendingInvoices() {
-  const modalContent = document.getElementById("pendingInvoicesList");
-  modalContent.innerHTML = "";
-  
-  pendingInvoices.forEach((inv, i) => {
-    const dateTime = inv.createdAt.toLocaleString("ar-EG", { hour12: false });
-    
-    const div = document.createElement("div");
-    div.style.borderBottom = "1px dashed #555";
-    div.style.padding = "8px";
-    div.innerHTML = `
-      <p><strong>فاتورة #${inv.number}</strong> | الكاشير: ${inv.user}</p>
-      <p>التاريخ والوقت: ${dateTime}</p>
-      ${inv.items.map(item => {
-        const lbp = (item.total * USD_TO_LBP).toLocaleString();
-        return `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
-      }).join('')}
-      <p><strong>المجموع: ${inv.totalUSD.toFixed(2)}$ (${inv.totalLBP.toLocaleString()} ل.ل)</strong></p>
-      <p>ضريبة: ${inv.tax}% | خصم: ${inv.discount}</p>
-      <button onclick="printPendingInvoice(${i})" style="background:#27ae60;color:white;padding:5px 8px;border:none;border-radius:6px;">طباعة</button>
-      <button onclick="deletePendingInvoice(${i})" style="background:red;color:white;padding:5px 8px;border:none;border-radius:6px;">حذف</button>
-    `;
-    modalContent.appendChild(div);
-  });
-  
-  document.getElementById("pendingInvoicesModal").style.display = "block";
-}
-function printPendingInvoice(i) {
-  const inv = pendingInvoices[i];
-  if (!inv) return alert("الفاتورة غير موجودة");
-  
-  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-  <h3>مطعم السندويشات</h3>
-  <p>فاتورة #${inv.number}</p>
-  <p>الكاشير: ${inv.user}</p>
-  <p>التاريخ والوقت: ${inv.createdAt.toLocaleString("ar-EG",{hour12:false})}</p>
-  <hr>`;
-  
-  inv.items.forEach(item => {
-    const lbp = (item.total * USD_TO_LBP).toLocaleString();
-    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
-  });
-  
-  html += `<hr>
-  <p>Subtotal: ${inv.subtotal.toFixed(2)}$ (${(inv.subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
-  <p>ضريبة: ${inv.tax}%</p>
-  <p>خصم: ${inv.discount}</p>
-  <p><strong>المجموع: ${inv.totalUSD.toFixed(2)}$ (${inv.totalLBP.toLocaleString()} ل.ل)</strong></p>
-  <hr>
-  <p>شكراً لزيارتكم</p>
-  </div>`;
-  
-  const invDiv = document.getElementById("invoice");
-  invDiv.innerHTML = html;
-  invDiv.style.display = "block";
-  window.print();
-  invDiv.style.display = "none";
-}
-
-function deletePendingInvoice(i) {
-  pendingInvoices.splice(i, 1);
-  renderPendingInvoices();
-}
-
-function closePendingInvoices() {
-  document.getElementById("pendingInvoicesModal").style.display = "none";
 }
 </script>
 </body>
