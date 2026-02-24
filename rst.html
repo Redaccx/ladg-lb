@@ -321,74 +321,58 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     background: rgba(255,255,255,0.2);
     outline: none;
 }
-
-/* --------- أزرار الطلبات --------- */
-/* حاوية الطلبات */
 .order-container {
-  margin: 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 100%;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 /* زر طلب جديد */
 #newOrderBtn {
-  padding: 14px 28px;
-  border-radius: 30px;
+  padding: 12px 24px;
+  border-radius: 25px;
   border: none;
   background: linear-gradient(135deg, #10b981, #3b82f6);
   color: #fff;
   font-weight: bold;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
-  align-self: flex-start;
 }
 
 #newOrderBtn:hover {
   transform: scale(1.05);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   background: linear-gradient(135deg, #3b82f6, #10b981);
 }
 
 /* ألسنة الطلبات */
 .order-tabs-container {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
   padding: 5px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #3b82f6 rgba(255, 255, 255, 0.1);
 }
 
-/* بطاقات الطلبات */
 .order-tabs-container button {
-  padding: 10px 16px;
+  padding: 8px 12px;
   border-radius: 20px;
   border: none;
   cursor: pointer;
   font-weight: bold;
   background: rgba(255, 255, 255, 0.05);
   color: #f0f0f0;
-  min-width: 90px;
+  min-width: 80px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: all 0.3s ease;
-  white-space: nowrap;
 }
 
 .order-tabs-container button.active {
   background: linear-gradient(135deg, #6ee7b7, #3b82f6);
   color: #fff;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-  transform: scale(1.05);
-}
-
-.order-tabs-container button:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 </style>
 </head>
@@ -445,17 +429,16 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <button class="extra" onclick="addExtra()">اكسترا</button>
 </div>
 
-
-<!-- حاوية زر الطلب الجديد وألسنة الطلبات -->
-<div class="order-container">
-  <button id="newOrderBtn">➕ طلب جديد</button>
-  <div id="orderTabs" class="order-tabs-container"></div>
-</div>
 <!-- السلة -->
 <div class="cart">
 <h3>الطلب</h3>
 <div class="cart-items" id="cartItems"></div>
 
+
+<div class="order-container">
+  <button id="newOrderBtn">➕ طلب جديد</button>
+  <div id="orderTabs" class="order-tabs-container"></div>
+</div>
 <button onclick="deleteCurrentOrder()" style="background:red;color:white;padding:6px;border:none;border-radius:6px;">
   🗑 حذف الطلب الحالي
 </button>
