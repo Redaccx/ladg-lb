@@ -436,8 +436,25 @@ const firebaseConfig={
   appId: "1:257385912042:web:bc30397b745340e31e2993"
 };
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// حفظ تسجيل الدخول حتى بعد اغلاق المتصفح
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById("userInfo").innerText = user.email + " | كاشير";
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadCategories();
+    loadProducts();
+  } else {
+    document.getElementById("loginPage").style.display = "block";
+    document.getElementById("app").style.display = "none";
+  }
+});
 
 let currentUser=null;
 let cart=[];
