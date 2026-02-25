@@ -610,7 +610,7 @@ function addToCart(name, price) {
     existing.qty += 1;
     existing.total = existing.price * existing.qty;
   } else {
-    cart.push({ name, price, qty: 1, total: price });
+    orders[currentOrderId].push({name, price, qty: weight, total: price});
   }
   
   renderCart();
@@ -757,44 +757,39 @@ async function getNextNumber(){
     return num;
   });
 }
-async function saveOrder(){
-  if(!currentOrderId || orders[currentOrderId].length===0) return alert("السلة فارغة");
-  const number=await getNextNumber();
-  const subtotal=orders[currentOrderId].reduce((s,i)=>s+i.total,0);
-  const tax=parseFloat(document.getElementById("tax").value)||0;
-  const discount=parseFloat(document.getElementById("discount").value)||0;
-  const totalUSD=subtotal+(subtotal*tax/100)-discount;
-  const totalLBP=totalUSD*USD_TO_LBP;
-
-  const now=new Date();
-  const dateStr=now.toISOString().split('T')[0];
-
+async function saveOrder() {
+  if (!currentOrderId || orders[currentOrderId].length === 0)
+    return alert("السلة فارغة");
+  
+  const number = await getNextNumber();
+  const subtotal = orders[currentOrderId].reduce((s, i) => s + i.total, 0);
+  const tax = parseFloat(document.getElementById("tax").value) || 0;
+  const discount = parseFloat(document.getElementById("discount").value) || 0;
+  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
+  const totalLBP = totalUSD * USD_TO_LBP;
+  
   await db.collection("sales").add({
-    orderNumber:number,
-    user:currentUser.email,
-    items:orders[currentOrderId],
+    orderNumber: number,
+    user: currentUser.email,
+    items: orders[currentOrderId],
     subtotal,
     tax,
     discount,
     totalUSD,
     totalLBP,
-    date:dateStr,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    date: new Date().toISOString().split('T')[0],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
-
+  
   generateInvoice(number, subtotal, tax, discount, totalUSD, totalLBP);
-window.print();
-
-// حذف الطلب الحالي من الطلبات المفتوحة
-delete orders[currentOrderId];
-
-// الانتقال لأول طلب موجود (إذا في)
-currentOrderId = Object.keys(orders)[0] || null;
-
-// تحديث الواجهة
-renderOpenOrders();
-renderCart();
-
+  window.print();
+  
+  delete orders[currentOrderId];
+  currentOrderId = Object.keys(orders)[0] || null;
+  
+  renderOpenOrders();
+  renderCart();
+}
 function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
   const now=new Date();
   const dateStr=now.toLocaleString("ar-EG",{hour12:false});
@@ -974,13 +969,13 @@ function createNewOrder() {
   orders[id] = [];
   currentOrderId = id;
   renderOpenOrders();
-  renderorders[currentOrderId]();
+  renderCart();
 }
 
 function switchOrder(id) {
   currentOrderId = id;
   renderOpenOrders();
-  renderorders[currentOrderId]();
+  renderCart();
 }
 
 function deleteOpenOrder(id) {
@@ -990,9 +985,8 @@ function deleteOpenOrder(id) {
     currentOrderId = Object.keys(orders)[0] || null;
   }
   renderOpenOrders();
-  renderorders[currentOrderId]();
+  renderCart();
 }
-
 function renderOpenOrders() {
   const div = document.getElementById("openOrders");
   div.innerHTML = "";
