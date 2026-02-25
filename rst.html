@@ -457,6 +457,27 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   </div>
 </div>
 
+<div id="editProductModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeEditProductModal()">&times;</span>
+    <h3>تعديل المنتج</h3>
+    
+    <label>اسم المنتج:</label>
+    <input type="text" id="editProductName">
+    
+    <label>السعر بالدولار:</label>
+    <input type="number" id="editProductPrice">
+    
+    <label>رقم الباركود:</label>
+    <input type="text" id="editProductBarcode">
+    
+    <label>القسم:</label>
+    <select id="editProductCategory"></select>
+    
+    <button onclick="saveEditedProduct()" style="background:#27ae60;color:white;">حفظ</button>
+  </div>
+</div>
+
 <!-- الفاتورة للطباعة -->
 <div id="invoice"></div>
 
@@ -569,7 +590,6 @@ async function loadProducts() {
   
   renderProducts(allProducts);
 }
-
 function renderProducts(products) {
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
@@ -581,6 +601,7 @@ function renderProducts(products) {
       ${p.name} - ${p.category}<br>
       ${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
       <br>
+      <button onclick="editProductPopup('${p.id}')" style="background:orange;">✏</button>
       <button onclick="deleteProduct('${p.id}')" style="background:red;">X</button>
     `;
     
@@ -592,6 +613,7 @@ function renderProducts(products) {
     grid.appendChild(div);
   });
 }
+
 
 function searchProducts() {
   const value = document.getElementById("searchProduct").value.toLowerCase();
@@ -1113,6 +1135,48 @@ function scanProduct(code) {
     addToCart(product.name, product.price);
     document.getElementById("scannerInput").value = ""; // مسح الرقم بعد الإضافة
   }
+}
+let editingProductId = null;
+
+function editProductPopup(productId) {
+  editingProductId = productId;
+  const product = allProducts.find(p => p.id === productId);
+  if (!product) return alert("المنتج غير موجود");
+
+  document.getElementById("editProductName").value = product.name;
+  document.getElementById("editProductPrice").value = product.price;
+  document.getElementById("editProductBarcode").value = product.barcode || "";
+
+  const select = document.getElementById("editProductCategory");
+  select.innerHTML = categoriesData.map(c => 
+    `<option value="${c.name}" ${c.name===product.category?'selected':''}>${c.name}</option>`
+  ).join('');
+
+  document.getElementById("editProductModal").style.display = "block";
+}
+
+function closeEditProductModal() {
+  document.getElementById("editProductModal").style.display = "none";
+  editingProductId = null;
+}
+
+async function saveEditedProduct() {
+  if (!editingProductId) return;
+
+  const name = document.getElementById("editProductName").value.trim();
+  const price = parseFloat(document.getElementById("editProductPrice").value);
+  const barcode = document.getElementById("editProductBarcode").value.trim();
+  const category = document.getElementById("editProductCategory").value;
+
+  if (!name || !price || !category || !barcode) return alert("املأ كل البيانات");
+
+  await db.collection("products").doc(editingProductId).update({
+    name, price, category, barcode
+  });
+
+  alert("تم تعديل المنتج");
+  closeEditProductModal();
+  loadProducts(); // إعادة تحميل المنتجات
 }
 </script>
 </body>
