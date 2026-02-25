@@ -48,11 +48,11 @@ h3, h4 {
   font-weight: bold;
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   box-shadow: 0 3px 6px rgba(0,0,0,0.3);
 }
 .header button:hover {
-  transform: scale(1.1) rotate(-2deg);
+  transform: scale(1.05) rotate(-2deg);
   box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
 
@@ -173,6 +173,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 .cart {
   width: 35%;
   background: rgba(40,40,50,0.95);
+  border-left: 3px solid #27ae60
   padding: 20px;
   border-radius: 15px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.6);
@@ -205,11 +206,11 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 }
 .cart input { padding: 6px; margin: 3px 0 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: #fff; }
 .cart .total {
-  font-weight: bold;
-  font-size: 18px;
-  margin-top: 15px;
-  text-align: center;
-  text-shadow: 1px 1px 4px #000;
+  background: #111;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 20px;
+  color: #2ecc71;
 }
 .cart button.save { background: #27ae60; }
 .cart button.clear { background: #c0392b; }
@@ -320,6 +321,38 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 #searchProduct:focus {
     background: rgba(255,255,255,0.2);
     outline: none;
+}
+/* --------- Open Orders Tabs --------- */
+.open-orders {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.open-orders div {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #444;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.open-orders div.active {
+  background: #27ae60;
+}
+
+.open-orders button {
+  background: red;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -1031,12 +1064,15 @@ function renderOpenOrders() {
   div.innerHTML = "";
   
   Object.keys(orders).forEach(id => {
-    div.innerHTML += `
-      <div style="display:flex;justify-content:space-between;background:${id===currentOrderId?'#27ae60':'#444'};padding:5px;border-radius:6px;margin-bottom:4px;">
-        <span onclick="switchOrder('${id}')" style="cursor:pointer;">${id}</span>
-        <button onclick="deleteOpenOrder('${id}')" style="background:red;color:white;border:none;border-radius:4px;">X</button>
-      </div>
+    const orderDiv = document.createElement("div");
+    orderDiv.className = id === currentOrderId ? "active" : "";
+    
+    orderDiv.innerHTML = `
+      <span onclick="switchOrder('${id}')">${id}</span>
+      <button onclick="deleteOpenOrder('${id}')">✕</button>
     `;
+    
+    div.appendChild(orderDiv);
   });
 }
 </script>
