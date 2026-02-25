@@ -220,13 +220,26 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   text-align: center;
   text-shadow: 1px 1px 4px #000;
 }
-.cart button.save { 
-  color:#fff;
-  background: #27ae60; }
-.cart button.clear { 
-  color:#fff;
-  background: #c0392b; }
-.cart button:hover { opacity: 0.9; }
+.cart button.save, 
+.cart button.clear {
+  width: 100%;          /* يملأ عرض السلة */
+  padding: 12px 0;      /* ارتفاع أكبر */
+  font-size: 16px;      /* حجم الخط أكبر */
+  font-weight: bold;
+  border-radius: 10px;
+  margin-top: 8px;      /* مسافة بين الأزرار */
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cart button.save { background: #27ae60; color: #fff; }
+.cart button.clear { background: #c0392b; color: #fff; }
+
+.cart button.save:hover,
+.cart button.clear:hover {
+  transform: scale(1.05);
+  opacity: 1;
+}
 
 /* --------- Login Box --------- */
 .login-box {
@@ -615,8 +628,11 @@ async function showProducts(cat, button){
 }
 
 // --------- السلة ---------
-function addToCart(name, price) {
-  if (!currentOrderId) createNewOrder();
+async function addToCart(name, price) {
+  
+  if (!currentOrderId) {
+    await createNewOrder(); // ⬅ ننتظر إنشاء الطلب
+  }
   
   let cart = orders[currentOrderId];
   let existing = cart.find(i => i.name === name);
@@ -625,12 +641,12 @@ function addToCart(name, price) {
     existing.qty += 1;
     existing.total = existing.price * existing.qty;
   } else {
-    orders[currentOrderId].push({
-  name,
-  price,
-  qty: 1,
-  total: price
-});
+    cart.push({
+      name,
+      price,
+      qty: 1,
+      total: price
+    });
   }
   
   renderCart();
