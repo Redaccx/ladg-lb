@@ -57,9 +57,9 @@ h3, h4 {
 }
 
 /* Color Variants */
-.header .new-section { background: #9b59b6; }
-.header .report { background: #3498db; }
-.header .logout { background: #e74c3c; }
+.header .new-section { color:white background: #fff; }
+.header .report { color:white background: #fff; }
+.header .logout { color:white background: #3498db; }
 
 /* --------- Container --------- */
 .container {
@@ -97,7 +97,7 @@ h3, h4 {
 }
 .categories button {
   padding: 10px 16px;
-  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+  background: linear-gradient(45deg, #121212, #121212);
   color: #fff;
   border-radius: 8px;
   border: none;
@@ -163,8 +163,8 @@ input, select, .products button.extra {
 }
 input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 .products button.extra {
-  background: #8e44ad;
-  color: #fff;
+  background: white;
+  color: #000;
   font-weight: bold;
 }
 .products button.extra:hover { transform: scale(1.05); }
@@ -346,7 +346,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <input type="text" id="searchProduct" placeholder="🔎 بحث سريع عن منتج..." oninput="searchProducts()">
   </div>
   <div>
-    <button onclick="createNewOrder()" style="background:#2ecc71;">طلب جديد</button>
+    <button onclick="createNewOrder()" style="color:#000000;background:#ffffff;">طلب جديد</button>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
     <button class="logout" onclick="logout()">خروج</button>
