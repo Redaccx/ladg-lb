@@ -421,7 +421,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 
     <h4>إضافة قسم جديد</h4>
     <input type="text" id="modalNewCategory" placeholder="اسم القسم">
-    <button onclick="addCategoryModal()" style="background:#ff9800;">إضافة قسم</button>
+    <button onclick="addCategoryModal()" style="color: #ffffff;background:#333333;">إضافة قسم</button>
 <h4>الأقسام الحالية</h4>
 <select id="categorySelectList" style="width:100%; padding:8px; border-radius:6px; margin-bottom:8px;">
 </select>
@@ -436,7 +436,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <input type="text" id="modalNewName" placeholder="اسم المنتج">
     <input type="number" id="modalNewPrice" placeholder="السعر بالدولار">
     <select id="modalCategorySelect"></select>
-    <button onclick="addProductModal()" style="background:#ff9800;">إضافة منتج</button>
+    <button onclick="addProductModal()" style="color:#ffffff;background:#333333;">إضافة منتج</button>
   </div>
 </div>
 
@@ -654,10 +654,13 @@ function renderCart() {
   
   const tax = parseFloat(document.getElementById("tax").value) || 0;
   const discount = parseFloat(document.getElementById("discount").value) || 0;
-  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
-  
-  document.getElementById("total").innerText =
-    "المجموع: " + totalUSD.toFixed(2) + "$";
+const totalUSD = subtotal + (subtotal * tax / 100) - discount;
+const totalLBP = totalUSD * USD_TO_LBP;
+
+document.getElementById("total").innerText =
+  "المجموع: " +
+  totalUSD.toFixed(2) + "$" +
+  " (" + totalLBP.toLocaleString() + " ل.ل)";
 }
 function removeItem(i) {
   if (!currentOrderId) return;
@@ -794,7 +797,7 @@ async function saveOrder() {
   if (!currentOrderId || orders[currentOrderId].length === 0)
     return alert("السلة فارغة");
   
-  const number = await getNextNumber();
+  const number = currentOrderId.replace("طلب-", "");
   const subtotal = orders[currentOrderId].reduce((s, i) => s + i.total, 0);
   const tax = parseFloat(document.getElementById("tax").value) || 0;
   const discount = parseFloat(document.getElementById("discount").value) || 0;
@@ -1018,10 +1021,20 @@ async function deleteSale(id){
   }
 }
 
-function createNewOrder() {
-  const id = "ORD-" + Date.now();
+async function createNewOrder() {
+  
+  // 🔴 منع فتح أكثر من 10 طلبات
+  if (Object.keys(orders).length >= 10) {
+    alert("لا يمكن فتح أكثر من 10 طلبات بنفس الوقت");
+    return;
+  }
+  
+  const number = await getNextNumber(); // نفس عداد الفاتورة
+  const id = "طلب-" + number;
+  
   orders[id] = [];
   currentOrderId = id;
+  
   renderOpenOrders();
   renderCart();
 }
@@ -1053,6 +1066,14 @@ function renderOpenOrders() {
       </div>
     `;
   });
+  
+  // 🔴 تعطيل زر "طلب جديد" إذا صاروا 10 طلبات
+  const btn = document.querySelector("button[onclick='createNewOrder()']");
+  if (btn) {
+    btn.disabled = Object.keys(orders).length >= 10;
+    btn.style.opacity = btn.disabled ? "0.5" : "1";
+    btn.style.cursor = btn.disabled ? "not-allowed" : "pointer";
+  }
 }
 </script>
 </body>
