@@ -59,15 +59,15 @@ h3, h4 {
 /* Color Variants */
 .header .new-section {
   color:#121212;
-  background: #fff; }
+  background: #333; }
 .header .report { 
-  color:#121212;
+  color:#fff;
   background: #fff; 
   
 }
 .header .logout { 
   background: #3498db; 
-  color: #fff;
+  color: #333;
 }
 
 /* --------- Container --------- */
@@ -172,8 +172,8 @@ input, select, .products button.extra {
 }
 input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 .products button.extra {
-  background: white;
-  color: #000;
+  background: #333;
+  color: #fff;
   font-weight: bold;
 }
 .products button.extra:hover { transform: scale(1.05); }
@@ -220,8 +220,12 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   text-align: center;
   text-shadow: 1px 1px 4px #000;
 }
-.cart button.save { background: #27ae60; }
-.cart button.clear { background: #c0392b; }
+.cart button.save { 
+  color:#fff;
+  background: #27ae60; }
+.cart button.clear { 
+  color:#fff;
+  background: #c0392b; }
 .cart button:hover { opacity: 0.9; }
 
 /* --------- Login Box --------- */
@@ -355,7 +359,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <input type="text" id="searchProduct" placeholder="🔎 بحث سريع عن منتج..." oninput="searchProducts()">
   </div>
   <div>
-    <button onclick="createNewOrder()" style="color:#121212;background:#ffffff;">طلب جديد</button>
+    <button onclick="createNewOrder()" style="color:#ffffff;background:#333333;">طلب جديد</button>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
     <button class="logout" onclick="logout()">خروج</button>
@@ -403,6 +407,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <div class="total" id="total">المجموع: 0</div>
 
 <button class="save" onclick="saveOrder()">طباعة فاتورة</button>
+<hr>
 <button class="clear" onclick="clearCart()">مسح</button>
 </div>
 </div>
