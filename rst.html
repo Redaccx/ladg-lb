@@ -156,9 +156,8 @@ h3, h4 {
   font-size: 14px;
   border: none;
   cursor: pointer;
-  z-index: 10;  /* ← هذا يضمن أن الزر يظهر فوق أي شيء */
+  z-index: 10;
 }
-
 /* Input & Add Buttons */
 input, select, .products button.extra {
   padding: 8px;
@@ -598,12 +597,12 @@ function renderProducts(products) {
   products.forEach(p => {
     const div = document.createElement("div");
     div.className = "product";
-    div.innerHTML = `
+   div.innerHTML = `
   ${p.name} - ${p.category}<br>
-  ${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
+  ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
   <br>
-  <button onclick="editProductPopup('${p.id}')" style="background:orange;">✏</button>
-  <button onclick="deleteProduct('${p.id}')" style="background:red;">X</button>
+  <button class="edit-btn" onclick="editProductPopup('${p.id}')" style="position:absolute; top:8px; left:8px; background:orange; width:28px; height:28px; border-radius:50%;">✏</button>
+  <button onclick="deleteProduct('${p.id}')" style="position:absolute; top:8px; right:8px; background:red; width:28px; height:28px; border-radius:50%;">X</button>
 `;
     
     div.addEventListener("click", function(e) {
