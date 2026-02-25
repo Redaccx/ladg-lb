@@ -665,8 +665,10 @@ async function showProducts(cat, button) {
       ${p.name} - ${p.category}<br>
       ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
       <br>
-      <button onclick="editProductPopup('${p.id}')" style="background:orange;">✏</button>
-      <button onclick="deleteProduct('${p.id}')" style="background:red;">X</button>
+   <button onclick="editProductPopup('${p.id}')" 
+        style="position:absolute; top:8px; left:8px; background:orange; width:28px; height:28px; border-radius:50%;">✏</button>
+<button onclick="deleteProduct('${p.id}')" 
+        style="position:absolute; top:8px; right:8px; background:red; width:28px; height:28px; border-radius:50%;">X</button>
     `;
     
     // الضغط على أي مكان في المنتج يضيفه للسلة، إلا الأزرار
