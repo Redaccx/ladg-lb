@@ -321,43 +321,6 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     background: rgba(255,255,255,0.2);
     outline: none;
 }
-.order-tabs-container {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 5px 0;
-}
-
-.order-tabs-container button {
-  position: relative;
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  background: rgba(255, 255, 255, 0.05);
-  color: #f0f0f0;
-  min-width: 100px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-  transition: all 0.3s ease;
-}
-
-/* زر نشط */
-.order-tabs-container button.active {
-  background: linear-gradient(135deg, #6ee7b7, #3b82f6);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* السنة تحت اسم الطلب */
-.order-tabs-container button::after {
-  content: attr(data-year);
-  display: block;
-  font-size: 10px;
-  color: #ccc;
-  margin-top: 3px;
-}
 </style>
 </head>
 
@@ -382,6 +345,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <input type="text" id="searchProduct" placeholder="🔎 بحث سريع عن منتج..." oninput="searchProducts()">
   </div>
   <div>
+    <button onclick="createNewOrder()" style="background:#2ecc71;">طلب جديد</button>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
     <button class="logout" onclick="logout()">خروج</button>
@@ -413,21 +377,12 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <button class="extra" onclick="addExtra()">اكسترا</button>
 </div>
 
-<div class="order-container">
-<button id="newOrderBtn" onclick="createNewOrder()">➕ طلب جديد</button>
-  <div id="orderTabs" class="order-tabs-container"></div>
-</div>
 
+<div id="openOrders" style="margin-bottom:10px;"></div>
 <!-- السلة -->
 <div class="cart">
 <h3>الطلب</h3>
 <div class="cart-items" id="cartItems"></div>
-
-
-
-<button onclick="deleteCurrentOrder()" style="background:red;color:white;padding:6px;border:none;border-radius:6px;">
-  🗑 حذف الطلب الحالي
-</button>
 
 <label>ضريبة %</label>
 <input type="number" id="tax" value="0">
@@ -509,26 +464,8 @@ auth.onAuthStateChanged(async user => {
 });
 
 let currentUser=null;
-let orders = [];
-let currentOrderIndex = 0;
-
-function createNewOrder() {
-  const order = {
-    id: Date.now(),
-    name: "طلب " + (orders.length + 1),
-    items: [],
-    tax: 0,
-    discount: 0
-  };
-  orders.push(order);
-  currentOrderIndex = orders.length - 1;
-  renderOrderTabs();
-  renderCart();
-}
-
-window.onload = function() {
-  createNewOrder();
-};
+let orders = {};
+let currentOrderId = null;
 const USD_TO_LBP=89000;
 
 // --------- تسجيل دخول وخروج ---------
@@ -664,64 +601,60 @@ async function showProducts(cat, button){
 
 // --------- السلة ---------
 function addToCart(name, price) {
-  const cart = orders[currentOrderIndex].items;
+  if (!currentOrderId) createNewOrder();
   
+  let cart = orders[currentOrderId];
   let existing = cart.find(i => i.name === name);
+  
   if (existing) {
     existing.qty += 1;
     existing.total = existing.price * existing.qty;
   } else {
     cart.push({ name, price, qty: 1, total: price });
   }
+  
   renderCart();
 }
 function renderCart() {
-  const order = orders[currentOrderIndex];
-  const cart = order.items;
-  
   const div = document.getElementById("cartItems");
   div.innerHTML = "";
   
+  if (!currentOrderId) return;
+  
+  const cart = orders[currentOrderId];
   let subtotal = 0;
   
   cart.forEach((item, i) => {
     subtotal += item.total;
     div.innerHTML += `
       ${item.name} × ${item.qty} = ${item.total.toFixed(2)}$
-      <button onclick="removeItem(${i})">❌</button><br>`;
+      <button onclick="removeItem(${i})">❌</button><br>
+    `;
   });
   
-  const tax = order.tax;
-  const discount = order.discount;
-  
+  const tax = parseFloat(document.getElementById("tax").value) || 0;
+  const discount = parseFloat(document.getElementById("discount").value) || 0;
   const totalUSD = subtotal + (subtotal * tax / 100) - discount;
-  const totalLBP = totalUSD * USD_TO_LBP;
   
   document.getElementById("total").innerText =
-    `المجموع: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)`;
+    "المجموع: " + totalUSD.toFixed(2) + "$";
 }
 function removeItem(i) {
-  orders[currentOrderIndex].items.splice(i, 1);
+  if (!currentOrderId) return;
+  orders[currentOrderId].splice(i, 1);
   renderCart();
 }
 function clearCart() {
-  orders[currentOrderIndex].items = [];
+  if (!currentOrderId) return;
+  orders[currentOrderId] = [];
   renderCart();
 }
-function addExtra() {
-  const name = prompt("اسم المنتج:");
-  const weight = parseFloat(prompt("أدخل الوزن بالكيلو:"));
-  const price = parseFloat(prompt("أدخل السعر الإجمالي لهذا الوزن:"));
-  
-  if (!name || !weight || !price) return;
-  
-  orders[currentOrderIndex].items.push({
-    name,
-    price,
-    qty: weight,
-    total: price
-  });
-  
+function addExtra(){
+  const name=prompt("اسم المنتج:");
+  const weight=parseFloat(prompt("أدخل الوزن بالكيلو:"));
+  const price=parseFloat(prompt("أدخل السعر الإجمالي لهذا الوزن:"));
+  if(!name || !weight || !price) return;
+  cart.push({name, price, qty: weight, total: price});
   renderCart();
 }
 
@@ -824,73 +757,68 @@ async function getNextNumber(){
     return num;
   });
 }
-async function saveOrder() {
-  const order = orders[currentOrderIndex];
-  
-  if (order.items.length === 0) return alert("السلة فارغة");
-  
-  const number = await getNextNumber();
-  const subtotal = order.items.reduce((s, i) => s + i.total, 0);
-  
-  const tax = parseFloat(document.getElementById("tax").value) || 0;
-  const discount = parseFloat(document.getElementById("discount").value) || 0;
-  
-  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
-  const totalLBP = totalUSD * USD_TO_LBP;
-  
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  
+async function saveOrder(){
+  if(!currentOrderId || orders[currentOrderId].length===0) return alert("السلة فارغة");
+  const number=await getNextNumber();
+  const subtotal=orders[currentOrderId].reduce((s,i)=>s+i.total,0);
+  const tax=parseFloat(document.getElementById("tax").value)||0;
+  const discount=parseFloat(document.getElementById("discount").value)||0;
+  const totalUSD=subtotal+(subtotal*tax/100)-discount;
+  const totalLBP=totalUSD*USD_TO_LBP;
+
+  const now=new Date();
+  const dateStr=now.toISOString().split('T')[0];
+
   await db.collection("sales").add({
-    orderNumber: number,
-    user: currentUser.email,
-    items: order.items,
+    orderNumber:number,
+    user:currentUser.email,
+    items:orders[currentOrderId],
     subtotal,
     tax,
     discount,
     totalUSD,
     totalLBP,
-    date: dateStr,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    date:dateStr,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
-  
-  // ❌ أهم سطر: إنشاء نسخة مستقلة للطباعة
-  const orderToPrint = { ...order, items: [...order.items] };
-  generateInvoice(orderToPrint, number, subtotal, tax, discount, totalUSD, totalLBP);
-  
-  window.print();
-  
-  // حذف الطلب بعد الحفظ
-  deleteCurrentOrder();
-}
 
-function generateInvoice(order, number, subtotal, tax, discount, totalUSD, totalLBP) {
-  const now = new Date();
-  const dateStr = now.toLocaleString("ar-EG", { hour12: false });
-  
-  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+  generateInvoice(number, subtotal, tax, discount, totalUSD, totalLBP);
+window.print();
+
+// حذف الطلب الحالي من الطلبات المفتوحة
+delete orders[currentOrderId];
+
+// الانتقال لأول طلب موجود (إذا في)
+currentOrderId = Object.keys(orders)[0] || null;
+
+// تحديث الواجهة
+renderOpenOrders();
+renderCart();
+
+function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
+  const now=new Date();
+  const dateStr=now.toLocaleString("ar-EG",{hour12:false});
+  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
   <h3>مطعم السندويشات</h3>
   <p>رقم الطلب: ${number}</p>
   <p>التاريخ: ${dateStr}</p>
   <p>الكاشير: ${currentUser.email}</p>
   <hr>`;
-  
-  order.items.forEach(item => {
-    const lbp = (item.total * USD_TO_LBP).toLocaleString();
-    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+  orders[currentOrderId].forEach(item=>{
+    const lbp=(item.total*USD_TO_LBP).toLocaleString();
+    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-  
-  html += `<hr>
-  <p>Subtotal: ${subtotal.toFixed(2)}$</p>
+  html+=`<hr>
+  <p>Subtotal: ${subtotal.toFixed(2)}$ (${(subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
   <p>Tax: ${tax}%</p>
   <p>Discount: ${discount}</p>
   <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
   <hr>
   <p>شكراً لزيارتكم</p>
   </div>`;
-  
-  document.getElementById("invoice").innerHTML = html;
+  invoice.innerHTML=html;
 }
+
 // --------- تقرير اليوم ---------
 async function toggleDailyReport() {
   const modal = document.getElementById("dailyReportModal");
@@ -1011,39 +939,26 @@ async function printDailyTotal() {
 function closeDailyReport() {
   document.getElementById("dailyReportModal").style.display = "none";
 }
-async function printSale(id) {
-  
-  const doc = await db.collection("sales").doc(id).get();
-  if (!doc.exists) return alert("الطلب غير موجود");
-  
-  const d = doc.data();
-  
-  const dateTime = d.createdAt && d.createdAt.toDate ?
-    d.createdAt.toDate().toLocaleString("ar-EG", { hour12: false }) :
-    d.date;
-  
-  let html = `<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+async function printSale(id){
+  const doc=await db.collection("sales").doc(id).get();
+  if(!doc.exists) return alert("الطلب غير موجود");
+  const d=doc.data();
+  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
   <h3>مطعم السندويشات</h3>
   <p>رقم الطلب: ${d.orderNumber}</p>
-  <p>الكاشير: ${d.user} | ${dateTime}</p>
+  let dateTime = d.createdAt ? d.createdAt.toDate().toLocaleString("ar-EG", {hour12:false}) : d.date;
+<p>الكاشير: ${d.user} | ${dateTime}</p>
   <hr>`;
-  
-  d.items.forEach(item => {
-    const lbp = (item.total * USD_TO_LBP).toLocaleString();
-    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+  d.items.forEach(item=>{
+    const lbp=(item.total*USD_TO_LBP).toLocaleString();
+    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-  
-  html += `<hr>
-  <p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
-  <hr>
-  <p>شكراً لتعاونكم</p>
-  </div>`;
-  
-  const inv = document.getElementById("invoice");
-  inv.innerHTML = html;
-  inv.style.display = "block";
+  html+=`<hr><p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr><p>شكراً لتعاونكم</p></div>`;
+  const inv=document.getElementById("invoice");
+  inv.innerHTML=html;
+  inv.style.display="block";
   window.print();
-  inv.style.display = "none";
+  inv.style.display="none";
 }
 
 async function deleteSale(id){
@@ -1054,40 +969,42 @@ async function deleteSale(id){
   }
 }
 
+function createNewOrder() {
+  const id = "ORD-" + Date.now();
+  orders[id] = [];
+  currentOrderId = id;
+  renderOpenOrders();
+  renderorders[currentOrderId]();
+}
 
-function renderOrderTabs() {
-  const div = document.getElementById("orderTabs");
+function switchOrder(id) {
+  currentOrderId = id;
+  renderOpenOrders();
+  renderorders[currentOrderId]();
+}
+
+function deleteOpenOrder(id) {
+  if (!confirm("حذف الطلب؟")) return;
+  delete orders[id];
+  if (currentOrderId === id) {
+    currentOrderId = Object.keys(orders)[0] || null;
+  }
+  renderOpenOrders();
+  renderorders[currentOrderId]();
+}
+
+function renderOpenOrders() {
+  const div = document.getElementById("openOrders");
   div.innerHTML = "";
   
-  orders.forEach((order, index) => {
-    const btn = document.createElement("button");
-    btn.textContent = order.name;
-    btn.setAttribute("data-year", new Date(order.id).getFullYear()); // السنة من الـ timestamp
-    if (index === currentOrderIndex) btn.classList.add("active");
-    btn.onclick = () => switchOrder(index);
-    div.appendChild(btn);
+  Object.keys(orders).forEach(id => {
+    div.innerHTML += `
+      <div style="display:flex;justify-content:space-between;background:${id===currentOrderId?'#27ae60':'#444'};padding:5px;border-radius:6px;margin-bottom:4px;">
+        <span onclick="switchOrder('${id}')" style="cursor:pointer;">${id}</span>
+        <button onclick="deleteOpenOrder('${id}')" style="background:red;color:white;border:none;border-radius:4px;">X</button>
+      </div>
+    `;
   });
-}
-
-function switchOrder(index) {
-  currentOrderIndex = index;
-  renderOrderTabs();
-  renderCart();
-}
-
-function deleteCurrentOrder() {
-  if (!confirm("هل تريد حذف هذا الطلب؟")) return;
-  
-  orders.splice(currentOrderIndex, 1);
-  
-  if (orders.length === 0) {
-    createNewOrder();
-  } else {
-    currentOrderIndex = 0;
-  }
-  
-  renderOrderTabs();
-  renderCart();
 }
 </script>
 </body>
