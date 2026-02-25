@@ -57,9 +57,9 @@ h3, h4 {
 }
 
 /* Color Variants */
-.header .new-section { color:white background: #fff; }
-.header .report { color:white background: #fff; }
-.header .logout { color:white background: #3498db; }
+.header .new-section { color:#121212 background: #fff; }
+.header .report { color:#121212 background: #121212; }
+.header .logout { background: #3498db; }
 
 /* --------- Container --------- */
 .container {
@@ -119,8 +119,8 @@ h3, h4 {
   margin-top: 15px;
 }
 .product {
-  background: linear-gradient(145deg, #1abc9c, #16a085);
-  color: #fff;
+  background: linear-gradient(145deg, #fff, #fff);
+  color: #121212;
   padding: 15px;
   text-align: center;
   border-radius: 12px;
@@ -346,7 +346,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <input type="text" id="searchProduct" placeholder="🔎 بحث سريع عن منتج..." oninput="searchProducts()">
   </div>
   <div>
-    <button onclick="createNewOrder()" style="color:#000000;background:#ffffff;">طلب جديد</button>
+    <button onclick="createNewOrder()" style="color:#121212;background:#ffffff;">طلب جديد</button>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
     <button class="logout" onclick="logout()">خروج</button>
