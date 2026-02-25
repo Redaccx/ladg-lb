@@ -156,6 +156,7 @@ h3, h4 {
   font-size: 14px;
   border: none;
   cursor: pointer;
+  z-index: 10;  /* ← هذا يضمن أن الزر يظهر فوق أي شيء */
 }
 
 /* Input & Add Buttons */
@@ -598,17 +599,17 @@ function renderProducts(products) {
     const div = document.createElement("div");
     div.className = "product";
     div.innerHTML = `
-      ${p.name} - ${p.category}<br>
-      ${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
-      <br>
-      <button onclick="editProductPopup('${p.id}')" style="background:orange;">✏</button>
-      <button onclick="deleteProduct('${p.id}')" style="background:red;">X</button>
-    `;
+  ${p.name} - ${p.category}<br>
+  ${p.price}$ (${(p.price*USD_TO_LBP).toLocaleString()} ل.ل)
+  <br>
+  <button onclick="editProductPopup('${p.id}')" style="background:orange;">✏</button>
+  <button onclick="deleteProduct('${p.id}')" style="background:red;">X</button>
+`;
     
-    div.onclick = function(e) {
-      if (e.target.tagName === "BUTTON") return;
-      addToCart(p.name, p.price);
-    };
+    div.addEventListener("click", function(e) {
+  if (e.target.tagName === "BUTTON") return; // إذا ضغط على زر لا تفعل شيء هنا
+  addToCart(p.name, p.price); // إذا ضغط على أي مكان آخر داخل المنتج، أضف للسلّة
+});
     
     grid.appendChild(div);
   });
