@@ -610,7 +610,12 @@ function addToCart(name, price) {
     existing.qty += 1;
     existing.total = existing.price * existing.qty;
   } else {
-    orders[currentOrderId].push({name, price, qty: weight, total: price});
+    orders[currentOrderId].push({
+  name,
+  price,
+  qty: 1,
+  total: price
+});
   }
   
   renderCart();
@@ -649,12 +654,25 @@ function clearCart() {
   orders[currentOrderId] = [];
   renderCart();
 }
-function addExtra(){
-  const name=prompt("اسم المنتج:");
-  const weight=parseFloat(prompt("أدخل الوزن بالكيلو:"));
-  const price=parseFloat(prompt("أدخل السعر الإجمالي لهذا الوزن:"));
-  if(!name || !weight || !price) return;
-  cart.push({name, price, qty: weight, total: price});
+function addExtra() {
+  if (!currentOrderId) {
+    alert("أنشئ طلب أولاً");
+    return;
+  }
+  
+  const name = prompt("اسم المنتج:");
+  const weight = parseFloat(prompt("أدخل الكمية:"));
+  const price = parseFloat(prompt("أدخل السعر الإجمالي:"));
+  
+  if (!name || !weight || !price) return;
+  
+  orders[currentOrderId].push({
+    name,
+    price: price / weight,
+    qty: weight,
+    total: price
+  });
+  
   renderCart();
 }
 
@@ -781,7 +799,7 @@ async function saveOrder() {
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
   
-  generateInvoice(number, subtotal, tax, discount, totalUSD, totalLBP);
+  generateInvoice(number, orders[currentOrderId], subtotal, tax, discount, totalUSD, totalLBP);
   window.print();
   
   delete orders[currentOrderId];
@@ -790,28 +808,35 @@ async function saveOrder() {
   renderOpenOrders();
   renderCart();
 }
-function generateInvoice(number,subtotal,tax,discount,totalUSD,totalLBP){
-  const now=new Date();
-  const dateStr=now.toLocaleString("ar-EG",{hour12:false});
-  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-  <h3>مطعم السندويشات</h3>
-  <p>رقم الطلب: ${number}</p>
-  <p>التاريخ: ${dateStr}</p>
-  <p>الكاشير: ${currentUser.email}</p>
-  <hr>`;
-  orders[currentOrderId].forEach(item=>{
-    const lbp=(item.total*USD_TO_LBP).toLocaleString();
-    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+function generateInvoice(number, items, subtotal, tax, discount, totalUSD, totalLBP) {
+  const now = new Date();
+  const dateStr = now.toLocaleString("ar-EG", { hour12: false });
+  
+  let html = `
+  <div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+    <h3>مطعم السندويشات</h3>
+    <p>رقم الطلب: ${number}</p>
+    <p>التاريخ: ${dateStr}</p>
+    <p>الكاشير: ${currentUser.email}</p>
+    <hr>
+  `;
+  
+  items.forEach(item => {
+    const lbp = (item.total * USD_TO_LBP).toLocaleString();
+    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-  html+=`<hr>
-  <p>Subtotal: ${subtotal.toFixed(2)}$ (${(subtotal*USD_TO_LBP).toLocaleString()} ل.ل)</p>
-  <p>Tax: ${tax}%</p>
-  <p>Discount: ${discount}</p>
-  <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
-  <hr>
-  <p>شكراً لزيارتكم</p>
+  
+  html += `
+    <hr>
+    <p>Subtotal: ${subtotal.toFixed(2)}$</p>
+    <p>Tax: ${tax}%</p>
+    <p>Discount: ${discount}</p>
+    <p><strong>Total: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong></p>
+    <hr>
+    <p>شكراً لزيارتكم</p>
   </div>`;
-  invoice.innerHTML=html;
+  
+  document.getElementById("invoice").innerHTML = html;
 }
 
 // --------- تقرير اليوم ---------
@@ -934,26 +959,40 @@ async function printDailyTotal() {
 function closeDailyReport() {
   document.getElementById("dailyReportModal").style.display = "none";
 }
-async function printSale(id){
-  const doc=await db.collection("sales").doc(id).get();
-  if(!doc.exists) return alert("الطلب غير موجود");
-  const d=doc.data();
-  let html=`<div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
-  <h3>مطعم السندويشات</h3>
-  <p>رقم الطلب: ${d.orderNumber}</p>
-  let dateTime = d.createdAt ? d.createdAt.toDate().toLocaleString("ar-EG", {hour12:false}) : d.date;
-<p>الكاشير: ${d.user} | ${dateTime}</p>
-  <hr>`;
-  d.items.forEach(item=>{
-    const lbp=(item.total*USD_TO_LBP).toLocaleString();
-    html+=`<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
+async function printSale(id) {
+  const doc = await db.collection("sales").doc(id).get();
+  if (!doc.exists) return alert("الطلب غير موجود");
+  
+  const d = doc.data();
+  const dateTime = d.createdAt && d.createdAt.toDate ?
+    d.createdAt.toDate().toLocaleString("ar-EG", { hour12: false }) :
+    d.date;
+  
+  let html = `
+  <div style="font-family:monospace;width:58mm;font-size:12px;text-align:center;">
+    <h3>مطعم السندويشات</h3>
+    <p>رقم الطلب: ${d.orderNumber}</p>
+    <p>الكاشير: ${d.user} | ${dateTime}</p>
+    <hr>
+  `;
+  
+  d.items.forEach(item => {
+    const lbp = (item.total * USD_TO_LBP).toLocaleString();
+    html += `<p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ (${lbp} ل.ل)</p>`;
   });
-  html+=`<hr><p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p><hr><p>شكراً لتعاونكم</p></div>`;
-  const inv=document.getElementById("invoice");
-  inv.innerHTML=html;
-  inv.style.display="block";
+  
+  html += `
+    <hr>
+    <p><strong>الإجمالي: ${d.totalUSD.toFixed(2)}$ (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
+    <hr>
+    <p>شكراً لتعاونكم</p>
+  </div>`;
+  
+  const inv = document.getElementById("invoice");
+  inv.innerHTML = html;
+  inv.style.display = "block";
   window.print();
-  inv.style.display="none";
+  inv.style.display = "none";
 }
 
 async function deleteSale(id){
