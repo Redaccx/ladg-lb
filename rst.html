@@ -284,8 +284,10 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   position: fixed;
   inset: 0;
   background-color: rgba(0,0,0,0.8);
-  overflow-y: scroll;   /* 👈 هذا السطر المهم */
+  overflow-y: auto;   /* 👈 هذا السطر المهم */
   padding: 40px 0;
+  width: 90%;
+  height: 90%;
 }
 .modal-content {
   background-color: rgba(25, 25, 35, 0.98);
@@ -294,8 +296,8 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   border-radius: 15px;
   width: 500px;        /* يمكنك زيادتها إلى 600px أو 70% */
   max-width: 90%;      /* اجعلها تستجيب للشاشة */
-  max-height: 95vh;    /* أقصى ارتفاع بنسبة الشاشة */
-  overflow-y: scroll;    /* مهم جدًا! لإظهار scroll عند الحاجة */
+  max-height: 90%;    /* أقصى ارتفاع بنسبة الشاشة */
+  overflow-y: auto;    /* مهم جدًا! لإظهار scroll عند الحاجة */
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
   text-align: right;
   position: relative;
@@ -306,7 +308,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   width: 500px;
   max-width: 90%;
   max-height: 80vh;       /* تقليل لتوفير مساحة للـ scroll */
-  overflow-y: scroll;       /* السماح بالتمرير العمودي */
+  overflow-y: auto;       /* السماح بالتمرير العمودي */
   padding: 20px;
   box-sizing: border-box; /* مهم جداً لحساب padding داخل الارتفاع */
 }
