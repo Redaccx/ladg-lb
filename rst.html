@@ -292,8 +292,10 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   margin: 40px auto;
   padding: 25px;
   border-radius: 15px;
-  width: 500px;
-  max-width: 95%;
+  width: 500px;        /* يمكنك زيادتها إلى 600px أو 70% */
+  max-width: 90%;      /* اجعلها تستجيب للشاشة */
+  max-height: 80vh;    /* أقصى ارتفاع بنسبة الشاشة */
+  overflow-y: auto;    /* مهم جدًا! لإظهار scroll عند الحاجة */
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
   text-align: right;
   position: relative;
