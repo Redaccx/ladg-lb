@@ -145,18 +145,16 @@ h3, h4 {
 }
 .product button {
   position: absolute;
-  top: 8px;
-  right: 8px;
   background: #c0392b;
   color: #fff;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   font-weight: bold;
   font-size: 14px;
   border: none;
   cursor: pointer;
-  z-index: 10;
+  z-index: 20;   /* 👈 أضف هذا السطر */
 }
 /* Input & Add Buttons */
 input, select, .products button.extra {
@@ -348,6 +346,17 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     outline: none;
 }
 
+.product .edit-btn {
+  top: 8px;
+  left: 8px;
+  background: orange;
+}
+
+.product .delete-btn {
+  top: 8px;
+  right: 8px;
+  background: red;
+}
 </style>
 </head>
 
@@ -601,8 +610,8 @@ function renderProducts(products) {
   ${p.name} - ${p.category}<br>
   ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
   <br>
-  <button class="edit-btn" onclick="editProductPopup('${p.id}')" style="position:absolute; top:8px; left:8px; background:orange; width:28px; height:28px; border-radius:50%;">✏</button>
-  <button onclick="deleteProduct('${p.id}')" style="position:absolute; top:8px; right:8px; background:red; width:28px; height:28px; border-radius:50%;">X</button>
+<button class="edit-btn" onclick="editProductPopup('${p.id}')">✏</button>
+<button class="delete-btn" onclick="deleteProduct('${p.id}')">X</button>
 `;
     
     div.addEventListener("click", function(e) {
@@ -665,10 +674,8 @@ async function showProducts(cat, button) {
       ${p.name} - ${p.category}<br>
       ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
       <br>
-   <button onclick="editProductPopup('${p.id}')" 
-        style="position:absolute; top:8px; left:8px; background:orange; width:28px; height:28px; border-radius:50%;">✏</button>
-<button onclick="deleteProduct('${p.id}')" 
-        style="position:absolute; top:8px; right:8px; background:red; width:28px; height:28px; border-radius:50%;">X</button>
+<button class="edit-btn" onclick="editProductPopup('${p.id}')">✏</button>
+<button class="delete-btn" onclick="deleteProduct('${p.id}')">X</button>
     `;
     
     // الضغط على أي مكان في المنتج يضيفه للسلة، إلا الأزرار
