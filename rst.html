@@ -85,15 +85,15 @@ h3, h4 {
 }
 
 /* --------- Products Section --------- */
-.product {
-  display: flex;              /* لتوزيع المحتوى داخل البطاقة */
-  flex-direction: column;     /* المحتوى من فوق لتحت */
-  justify-content: space-between; /* توزيع المحتوى على كامل البطاقة */
-  min-height: 140px;          /* أقل ارتفاع للبطاقة */
-  max-height: 180px;          /* أقصى ارتفاع */
-  overflow: hidden;           /* أي شيء زائد يختفي */
-  word-break: break-word;     /* يكسر الكلمات الطويلة */
-  text-align: center;
+.products {
+  width: 65%;
+  padding: 15px;
+  background: rgba(30,30,40,0.9);
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+  overflow-y: auto;
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
 }
 .products:hover { transform: scale(1.02); }
 
