@@ -755,7 +755,13 @@ function renderCart() {
   const div = document.getElementById("cartItems");
   div.innerHTML = "";
   
-  if (!currentOrderId) return;
+  // 🔴 إذا ما في طلب حالي → تصفير كامل
+  if (!currentOrderId) {
+    document.getElementById("total").innerText = "المجموع: 0";
+    document.getElementById("tax").value = 0;
+    document.getElementById("discount").value = 0;
+    return;
+  }
   
   const cart = orders[currentOrderId];
   let subtotal = 0;
@@ -770,13 +776,14 @@ function renderCart() {
   
   const tax = parseFloat(document.getElementById("tax").value) || 0;
   const discount = parseFloat(document.getElementById("discount").value) || 0;
-const totalUSD = subtotal + (subtotal * tax / 100) - discount;
-const totalLBP = totalUSD * USD_TO_LBP;
-
-document.getElementById("total").innerText =
-  "المجموع: " +
-  totalUSD.toFixed(2) + "$" +
-  " (" + totalLBP.toLocaleString() + " ل.ل)";
+  
+  const totalUSD = subtotal + (subtotal * tax / 100) - discount;
+  const totalLBP = totalUSD * USD_TO_LBP;
+  
+  document.getElementById("total").innerText =
+    "المجموع: " +
+    totalUSD.toFixed(2) + "$" +
+    " (" + totalLBP.toLocaleString() + " ل.ل)";
 }
 function removeItem(i) {
   if (!currentOrderId) return;
