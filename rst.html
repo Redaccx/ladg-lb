@@ -282,24 +282,21 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 .modal {
   display: none;
   position: fixed;
-  z-index: 1000;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  overflow: auto;
+  inset: 0;
   background-color: rgba(0,0,0,0.8);
+  overflow-y: auto;   /* 👈 هذا السطر المهم */
+  padding: 40px 0;
 }
 .modal-content {
-  background-color: rgba(25,25,35,0.98);
+  background-color: rgba(25, 25, 35, 0.98);
   margin: 40px auto;
   padding: 25px;
   border-radius: 15px;
   width: 500px;
   max-width: 95%;
-  
-  max-height: 85vh;     /* أهم سطر */
-  overflow-y: auto;     /* أهم سطر */
-
-  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
   text-align: right;
   position: relative;
   animation: modalFade 0.4s ease;
