@@ -530,8 +530,17 @@ auth.onAuthStateChanged(async user => {
     document.getElementById("userInfo").innerText = user.email + " | كاشير";
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
-    loadCategories();
-    loadProducts();
+    
+    // 🔴 تنظيف البيانات القديمة لتجنب التكرار
+    orders = {};
+    currentOrderId = null;
+    document.getElementById("cartItems").innerHTML = "";
+    document.getElementById("openOrders").innerHTML = "";
+    document.getElementById("productGrid").innerHTML = "";
+    document.getElementById("categories").innerHTML = "";
+    
+    await loadCategories();
+    await loadProducts();
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
