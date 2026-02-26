@@ -946,18 +946,18 @@ async function saveOrder() {
   });
   
   generateInvoice(number, orders[currentOrderId], subtotal, tax, discount, totalUSD, totalLBP);
-  
-  const inv = document.getElementById("invoice");
-  inv.style.display = "block";
   window.print();
-  inv.style.display = "none";
-  inv.innerHTML = ""; // 🟢 امسح المحتوى بعد الطباعة
   
+  // 🔴 تصفير كامل بعد الطباعة
   delete orders[currentOrderId];
-  currentOrderId = Object.keys(orders)[0] || null;
+  currentOrderId = null;
+  
+  document.getElementById("cartItems").innerHTML = "";
+  document.getElementById("tax").value = 0;
+  document.getElementById("discount").value = 0;
+  document.getElementById("total").innerText = "المجموع: 0";
   
   renderOpenOrders();
-  renderCart();
 }
 function generateInvoice(number, items, subtotal, tax, discount, totalUSD, totalLBP) {
   const now = new Date();
@@ -1106,7 +1106,6 @@ async function printDailyTotal() {
   inv.style.display = "block";
   window.print();
   inv.style.display = "none";
-  inv.innerHTML = ""; // 🟢 مسح بعد الطباعة
 }
 function closeDailyReport() {
   document.getElementById("dailyReportModal").style.display = "none";
@@ -1145,8 +1144,8 @@ async function printSale(id) {
   inv.style.display = "block";
   window.print();
   inv.style.display = "none";
-  inv.innerHTML = ""; // 🟢 مسح بعد الطباعة
 }
+
 async function deleteSale(id){
   if(confirm("هل تريد حذف هذا الطلب؟")){
     await db.collection("sales").doc(id).delete();
