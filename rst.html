@@ -85,15 +85,15 @@ h3, h4 {
 }
 
 /* --------- Products Section --------- */
-.products {
-  width: 65%;
-  padding: 15px;
-  background: rgba(30,30,40,0.9);
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-  overflow-y: auto;
-  backdrop-filter: blur(10px);
-  transition: transform 0.3s ease;
+.product {
+  display: flex;              /* لتوزيع المحتوى داخل البطاقة */
+  flex-direction: column;     /* المحتوى من فوق لتحت */
+  justify-content: space-between; /* توزيع المحتوى على كامل البطاقة */
+  min-height: 140px;          /* أقل ارتفاع للبطاقة */
+  max-height: 180px;          /* أقصى ارتفاع */
+  overflow: hidden;           /* أي شيء زائد يختفي */
+  word-break: break-word;     /* يكسر الكلمات الطويلة */
+  text-align: center;
 }
 .products:hover { transform: scale(1.02); }
 
@@ -123,9 +123,8 @@ h3, h4 {
 /* Product Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* كل عمود لا يقل عن 160px */
+  gap: 15px; /* مسافة بين المربعات */
 }
 .product {
   background: linear-gradient(145deg, #333, #333);
