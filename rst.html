@@ -948,6 +948,12 @@ async function saveOrder() {
   generateInvoice(number, orders[currentOrderId], subtotal, tax, discount, totalUSD, totalLBP);
   window.print();
   
+  const inv = document.getElementById("invoice");
+  inv.style.display = "none";
+  inv.innerHTML = "";
+
+
+  
   delete orders[currentOrderId];
   currentOrderId = Object.keys(orders)[0] || null;
   
@@ -1097,10 +1103,13 @@ async function printDailyTotal() {
   html += `<p>شكراً لتعاونكم</p></div>`;
   
   const inv = document.getElementById("invoice");
-  inv.innerHTML = html;
-  inv.style.display = "block";
-  window.print();
-  inv.style.display = "none";
+inv.innerHTML = html; // 1️⃣ وضع المحتوى
+inv.style.display = "block"; // 2️⃣ اجعله ظاهر للطباعة
+window.print(); // 3️⃣ طباعة
+inv.style.display = "none";
+inv.innerHTML = ""; // 4️⃣ مسح المحتوى بعد الطباعة
+
+
 }
 function closeDailyReport() {
   document.getElementById("dailyReportModal").style.display = "none";
@@ -1135,10 +1144,11 @@ async function printSale(id) {
   </div>`;
   
   const inv = document.getElementById("invoice");
-  inv.innerHTML = html;
-  inv.style.display = "block";
-  window.print();
-  inv.style.display = "none";
+inv.innerHTML = html; // 1️⃣ وضع المحتوى
+inv.style.display = "block"; // 2️⃣ اجعله ظاهر للطباعة
+window.print(); // 3️⃣ طباعة
+inv.style.display = "none";
+inv.innerHTML = ""; // 4️⃣ مسح المحتوى بعد الطباعة
 }
 
 async function deleteSale(id){
