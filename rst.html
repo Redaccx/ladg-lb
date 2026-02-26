@@ -303,10 +303,12 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   color: #fff;
 }
 #editProductModal .modal-content {
-  width: 500px;       /* أو 60% إذا بدك أعرض أكبر على الشاشات الكبيرة */
+  width: 500px;
   max-width: 90%;
-  max-height: 90vh;   /* زيادة طول المودال */
-  overflow-y: auto;   /* يسمح بالتمرير إذا المحتوى أكبر من الارتفاع */
+  max-height: 80vh;       /* تقليل لتوفير مساحة للـ scroll */
+  overflow-y: scroll;       /* السماح بالتمرير العمودي */
+  padding: 20px;
+  box-sizing: border-box; /* مهم جداً لحساب padding داخل الارتفاع */
 }
 .modal-content input, .modal-content select, .modal-content button {
   margin: 8px 0;
