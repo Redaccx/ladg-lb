@@ -91,9 +91,12 @@ h3, h4 {
   background: rgba(30,30,40,0.9);
   border-radius: 15px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-  overflow-y: auto;
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease;
+
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 مربعات في السطر */
+  gap: 15px; /* المسافة بين المنتجات */
 }
 .products:hover { transform: scale(1.02); }
 
@@ -138,6 +141,16 @@ h3, h4 {
   position: relative;
   box-shadow: 0 8px 20px rgba(0,0,0,0.5);
   transform-style: preserve-3d;
+
+  /* ---- تعديل الحجم ---- */
+  width: 100%;           /* ليملأ العمود في Grid */
+  height: 180px;         /* ارتفاع ثابت لكل المنتجات */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* توزيع المحتوى داخل المربع */
+  overflow: hidden;       /* لمنع الكسر */
+  word-wrap: break-word;  /* لف النصوص الطويلة */
+  white-space: normal;    /* لف النصوص الطويلة */
 }
 .product:hover {
   transform: rotateY(15deg) translateY(-10px);
