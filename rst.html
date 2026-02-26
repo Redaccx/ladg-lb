@@ -1186,20 +1186,25 @@ function scanProduct(code) {
 }
 let editingProductId = null;
 
-function editProductPopup(productId) {
+async function editProductPopup(productId) {
   editingProductId = productId;
   const product = allProducts.find(p => p.id === productId);
   if (!product) return alert("المنتج غير موجود");
-
+  
+  // ✅ التأكد من تحميل الأقسام
+  if (!categoriesData.length) {
+    await loadCategoriesModal();
+  }
+  
   document.getElementById("editProductName").value = product.name;
   document.getElementById("editProductPrice").value = product.price;
   document.getElementById("editProductBarcode").value = product.barcode || "";
-
+  
   const select = document.getElementById("editProductCategory");
-  select.innerHTML = categoriesData.map(c => 
-    `<option value="${c.name}" ${c.name===product.category?'selected':''}>${c.name}</option>`
+  select.innerHTML = categoriesData.map(c =>
+    `<option value="${c.name}" ${c.name === product.category ? 'selected' : ''}>${c.name}</option>`
   ).join('');
-
+  
   document.getElementById("editProductModal").style.display = "block";
 }
 
