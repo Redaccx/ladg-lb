@@ -563,8 +563,6 @@ async function login(){
   document.getElementById("userInfo").innerText=currentUser.email+" | كاشير";
   loginPage.style.display="none";
   app.style.display="block";
-  loadCategories();
-  loadProducts();
 }
 function logout(){auth.signOut(); location.reload();}
 
