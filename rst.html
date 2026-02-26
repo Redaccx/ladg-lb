@@ -303,12 +303,18 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   color: #fff;
 }
 #editProductModal .modal-content {
-  width: 500px;
-  max-width: 90%;
-  max-height: 80vh;       /* تقليل لتوفير مساحة للـ scroll */
-  overflow-y: scroll;       /* السماح بالتمرير العمودي */
+  width: 500px;          /* عرض المودال */
+  max-width: 90%;        /* استجابة للشاشات الصغيرة */
+  max-height: 80vh;      /* أقصى ارتفاع 80% من الشاشة */
+  overflow-y: auto;      /* السماح بالتمرير العمودي */
   padding: 20px;
-  box-sizing: border-box; /* مهم جداً لحساب padding داخل الارتفاع */
+  box-sizing: border-box;
+  color: #fff;
+  text-align: right;
+}
+#editProductModal select {
+  max-height: 200px;     /* أقصى ارتفاع لقائمة الأقسام */
+  overflow-y: auto;      /* تمرير إذا تجاوزت القائمة */
 }
 .modal-content input, .modal-content select, .modal-content button {
   margin: 8px 0;
