@@ -377,19 +377,15 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   <input type="text" id="scannerInput" style="position:absolute; top:-100px;" autofocus oninput="scanProduct(this.value)">
 
 <!-- تسجيل دخول -->
+<div id="loginPage" class="login-box">
+<h3>تسجيل دخول</h3>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
+<button onclick="login()">دخول</button>
+</div>
 
-  <!-- شاشة تحميل أو مجرد مخفي -->
-  <div id="loginPage" class="login-box" style="display:none">
-    <h3>تسجيل دخول</h3>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">دخول</button>
-  </div>
-  
-  <div id="app" style="display:none">
-    <!-- محتوى التطبيق -->
-  </div>
-
+<!-- التطبيق بعد تسجيل الدخول -->
+<div id="app" style="display:none;">
 
 <!-- الهيدر -->
 <div class="header">
@@ -527,7 +523,6 @@ const db = firebase.firestore();
 
 // حفظ تسجيل الدخول حتى بعد اغلاق المتصفح
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
 
 auth.onAuthStateChanged(async user => {
   if (user) {
