@@ -527,8 +527,7 @@ const db = firebase.firestore();
 
 // حفظ تسجيل الدخول حتى بعد اغلاق المتصفح
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-document.getElementById("loginPage").style.display = "none";
-document.getElementById("app").style.display = "none";
+
 
 auth.onAuthStateChanged(async user => {
   if (user) {
