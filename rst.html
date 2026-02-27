@@ -613,8 +613,8 @@ async function login() {
     
     applyPermissions(role);
     
-    loginPage.style.display = "none";
-    app.style.display = "block";
+    document.getElementById("loginPage").style.display = "none";
+document.getElementById("app").style.display = "block";
     
   } catch (error) {
     alert("بيانات الدخول غير صحيحة");
@@ -628,11 +628,11 @@ function applyPermissions(role) {
   
   if (!sectionBtn || !reportBtn) return;
   
-  // 🔥 أولاً نظهر كل شيء
+  // إظهار الكل أولاً
   sectionBtn.style.display = "inline-block";
   reportBtn.style.display = "inline-block";
   
-  // 🔒 إذا كاشير نخفي
+  // إذا كاشير نخفي
   if (role === "cashier") {
     sectionBtn.style.display = "none";
     reportBtn.style.display = "none";
@@ -747,7 +747,16 @@ async function addProduct(){
   document.getElementById("newPrice").value="";
   loadProducts();
 }
-async function deleteProduct(id){await db.collection("products").doc(id).delete(); loadProducts();}
+async function deleteProduct(id) {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
+  if (!confirm("هل تريد حذف المنتج؟")) return;
+  
+  await db.collection("products").doc(id).delete();
+  loadProducts();
+}
 async function showProducts(cat, button) {
   document.querySelectorAll(".categories button")
     .forEach(b => b.classList.remove("active"));
@@ -864,19 +873,19 @@ function clearCart() {
 }
 function addExtra() {
   
-  if (!currentOrderId) {
-    alert("أنشئ طلب أولاً");
-    return;
-  }
+  if (!currentOrderId)
+    return alert("أنشئ طلب أولاً");
   
   const name = prompt("اسم المنتج:");
   if (!name) return;
   
   const qty = parseFloat(prompt("أدخل الكمية:"));
-  if (!qty || qty <= 0) return alert("الكمية غير صحيحة");
+  if (!qty || qty <= 0)
+    return alert("الكمية غير صحيحة");
   
   const totalPrice = parseFloat(prompt("أدخل السعر الإجمالي:"));
-  if (!totalPrice || totalPrice <= 0) return alert("السعر غير صحيح");
+  if (!totalPrice || totalPrice <= 0)
+    return alert("السعر غير صحيح");
   
   orders[currentOrderId].push({
     name: name + " (Extra)",
@@ -888,7 +897,11 @@ function addExtra() {
   renderCart();
 }
 // --------- إدارة الأقسام والمنتجات بالمودال ---------
-function openSectionModal(){
+function openSectionModal() {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
   document.getElementById("sectionModal").style.display = "block";
   loadCategoriesModal();
 }
@@ -915,78 +928,94 @@ async function loadCategoriesModal() {
 
 // تعديل القسم المحدد من المودال
 async function editSelectedCategory() {
-  const select = document.getElementById("categorySelectList");
-  const selectedId = select.value;
-  const category = categoriesData.find(c => c.id === selectedId);
-  if (!category) return;
   
-  const newName = prompt("اسم جديد للقسم:", category.name);
-  if (!newName || newName === category.name) return;
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
   
-  await db.collection("categories").doc(selectedId).update({ name: newName });
+  let selectedCategoryId = null;
+
+document.addEventListener("change", function(e) {
+  if (e.target.id === "categorySelectList") {
+    selectedCategoryId = e.target.value;
+  }
+});
+    return alert("اختر قسم أولاً");
   
-  // تحديث المنتجات التابعة
-  const snap = await db.collection("products").where("category", "==", category.name).get();
-  const batch = db.batch();
-  snap.forEach(doc => batch.update(doc.ref, { category: newName }));
-  await batch.commit();
+  const newName = prompt("اسم القسم الجديد:");
+  if (!newName) return;
   
-  alert("تم تعديل القسم");
-  loadCategories();
-  loadCategoriesModal();
+  await db.collection("categories")
+    .doc(selectedCategoryId)
+    .update({ name: newName });
+    
+ alert("تم تعديل القسم");
+await loadCategories();
+await loadCategoriesModal();
+await loadProducts();
 }
 
 // حذف القسم المحدد من المودال
 async function deleteSelectedCategory() {
-  const select = document.getElementById("categorySelectList");
-  const selectedId = select.value;
-  const category = categoriesData.find(c => c.id === selectedId);
-  if (!category) return;
   
-  if (!confirm("سيتم حذف القسم وكل منتجاته. هل أنت متأكد؟")) return;
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
   
-  const snap = await db.collection("products").where("category", "==", category.name).get();
-  const batch = db.batch();
-  snap.forEach(doc => batch.delete(doc.ref));
-  batch.delete(db.collection("categories").doc(selectedId));
-  await batch.commit();
+  if (!selectedCategoryId)
+    return alert("اختر قسم أولاً");
   
-  alert("تم حذف القسم وكل المنتجات التابعة له");
-  loadCategories();
-  loadCategoriesModal();
+  if (!confirm("هل تريد حذف القسم؟")) return;
+  
+  await db.collection("categories")
+    .doc(selectedCategoryId)
+    .delete();
+    
+ alert("تم حذف القسم");
+await loadCategories();
+await loadCategoriesModal();
+await loadProducts();
 }
 
-async function addCategoryModal(){
+async function addCategoryModal() {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
   const name = document.getElementById("modalNewCategory").value.trim();
-  if(!name) return alert("ادخل اسم القسم");
-  await db.collection("categories").add({name});
-  document.getElementById("modalNewCategory").value="";
-  loadCategoriesModal();
-  loadCategories();
+  if (!name) return alert("أدخل اسم القسم");
+  
+  await db.collection("categories").add({ name });
+  
+  alert("تمت إضافة القسم");
+  
+  document.getElementById("modalNewCategory").value = "";
+  
+  await loadCategories();
+  await loadCategoriesModal();
 }
 async function addProductModal() {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
   const name = document.getElementById("modalNewName").value.trim();
   const price = parseFloat(document.getElementById("modalNewPrice").value);
   const category = document.getElementById("modalCategorySelect").value;
-  const barcode = document.getElementById("modalNewBarcode").value.trim(); // هذا الجديد
+  const barcode = document.getElementById("modalNewBarcode").value.trim();
   
-  if (!name || !price || !category || !barcode) return alert("املأ كل البيانات");
+  if (!name || !price || !category || !barcode)
+    return alert("املأ كل البيانات");
   
   await db.collection("products").add({
     name,
     price,
     category,
-    barcode // حفظ الباركود
+    barcode
   });
   
-  // تنظيف الحقول بعد الإضافة
-  document.getElementById("modalNewName").value = "";
-  document.getElementById("modalNewPrice").value = "";
-  document.getElementById("modalNewBarcode").value = "";
-  
-  loadProducts(); // إعادة تحميل المنتجات
+  alert("تمت إضافة المنتج");
+  closeSectionModal();
+  loadProducts();
 }
-
 // --------- الفاتورة ---------
 async function getNextNumber(){
   const ref=db.collection("counters").doc("orderCounter");
@@ -1069,6 +1098,8 @@ function generateInvoice(number, items, subtotal, tax, discount, totalUSD, total
 
 // --------- تقرير اليوم ---------
 async function toggleDailyReport() {
+  if (!currentUser || currentUser.role !== "admin")
+  return alert("غير مسموح");
   const modal = document.getElementById("dailyReportModal");
   const content = document.getElementById("dailyReportContent");
   
@@ -1109,10 +1140,12 @@ async function toggleDailyReport() {
             style="background:#2196F3;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
             طباعة
         </button>
-        <button onclick="deleteSale('${doc.id}')" 
-            style="background:red;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
-            حذف
-        </button>
+     ${currentUser.role === "admin" ? `
+<button onclick="deleteSale('${doc.id}')" 
+  style="background:red;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
+  حذف
+</button>
+` : ""}
     </div>`;
   
   // إضافة HTML للمودال
@@ -1126,10 +1159,12 @@ content.innerHTML = `<div style="text-align:center; margin-bottom:10px;">
     style="background:#27ae60;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
     طباعة الكل
   </button>
-  <button onclick="deleteAllDailySales()" 
-    style="background:red;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
-    حذف كل الطلبات اليوم
-  </button>
+${currentUser.role === "admin" ? `
+<button onclick="deleteAllDailySales()" 
+  style="background:red;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
+  حذف كل الطلبات اليوم
+</button>
+` : ""}
 </div>` + content.innerHTML;
   
   modal.style.display = "block";
@@ -1155,6 +1190,8 @@ async function deleteAllDailySales() {
   toggleDailyReport();
 }
 async function printDailyTotal() {
+  if (!currentUser || currentUser.role !== "admin")
+  return alert("غير مسموح");
   const today = new Date().toISOString().split('T')[0];
   const snap = await db.collection("sales").where("date", "==", today).get();
   if (snap.empty) return alert("لا توجد طلبات اليوم");
@@ -1231,16 +1268,15 @@ async function printSale(id) {
 
 async function deleteSale(id) {
   
-  if (!currentUser || currentUser.role !== "admin") {
-    alert("غير مسموح");
-    return;
-  }
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
   
-  if (confirm("هل تريد حذف هذا الطلب؟")) {
-    await db.collection("sales").doc(id).delete();
-    alert("تم حذف الطلب");
-    toggleDailyReport();
-  }
+  if (!confirm("هل تريد حذف هذا الطلب؟")) return;
+  
+  await db.collection("sales").doc(id).delete();
+  
+  alert("تم حذف الطلب");
+  toggleDailyReport();
 }
 async function createNewOrder() {
   
@@ -1333,22 +1369,30 @@ function closeEditProductModal() {
 }
 
 async function saveEditedProduct() {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
   if (!editingProductId) return;
-
+  
   const name = document.getElementById("editProductName").value.trim();
   const price = parseFloat(document.getElementById("editProductPrice").value);
   const barcode = document.getElementById("editProductBarcode").value.trim();
   const category = document.getElementById("editProductCategory").value;
-
-  if (!name || !price || !category || !barcode) return alert("املأ كل البيانات");
-
+  
+  if (!name || !price || !category || !barcode)
+    return alert("املأ كل البيانات");
+  
   await db.collection("products").doc(editingProductId).update({
-    name, price, category, barcode
+    name,
+    price,
+    category,
+    barcode
   });
-
+  
   alert("تم تعديل المنتج");
   closeEditProductModal();
-  loadProducts(); // إعادة تحميل المنتجات
+  loadProducts();
 }
 </script>
 </body>
