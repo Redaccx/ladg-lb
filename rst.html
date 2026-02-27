@@ -605,7 +605,7 @@ async function login() {
     
     currentUser = userCred.user;
     currentUser.role = userDoc.data().role;
-    console.log("تم تسجيل الدخول:", currentUser.email, "Role:", currentUser.role);
+    console.log("تم تسجيل الدخول:", currentUser.email, "role:", currentUser.role);
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
