@@ -393,7 +393,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <body>
   
   
-  <input type="text" id="scannerInput" style="position:absolute; top:-100px;" autofocus oninput="scanProduct(this.value)">
+  <input type="text" id="scannerInput" style="position:absolute; top:-100px;" autofocus onkeydown="if(event.key==='Enter'){scanProduct(this.value)}">
 
 <!-- تسجيل دخول -->
 <div id="loginPage" class="login-box">
@@ -491,6 +491,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <input type="text" id="modalNewName" placeholder="اسم المنتج">
     <input type="number" id="modalNewPrice" placeholder="السعر بالدولار">
     <input type="text" id="modalNewBarcode" placeholder="رقم الباركود">
+    <input type="number" id="modalNewStock" placeholder="الكمية في المخزون">
     <select id="modalCategorySelect"></select>
     <button onclick="addProductModal()" style="color:#ffffff;background:#333333;">إضافة منتج</button>
   </div>
@@ -513,6 +514,8 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     
     <label>رقم الباركود:</label>
     <input type="text" id="editProductBarcode">
+    
+    <input type="number" id="editProductStock" placeholder="الكمية في المخزون">
    
     
     <button onclick="saveEditedProduct()" style="background:#27ae60;color:white;">حفظ</button>
@@ -539,6 +542,17 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// --------- متغيرات عامة ---------
+let currentUser = null;
+let allProducts = [];
+let currentCategory = "all";
+let categoriesData = [];
+let orders = {};
+let currentOrderId = null;
+let unsubscribeProducts = null;
+
+const USD_TO_LBP = 89000;
 
 // حفظ تسجيل الدخول حتى بعد اغلاق المتصفح
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -574,7 +588,8 @@ auth.onAuthStateChanged(async user => {
     document.getElementById("categories").innerHTML = "";
     
     await loadCategories();
-    await loadProducts();
+listenToProductsRealtime();
+await createNewOrder();
     
   } else {
     document.getElementById("loginPage").style.display = "block";
@@ -582,10 +597,6 @@ auth.onAuthStateChanged(async user => {
   }
 });
 
-let currentUser=null;
-let orders = {};
-let currentOrderId = null;
-const USD_TO_LBP=89000;
 
 // --------- تسجيل دخول وخروج ---------
 async function login() {
@@ -607,8 +618,7 @@ async function login() {
     currentUser.role = userDoc.data().role;
     console.log("تم تسجيل الدخول:", currentUser.email, "role:", currentUser.role);
     
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("app").style.display = "block";
+    
     
   } catch (error) {
     console.error("Login error:", error.code, error.message);
@@ -633,22 +643,28 @@ function applyPermissions(role) {
     reportBtn.style.display = "none";
   }
 }
-function logout(){auth.signOut(); location.reload();}
+function logout() {
+  
+  if (unsubscribeProducts) {
+    unsubscribeProducts(); // 🔥 إلغاء realtime listener
+    unsubscribeProducts = null;
+  }
+  
+  auth.signOut();
+  location.reload();
+}
 
 // --------- الأقسام ---------
 async function loadCategories() {
   const div = document.getElementById("categories");
-  div.innerHTML = ""; // مسح أي شيء سابق
+  div.innerHTML = "";
   
-  // زر الكل دائماً يظهر
   const allBtn = document.createElement("button");
   allBtn.textContent = "الكل";
-  allBtn.style.background = "#333";
-  allBtn.style.color = "white";
+  allBtn.classList.add("active"); // 🔥 خليها مفعلة أول شي
   allBtn.onclick = function() { showProducts('all', allBtn); };
   div.appendChild(allBtn);
   
-  // باقي الأقسام من Firebase
   const snap = await db.collection("categories").get();
   snap.forEach(doc => {
     const cat = doc.data().name;
@@ -672,22 +688,9 @@ async function editCategory(id){
   loadCategories();
 }
 
-let allProducts = [];
 
-async function loadProducts() {
-  const grid = document.getElementById("productGrid");
-  grid.innerHTML = "";
-  allProducts = [];
-  
-  const snap = await db.collection("products").get();
-  snap.forEach(doc => {
-    const p = doc.data();
-    p.id = doc.id;
-    allProducts.push(p);
-  });
-  
-  renderProducts(allProducts);
-}
+
+
 function renderProducts(products) {
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
@@ -695,6 +698,16 @@ function renderProducts(products) {
   products.forEach(p => {
     const div = document.createElement("div");
     div.className = "product";
+    
+    // 🟢 تحسين عرض حسب المخزون
+    if ((p.stock || 0) <= 0) {
+      div.style.opacity = "0.4";
+      div.style.pointerEvents = "auto"; // يمنع البيع
+    }
+    
+    if ((p.stock || 0) < 5 && (p.stock || 0) > 0) {
+      div.style.border = "2px solid orange";
+    }
     
     // أزرار الأدمن فقط
     let adminButtons = "";
@@ -710,12 +723,21 @@ function renderProducts(products) {
       ${p.name} - ${p.category}<br>
       ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
       <br>
+      المخزون: ${p.stock || 0}
+      <br>
       ${adminButtons}
     `;
     
     div.addEventListener("click", function(e) {
       if (e.target.tagName === "BUTTON") return;
-      addToCart(p.name, p.price);
+      
+      // 🛑 منع البيع إذا صفر مخزون
+      if ((p.stock || 0) <= 0) {
+        alert("المنتج غير متوفر بالمخزون");
+        return;
+      }
+      
+      addToCart(p);
     });
     
     grid.appendChild(div);
@@ -723,24 +745,43 @@ function renderProducts(products) {
 }
 
 function searchProducts() {
-  const value = document.getElementById("searchProduct").value.toLowerCase();
   
-  const filtered = allProducts.filter(p =>
+  const value = document
+    .getElementById("searchProduct")
+    .value.toLowerCase();
+  
+  let base =
+    currentCategory === "all" ?
+    allProducts :
+    allProducts.filter(p => p.category === currentCategory);
+  
+  const filtered = base.filter(p =>
     p.name.toLowerCase().includes(value) ||
     p.category.toLowerCase().includes(value)
   );
   
-  renderProducts(filtered);
+  renderProducts(filtered); // ✅ هذا السطر الصح
 }
-async function addProduct(){
-  const name=document.getElementById("newName").value.trim();
-  const price=parseFloat(document.getElementById("newPrice").value);
-  const category=document.getElementById("categorySelect").value;
-  if(!name || !price || !category) return alert("املأ البيانات");
-  await db.collection("products").add({name,price,category});
-  document.getElementById("newName").value="";
-  document.getElementById("newPrice").value="";
-  loadProducts();
+async function addProduct() {
+  const name = document.getElementById("newName").value.trim();
+  const price = parseFloat(document.getElementById("newPrice").value);
+  const category = document.getElementById("categorySelect").value;
+  
+  if (!name || !price || !category)
+    return alert("املأ البيانات");
+  
+  await db.collection("products").add({
+    name,
+    price,
+    category,
+    stock: 0, // ⬅ نحط مخزون افتراضي
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  
+  document.getElementById("newName").value = "";
+  document.getElementById("newPrice").value = "";
+  
+  alert("تمت إضافة المنتج");
 }
 async function deleteProduct(id) {
   
@@ -750,73 +791,51 @@ async function deleteProduct(id) {
   if (!confirm("هل تريد حذف المنتج؟")) return;
   
   await db.collection("products").doc(id).delete();
-  loadProducts();
+
 }
-async function showProducts(cat, button) {
+
+
+function showProducts(cat, button) {
+  
+  currentCategory = cat;
+  
   document.querySelectorAll(".categories button")
     .forEach(b => b.classList.remove("active"));
   
   if (button) button.classList.add("active");
   
-  const grid = document.getElementById("productGrid");
-  grid.innerHTML = "";
+  let filtered =
+    cat === "all" ?
+    allProducts :
+    allProducts.filter(p => p.category === cat);
   
-  let snap = (cat === 'all') ?
-    await db.collection("products").get() :
-    await db.collection("products").where("category", "==", cat).get();
-  
-  snap.forEach(doc => {
-    const p = doc.data();
-    p.id = doc.id;
-    
-    const div = document.createElement("div");
-    div.className = "product";
-    
-    let adminButtons = "";
-    
-    // 🔥 إظهار أزرار التعديل فقط للادمن
-    if (currentUser && currentUser.role === "admin") {
-      adminButtons = `
-        <button class="edit-btn" onclick="editProductPopup('${p.id}')">✏</button>
-        <button class="delete-btn" onclick="deleteProduct('${p.id}')">X</button>
-      `;
-    }
-    
-    div.innerHTML = `
-      ${p.name} - ${p.category}<br>
-      ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
-      <br>
-      ${adminButtons}
-    `;
-    
-    div.addEventListener("click", function(e) {
-      if (e.target.tagName === "BUTTON") return;
-      addToCart(p.name, p.price);
-    });
-    
-    grid.appendChild(div);
-  });
+  renderProducts(filtered);
 }
-
 // --------- السلة ---------
-async function addToCart(name, price) {
+async function addToCart(product) {
   
   if (!currentOrderId) {
-    await createNewOrder(); // ⬅ ننتظر إنشاء الطلب
+    await createNewOrder();
   }
   
   let cart = orders[currentOrderId];
-  let existing = cart.find(i => i.name === name);
+  let existing = cart.find(i => i.productId === product.id);
+  
+  const currentQtyInCart = existing ? existing.qty : 0;
+  
+  if ((product.stock || 0) <= currentQtyInCart)
+    return alert("المخزون غير كافي");
   
   if (existing) {
     existing.qty += 1;
     existing.total = existing.price * existing.qty;
   } else {
     cart.push({
-      name,
-      price,
+      productId: product.id,
+      name: product.name,
+      price: product.price,
       qty: 1,
-      total: price
+      total: product.price
     });
   }
   
@@ -898,11 +917,11 @@ function openSectionModal() {
     return alert("غير مسموح");
   
   document.getElementById("sectionModal").style.display = "block";
-  loadCategoriesModal();
+  
+  loadCategoriesModal().then(() => {
+    
+  });
 }
-function closeSectionModal(){ document.getElementById("sectionModal").style.display = "none"; }
-
-let categoriesData = [];
 
 async function loadCategoriesModal() {
   const select = document.getElementById("categorySelectList");
@@ -921,19 +940,19 @@ async function loadCategoriesModal() {
   modalSelect.innerHTML = categoriesData.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
 }
 
+
+
+
 // تعديل القسم المحدد من المودال
 async function editSelectedCategory() {
   
   if (!currentUser || currentUser.role !== "admin")
     return alert("غير مسموح");
   
-  let selectedCategoryId = null;
-
-document.addEventListener("change", function(e) {
-  if (e.target.id === "categorySelectList") {
-    selectedCategoryId = e.target.value;
-  }
-});
+  const selectedCategoryId =
+    document.getElementById("categorySelectList").value;
+  
+  if (!selectedCategoryId)
     return alert("اختر قسم أولاً");
   
   const newName = prompt("اسم القسم الجديد:");
@@ -942,34 +961,12 @@ document.addEventListener("change", function(e) {
   await db.collection("categories")
     .doc(selectedCategoryId)
     .update({ name: newName });
-    
- alert("تم تعديل القسم");
-await loadCategories();
-await loadCategoriesModal();
-await loadProducts();
+  
+  alert("تم تعديل القسم");
+  
+  await loadCategories();
+  await loadCategoriesModal();
 }
-
-// حذف القسم المحدد من المودال
-async function deleteSelectedCategory() {
-  
-  if (!currentUser || currentUser.role !== "admin")
-    return alert("غير مسموح");
-  
-  if (!selectedCategoryId)
-    return alert("اختر قسم أولاً");
-  
-  if (!confirm("هل تريد حذف القسم؟")) return;
-  
-  await db.collection("categories")
-    .doc(selectedCategoryId)
-    .delete();
-    
- alert("تم حذف القسم");
-await loadCategories();
-await loadCategoriesModal();
-await loadProducts();
-}
-
 async function addCategoryModal() {
   
   if (!currentUser || currentUser.role !== "admin")
@@ -996,20 +993,59 @@ async function addProductModal() {
   const price = parseFloat(document.getElementById("modalNewPrice").value);
   const category = document.getElementById("modalCategorySelect").value;
   const barcode = document.getElementById("modalNewBarcode").value.trim();
+  const stock = parseInt(document.getElementById("modalNewStock").value);
   
-  if (!name || !price || !category || !barcode)
-    return alert("املأ كل البيانات");
+  // تحقق من القيم
+  if (!name || isNaN(price) || !category || !barcode || isNaN(stock) || stock < 0)
+    return alert("املأ كل البيانات بشكل صحيح");
   
   await db.collection("products").add({
-    name,
-    price,
-    category,
-    barcode
-  });
+  name,
+  price,
+  category,
+  barcode,
+  stock, // ✅ فاصلة هون مهمة جداً
+  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
   
   alert("تمت إضافة المنتج");
+  
+  // تصفير الحقول بعد الإضافة
+  document.getElementById("modalNewName").value = "";
+  document.getElementById("modalNewPrice").value = "";
+  document.getElementById("modalNewBarcode").value = "";
+  document.getElementById("modalNewStock").value = "";
+  
   closeSectionModal();
-  loadProducts();
+  showProducts(currentCategory);
+  
+}
+
+
+
+function listenToProductsRealtime() {
+  
+  if (unsubscribeProducts) {
+    unsubscribeProducts(); // إلغاء القديم
+  }
+  
+  unsubscribeProducts = db.collection("products")
+    .onSnapshot(snapshot => {
+      
+      allProducts = [];
+      
+      snapshot.forEach(doc => {
+        const p = doc.data();
+        p.id = doc.id;
+        allProducts.push(p);
+      });
+      
+      showProducts(currentCategory);
+    });
+}
+
+function closeSectionModal() {
+  document.getElementById("sectionModal").style.display = "none";
 }
 // --------- الفاتورة ---------
 async function getNextNumber(){
@@ -1023,41 +1059,74 @@ async function getNextNumber(){
   });
 }
 async function saveOrder() {
+  
   if (!currentOrderId || orders[currentOrderId].length === 0)
     return alert("السلة فارغة");
   
   const number = currentOrderId.replace("طلب-", "");
-  const subtotal = orders[currentOrderId].reduce((s, i) => s + i.total, 0);
+  const cartItems = orders[currentOrderId];
+  
+  const subtotal = cartItems.reduce((s, i) => s + i.total, 0);
   const tax = parseFloat(document.getElementById("tax").value) || 0;
   const discount = parseFloat(document.getElementById("discount").value) || 0;
   const totalUSD = subtotal + (subtotal * tax / 100) - discount;
   const totalLBP = totalUSD * USD_TO_LBP;
   
   try {
-    // 🔹 التأكد من وجود role قبل الإضافة
+    
     if (!currentUser || !currentUser.role) {
       alert("خطأ: المستخدم غير معرف");
       return;
     }
     
-    // 🔹 حفظ الطلب في Firestore
-    await db.collection("sales").add({
-      orderNumber: number,
-      user: currentUser.email,
-      items: orders[currentOrderId],
-      subtotal,
-      tax,
-      discount,
-      totalUSD,
-      totalLBP,
-      date: new Date().toISOString().split('T')[0],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    // 🔥 أهم جزء — Transaction
+    await db.runTransaction(async (transaction) => {
+      
+      // 1️⃣ فحص وخصم المخزون
+      for (const item of cartItems) {
+  
+  // ⛔ إذا المنتج Extra ما إله مخزون
+  if (!item.productId) continue;
+  
+  const productRef = db.collection("products").doc(item.productId);
+  const productDoc = await transaction.get(productRef);
+  
+  if (!productDoc.exists)
+    throw "المنتج غير موجود";
+  
+  const currentStock = productDoc.data().stock || 0;
+  
+  if (currentStock < item.qty)
+    throw new Error("المخزون غير كافي للمنتج: " + item.name);
+  
+  transaction.update(productRef, {
+    stock: currentStock - item.qty
+  });
+}
+      
+      // 2️⃣ حفظ الطلب بعد التأكد من المخزون
+      const saleRef = db.collection("sales").doc();
+      
+      transaction.set(saleRef, {
+        orderNumber: number,
+        user: currentUser.email,
+        items: cartItems,
+        subtotal,
+        tax,
+        discount,
+        totalUSD,
+        totalLBP,
+        date: new Date().toISOString().split('T')[0],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
     });
     
-    generateInvoice(number, orders[currentOrderId], subtotal, tax, discount, totalUSD, totalLBP);
+    // ✅ إذا وصل لهون يعني العملية نجحت
+    generateInvoice(number, cartItems, subtotal, tax, discount, totalUSD, totalLBP);
     window.print();
     
-    // 🔹 تصفير الطلب بعد الطباعة
+    // تصفير الطلب
     delete orders[currentOrderId];
     currentOrderId = null;
     document.getElementById("cartItems").innerHTML = "";
@@ -1066,10 +1135,11 @@ async function saveOrder() {
     document.getElementById("total").innerText = "المجموع: 0";
     
     renderOpenOrders();
+      
     
   } catch (error) {
-    console.error("Error saving order:", error);
-    alert("فشل حفظ الطلب! قد يكون السبب صلاحيات Firestore أو مشكلة بالاتصال.");
+    console.error("Transaction error:", error);
+    alert(error);
   }
 }
 function generateInvoice(number, items, subtotal, tax, discount, totalUSD, totalLBP) {
@@ -1105,13 +1175,17 @@ function generateInvoice(number, items, subtotal, tax, discount, totalUSD, total
 
 // --------- تقرير اليوم ---------
 async function toggleDailyReport() {
+  
   if (!currentUser || currentUser.role !== "admin")
-  return alert("غير مسموح");
+    return alert("غير مسموح");
+  
   const modal = document.getElementById("dailyReportModal");
   const content = document.getElementById("dailyReportContent");
   
   const today = new Date().toISOString().split('T')[0];
-  const snap = await db.collection("sales").where("date", "==", today).get();
+  const snap = await db.collection("sales")
+    .where("date", "==", today)
+    .get();
   
   if (snap.empty) {
     content.innerHTML = "<p>لا توجد طلبات اليوم</p>";
@@ -1121,58 +1195,77 @@ async function toggleDailyReport() {
   
   let totalUSD = 0;
   let totalLBP = 0;
+  let reportHTML = "";
   
-  content.innerHTML = "";
   snap.forEach(doc => {
-  const d = doc.data();
-  totalUSD += d.totalUSD;
-  totalLBP += d.totalLBP;
-  
-  // الحصول على التاريخ والوقت
-  let dateTime = d.createdAt && d.createdAt.toDate ?
-    d.createdAt.toDate().toLocaleString("ar-EG", { hour12: false }) :
-    d.date;
-  
-  // بناء HTML للطلب
-  let html = `<div style="border-bottom:1px dashed #555;margin-bottom:8px;padding:8px;">
+    const d = doc.data();
+    
+    totalUSD += d.totalUSD || 0;
+    totalLBP += d.totalLBP || 0;
+    
+    let dateTime = d.createdAt && d.createdAt.toDate ?
+      d.createdAt.toDate().toLocaleString("ar-EG", { hour12: false }) :
+      d.date;
+    
+    reportHTML += `
+      <div style="border-bottom:1px dashed #555;margin-bottom:8px;padding:8px;">
         <p><strong>طلب #${d.orderNumber}</strong> | ${d.user}</p>
         <p>تاريخ ووقت الطلب: ${dateTime}</p>
+
         ${d.items.map(item => `
-            <p>${item.name} × ${item.qty} = ${item.total.toFixed(2)}$ 
-            (${(item.total*USD_TO_LBP).toLocaleString()} ل.ل)</p>
+          <p>
+            ${item.name} × ${item.qty} = ${item.total.toFixed(2)}$
+            (${(item.total * USD_TO_LBP).toLocaleString()} ل.ل)
+          </p>
         `).join('')}
-        <p><strong>إجمالي الطلب: ${d.totalUSD.toFixed(2)}$ 
-        (${d.totalLBP.toLocaleString()} ل.ل)</strong></p>
-        <button onclick="printSale('${doc.id}')" 
-            style="background:#2196F3;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
-            طباعة
+
+        <p>
+          <strong>
+            إجمالي الطلب: ${d.totalUSD.toFixed(2)}$
+            (${d.totalLBP.toLocaleString()} ل.ل)
+          </strong>
+        </p>
+
+        <button onclick="printSale('${doc.id}')"
+          style="background:#2196F3;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
+          طباعة
         </button>
-     ${currentUser.role === "admin" ? `
-<button onclick="deleteSale('${doc.id}')" 
-  style="background:red;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
-  حذف
-</button>
-` : ""}
-    </div>`;
+
+        ${currentUser.role === "admin" ? `
+          <button onclick="deleteSale('${doc.id}')"
+            style="background:red;color:white;padding:5px 8px;margin:3px;border:none;border-radius:6px;">
+            حذف
+          </button>
+        ` : ""}
+
+      </div>
+    `;
+  });
   
-  // إضافة HTML للمودال
-  content.innerHTML += html;
-});
-// إضافة المجموع الكلي وزر طباعة الكل وزر حذف الكل
-content.innerHTML = `<div style="text-align:center; margin-bottom:10px;">
-  <strong>المجموع الكلي لليوم: ${totalUSD.toFixed(2)}$ (${totalLBP.toLocaleString()} ل.ل)</strong>
-  <br>
-  <button onclick="printDailyTotal()" 
-    style="background:#27ae60;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
-    طباعة الكل
-  </button>
-${currentUser.role === "admin" ? `
-<button onclick="deleteAllDailySales()" 
-  style="background:red;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
-  حذف كل الطلبات اليوم
-</button>
-` : ""}
-</div>` + content.innerHTML;
+  content.innerHTML = `
+    <div style="text-align:center; margin-bottom:15px;">
+      <strong>
+        المجموع الكلي لليوم:
+        ${totalUSD.toFixed(2)}$
+        (${totalLBP.toLocaleString()} ل.ل)
+      </strong>
+      <br>
+
+      <button onclick="printDailyTotal()"
+        style="background:#27ae60;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
+        طباعة الكل
+      </button>
+
+      ${currentUser.role === "admin" ? `
+        <button onclick="deleteAllDailySales()"
+          style="background:red;color:white;padding:8px 12px;margin-top:5px;border:none;border-radius:6px;">
+          حذف كل الطلبات اليوم
+        </button>
+      ` : ""}
+    </div>
+
+    ${reportHTML}
+  `;
   
   modal.style.display = "block";
 }
@@ -1317,6 +1410,7 @@ function deleteOpenOrder(id) {
   }
   renderOpenOrders();
   renderCart();
+  showProducts(currentCategory);
 }
 function renderOpenOrders() {
   const div = document.getElementById("openOrders");
@@ -1340,15 +1434,21 @@ function renderOpenOrders() {
   }
 }
 function scanProduct(code) {
-  const product = allProducts.find(p => p.barcode === code);
+  
+  if (code.length < 3) return; // منع القراءة الجزئية
+  
+  const cleanCode = code.trim();
+const product = allProducts.find(p => p.barcode === cleanCode);
+  
   if (product) {
-    addToCart(product.name, product.price);
-    document.getElementById("scannerInput").value = ""; // مسح الرقم بعد الإضافة
+    addToCart(product);
+    document.getElementById("scannerInput").value = "";
   }
 }
 let editingProductId = null;
 
 async function editProductPopup(productId) {
+  
   editingProductId = productId;
   const product = allProducts.find(p => p.id === productId);
   if (!product) return alert("المنتج غير موجود");
@@ -1361,6 +1461,7 @@ async function editProductPopup(productId) {
   document.getElementById("editProductName").value = product.name;
   document.getElementById("editProductPrice").value = product.price;
   document.getElementById("editProductBarcode").value = product.barcode || "";
+  document.getElementById("editProductStock").value = product.stock || 0; // 🔥 أضفنا هذا السطر
   
   const select = document.getElementById("editProductCategory");
   select.innerHTML = categoriesData.map(c =>
@@ -1386,20 +1487,23 @@ async function saveEditedProduct() {
   const price = parseFloat(document.getElementById("editProductPrice").value);
   const barcode = document.getElementById("editProductBarcode").value.trim();
   const category = document.getElementById("editProductCategory").value;
+  const stock = parseInt(document.getElementById("editProductStock").value);
   
-  if (!name || !price || !category || !barcode)
+  if (!name || isNaN(price) || !category || !barcode || isNaN(stock) || stock < 0)
     return alert("املأ كل البيانات");
   
   await db.collection("products").doc(editingProductId).update({
     name,
     price,
     category,
-    barcode
+    barcode,
+    stock
   });
   
   alert("تم تعديل المنتج");
   closeEditProductModal();
-  loadProducts();
+  showProducts(currentCategory);
+ 
 }
 </script>
 </body>
