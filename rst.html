@@ -572,16 +572,53 @@ let currentOrderId = null;
 const USD_TO_LBP=89000;
 
 // --------- تسجيل دخول وخروج ---------
-async function login(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  let userCred;
-  try{userCred=await auth.signInWithEmailAndPassword(email,password);}
-  catch{userCred=await auth.createUserWithEmailAndPassword(email,password);}
-  currentUser=userCred.user;
-  document.getElementById("userInfo").innerText=currentUser.email+" | كاشير";
-  loginPage.style.display="none";
-  app.style.display="block";
+async function login() {
+  
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  
+  try {
+    const userCred = await auth.signInWithEmailAndPassword(email, password);
+    currentUser = userCred.user;
+    
+    const userDoc = await db.collection("users").doc(currentUser.uid).get();
+    
+    if (!userDoc.exists) {
+      alert("هذا المستخدم ليس لديه صلاحيات");
+      await auth.signOut();
+      return;
+    }
+    
+    const role = userDoc.data().role;
+    currentUser.role = role;
+    
+    document.getElementById("userInfo").innerText =
+      currentUser.email + " | " + role;
+    
+    applyPermissions(role);
+    
+    loginPage.style.display = "none";
+    app.style.display = "block";
+    
+  } catch (error) {
+    alert("بيانات الدخول غير صحيحة");
+  }
+}
+
+function applyPermissions(role) {
+  
+  if (role === "cashier") {
+    
+    // إخفاء زر إدارة الأقسام
+    const sectionBtn = document.querySelector(".new-section");
+    if (sectionBtn) sectionBtn.style.display = "none";
+    
+    // إخفاء زر التقرير
+    const reportBtn = document.querySelector(".report");
+    if (reportBtn) reportBtn.style.display = "none";
+    
+  }
+  
 }
 function logout(){auth.signOut(); location.reload();}
 
@@ -645,23 +682,32 @@ function renderProducts(products) {
   products.forEach(p => {
     const div = document.createElement("div");
     div.className = "product";
-   div.innerHTML = `
-  ${p.name} - ${p.category}<br>
-  ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
-  <br>
-<button class="edit-btn" onclick="editProductPopup('${p.id}')">✏</button>
-<button class="delete-btn" onclick="deleteProduct('${p.id}')">X</button>
-`;
+    
+    // أزرار الأدمن فقط
+    let adminButtons = "";
+    
+    if (currentUser && currentUser.role === "admin") {
+      adminButtons = `
+        <button class="edit-btn" onclick="editProductPopup('${p.id}')">✏</button>
+        <button class="delete-btn" onclick="deleteProduct('${p.id}')">X</button>
+      `;
+    }
+    
+    div.innerHTML = `
+      ${p.name} - ${p.category}<br>
+      ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
+      <br>
+      ${adminButtons}
+    `;
     
     div.addEventListener("click", function(e) {
-  if (e.target.tagName === "BUTTON") return; // إذا ضغط على زر لا تفعل شيء هنا
-  addToCart(p.name, p.price); // إذا ضغط على أي مكان آخر داخل المنتج، أضف للسلّة
-});
+      if (e.target.tagName === "BUTTON") return;
+      addToCart(p.name, p.price);
+    });
     
     grid.appendChild(div);
   });
 }
-
 
 function searchProducts() {
   const value = document.getElementById("searchProduct").value.toLowerCase();
