@@ -626,14 +626,16 @@ function applyPermissions(role) {
   const sectionBtn = document.querySelector(".new-section");
   const reportBtn = document.querySelector(".report");
   
-  if (role === "admin") {
-    if (sectionBtn) sectionBtn.style.display = "inline-block";
-    if (reportBtn) reportBtn.style.display = "inline-block";
-  }
+  if (!sectionBtn || !reportBtn) return;
   
+  // 🔥 أولاً نظهر كل شيء
+  sectionBtn.style.display = "inline-block";
+  reportBtn.style.display = "inline-block";
+  
+  // 🔒 إذا كاشير نخفي
   if (role === "cashier") {
-    if (sectionBtn) sectionBtn.style.display = "none";
-    if (reportBtn) reportBtn.style.display = "none";
+    sectionBtn.style.display = "none";
+    reportBtn.style.display = "none";
   }
 }
 function logout(){auth.signOut(); location.reload();}
@@ -1134,7 +1136,13 @@ content.innerHTML = `<div style="text-align:center; margin-bottom:10px;">
 }
 
 async function deleteAllDailySales() {
-  if (!confirm("هل تريد حذف كل الطلبات اليوم؟ لن يمكن التراجع!")) return;
+  
+  if (!currentUser || currentUser.role !== "admin") {
+    alert("غير مسموح");
+    return;
+  }
+  
+  if (!confirm("هل تريد حذف كل الطلبات اليوم؟")) return;
   
   const today = new Date().toISOString().split('T')[0];
   const snap = await db.collection("sales").where("date", "==", today).get();
@@ -1144,7 +1152,7 @@ async function deleteAllDailySales() {
   await batch.commit();
   
   alert("تم حذف كل الطلبات اليوم");
-  toggleDailyReport(); // إعادة تحميل المودال بعد الحذف
+  toggleDailyReport();
 }
 async function printDailyTotal() {
   const today = new Date().toISOString().split('T')[0];
@@ -1221,14 +1229,19 @@ async function printSale(id) {
   inv.style.display = "none";
 }
 
-async function deleteSale(id){
-  if(confirm("هل تريد حذف هذا الطلب؟")){
+async function deleteSale(id) {
+  
+  if (!currentUser || currentUser.role !== "admin") {
+    alert("غير مسموح");
+    return;
+  }
+  
+  if (confirm("هل تريد حذف هذا الطلب؟")) {
     await db.collection("sales").doc(id).delete();
     alert("تم حذف الطلب");
     toggleDailyReport();
   }
 }
-
 async function createNewOrder() {
   
   // 🔴 منع فتح أكثر من 10 طلبات
