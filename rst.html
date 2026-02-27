@@ -546,11 +546,26 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 auth.onAuthStateChanged(async user => {
   if (user) {
     currentUser = user;
-    document.getElementById("userInfo").innerText = user.email + " | كاشير";
+    
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    
+    if (!userDoc.exists) {
+      alert("هذا المستخدم ليس لديه صلاحيات");
+      await auth.signOut();
+      return;
+    }
+    
+    const role = userDoc.data().role;
+    currentUser.role = role;
+    
+    document.getElementById("userInfo").innerText =
+      currentUser.email + " | " + role;
+    
+    applyPermissions(role);
+    
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
     
-    // 🔴 تنظيف البيانات القديمة لتجنب التكرار
     orders = {};
     currentOrderId = null;
     document.getElementById("cartItems").innerHTML = "";
@@ -560,6 +575,7 @@ auth.onAuthStateChanged(async user => {
     
     await loadCategories();
     await loadProducts();
+    
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
