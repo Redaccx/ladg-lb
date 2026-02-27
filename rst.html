@@ -1033,32 +1033,44 @@ async function saveOrder() {
   const totalUSD = subtotal + (subtotal * tax / 100) - discount;
   const totalLBP = totalUSD * USD_TO_LBP;
   
-  await db.collection("sales").add({
-    orderNumber: number,
-    user: currentUser.email,
-    items: orders[currentOrderId],
-    subtotal,
-    tax,
-    discount,
-    totalUSD,
-    totalLBP,
-    date: new Date().toISOString().split('T')[0],
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  
-  generateInvoice(number, orders[currentOrderId], subtotal, tax, discount, totalUSD, totalLBP);
-  window.print();
-  
-  // 🔴 تصفير كامل بعد الطباعة
-  delete orders[currentOrderId];
-  currentOrderId = null;
-  
-  document.getElementById("cartItems").innerHTML = "";
-  document.getElementById("tax").value = 0;
-  document.getElementById("discount").value = 0;
-  document.getElementById("total").innerText = "المجموع: 0";
-  
-  renderOpenOrders();
+  try {
+    // 🔹 التأكد من وجود role قبل الإضافة
+    if (!currentUser || !currentUser.role) {
+      alert("خطأ: المستخدم غير معرف");
+      return;
+    }
+    
+    // 🔹 حفظ الطلب في Firestore
+    await db.collection("sales").add({
+      orderNumber: number,
+      user: currentUser.email,
+      items: orders[currentOrderId],
+      subtotal,
+      tax,
+      discount,
+      totalUSD,
+      totalLBP,
+      date: new Date().toISOString().split('T')[0],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    generateInvoice(number, orders[currentOrderId], subtotal, tax, discount, totalUSD, totalLBP);
+    window.print();
+    
+    // 🔹 تصفير الطلب بعد الطباعة
+    delete orders[currentOrderId];
+    currentOrderId = null;
+    document.getElementById("cartItems").innerHTML = "";
+    document.getElementById("tax").value = 0;
+    document.getElementById("discount").value = 0;
+    document.getElementById("total").innerText = "المجموع: 0";
+    
+    renderOpenOrders();
+    
+  } catch (error) {
+    console.error("Error saving order:", error);
+    alert("فشل حفظ الطلب! قد يكون السبب صلاحيات Firestore أو مشكلة بالاتصال.");
+  }
 }
 function generateInvoice(number, items, subtotal, tax, discount, totalUSD, totalLBP) {
   const now = new Date();
