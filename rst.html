@@ -589,34 +589,29 @@ const USD_TO_LBP=89000;
 
 // --------- تسجيل دخول وخروج ---------
 async function login() {
-  
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   
   try {
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); // ✅ مهم
     const userCred = await auth.signInWithEmailAndPassword(email, password);
-    currentUser = userCred.user;
     
-    const userDoc = await db.collection("users").doc(currentUser.uid).get();
-    
-    if (!userDoc.exists) {
-      alert("هذا المستخدم ليس لديه صلاحيات");
+    const userDoc = await db.collection("users").doc(userCred.user.uid).get();
+    if (!userDoc.exists || !userDoc.data().role) {
+      alert("المستخدم غير مصرح له بالدخول");
       await auth.signOut();
       return;
     }
     
-    const role = userDoc.data().role;
-    currentUser.role = role;
-    
-    document.getElementById("userInfo").innerText =
-      currentUser.email + " | " + role;
-    
-    applyPermissions(role);
+    currentUser = userCred.user;
+    currentUser.role = userDoc.data().role;
+    console.log("تم تسجيل الدخول:", currentUser.email, "Role:", currentUser.role);
     
     document.getElementById("loginPage").style.display = "none";
-document.getElementById("app").style.display = "block";
+    document.getElementById("app").style.display = "block";
     
   } catch (error) {
+    console.error("Login error:", error.code, error.message);
     alert("بيانات الدخول غير صحيحة");
   }
 }
