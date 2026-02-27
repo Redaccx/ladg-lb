@@ -623,18 +623,18 @@ async function login() {
 
 function applyPermissions(role) {
   
-  if (role === "cashier") {
-    
-    // إخفاء زر إدارة الأقسام
-    const sectionBtn = document.querySelector(".new-section");
-    if (sectionBtn) sectionBtn.style.display = "none";
-    
-    // إخفاء زر التقرير
-    const reportBtn = document.querySelector(".report");
-    if (reportBtn) reportBtn.style.display = "none";
-    
+  const sectionBtn = document.querySelector(".new-section");
+  const reportBtn = document.querySelector(".report");
+  
+  if (role === "admin") {
+    if (sectionBtn) sectionBtn.style.display = "inline-block";
+    if (reportBtn) reportBtn.style.display = "inline-block";
   }
   
+  if (role === "cashier") {
+    if (sectionBtn) sectionBtn.style.display = "none";
+    if (reportBtn) reportBtn.style.display = "none";
+  }
 }
 function logout(){auth.signOut(); location.reload();}
 
@@ -747,39 +747,42 @@ async function addProduct(){
 }
 async function deleteProduct(id){await db.collection("products").doc(id).delete(); loadProducts();}
 async function showProducts(cat, button) {
-  // إزالة التحديد عن كل أزرار الفئات
-  document.querySelectorAll(".categories button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".categories button")
+    .forEach(b => b.classList.remove("active"));
+  
   if (button) button.classList.add("active");
   
   const grid = document.getElementById("productGrid");
   grid.innerHTML = "";
   
-  // جلب المنتجات حسب الفئة أو الكل
   let snap = (cat === 'all') ?
     await db.collection("products").get() :
     await db.collection("products").where("category", "==", cat).get();
   
-  const productsToRender = [];
   snap.forEach(doc => {
     const p = doc.data();
     p.id = doc.id;
-    productsToRender.push(p);
-  });
-  
-  // عرض المنتجات باستخدام نفس الأسلوب في renderProducts
-  productsToRender.forEach(p => {
+    
     const div = document.createElement("div");
     div.className = "product";
+    
+    let adminButtons = "";
+    
+    // 🔥 إظهار أزرار التعديل فقط للادمن
+    if (currentUser && currentUser.role === "admin") {
+      adminButtons = `
+        <button class="edit-btn" onclick="editProductPopup('${p.id}')">✏</button>
+        <button class="delete-btn" onclick="deleteProduct('${p.id}')">X</button>
+      `;
+    }
     
     div.innerHTML = `
       ${p.name} - ${p.category}<br>
       ${p.price}$ (${(p.price * USD_TO_LBP).toLocaleString()} ل.ل)
       <br>
-<button class="edit-btn" onclick="editProductPopup('${p.id}')">✏</button>
-<button class="delete-btn" onclick="deleteProduct('${p.id}')">X</button>
+      ${adminButtons}
     `;
     
-    // الضغط على أي مكان في المنتج يضيفه للسلة، إلا الأزرار
     div.addEventListener("click", function(e) {
       if (e.target.tagName === "BUTTON") return;
       addToCart(p.name, p.price);
@@ -858,27 +861,30 @@ function clearCart() {
   renderCart();
 }
 function addExtra() {
+  
   if (!currentOrderId) {
     alert("أنشئ طلب أولاً");
     return;
   }
   
   const name = prompt("اسم المنتج:");
-  const weight = parseFloat(prompt("أدخل الكمية:"));
-  const price = parseFloat(prompt("أدخل السعر الإجمالي:"));
+  if (!name) return;
   
-  if (!name || !weight || !price) return;
+  const qty = parseFloat(prompt("أدخل الكمية:"));
+  if (!qty || qty <= 0) return alert("الكمية غير صحيحة");
+  
+  const totalPrice = parseFloat(prompt("أدخل السعر الإجمالي:"));
+  if (!totalPrice || totalPrice <= 0) return alert("السعر غير صحيح");
   
   orders[currentOrderId].push({
-    name,
-    price: price / weight,
-    qty: weight,
-    total: price
+    name: name + " (Extra)",
+    price: totalPrice / qty,
+    qty: qty,
+    total: totalPrice
   });
   
   renderCart();
 }
-
 // --------- إدارة الأقسام والمنتجات بالمودال ---------
 function openSectionModal(){
   document.getElementById("sectionModal").style.display = "block";
