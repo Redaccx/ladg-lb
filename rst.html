@@ -707,7 +707,7 @@ function renderProducts(products) {
     // 🟢 تحسين عرض حسب المخزون
     if ((p.stock || 0) <= 0) {
       div.style.opacity = "0.4";
-      div.style.pointerEvents = "none"; // يمنع البيع
+      div.style.pointerEvents = "auto"; // يمنع البيع
     }
     
     if ((p.stock || 0) < 5 && (p.stock || 0) > 0) {
