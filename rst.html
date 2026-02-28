@@ -995,7 +995,52 @@ async function addProductModal() {
 }
 
 
+// --------- حذف منتج ---------
+async function deleteProduct(productId) {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
+  if (!confirm("هل تريد حذف هذا المنتج؟")) return;
+  
+  try {
+    await db.collection("products").doc(productId).delete();
+    alert("تم حذف المنتج بنجاح");
+  } catch (error) {
+    console.error(error);
+    alert("حدث خطأ أثناء الحذف");
+  }
+}
 
+// --------- حذف قسم ---------
+async function deleteSelectedCategory() {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
+  const selectedCategoryId =
+    document.getElementById("categorySelectList").value;
+  
+  if (!selectedCategoryId)
+    return alert("اختر قسم أولاً");
+  
+  if (!confirm("هل تريد حذف هذا القسم؟")) return;
+  
+  try {
+    await db.collection("categories")
+      .doc(selectedCategoryId)
+      .delete();
+    
+    alert("تم حذف القسم");
+    
+    await loadCategories();
+    await loadCategoriesModal();
+    
+  } catch (error) {
+    console.error(error);
+    alert("حدث خطأ أثناء حذف القسم");
+  }
+}
 function listenToProductsRealtime() {
   
   if (unsubscribeProducts) {
