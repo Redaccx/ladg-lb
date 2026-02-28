@@ -417,6 +417,9 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <button onclick="createNewOrder()" style="color:#ffffff;background:#333333;">طلب جديد</button>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
+    <button onclick="showProfitStats()" style="background:#8e44ad;color:white;">
+  📊 إحصائيات الربح
+</button>
     <button class="logout" onclick="logout()">خروج</button>
   </div>
 </div>
@@ -490,6 +493,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <h4>إضافة منتج جديد</h4>
     <input type="text" id="modalNewName" placeholder="اسم المنتج">
     <input type="number" id="modalNewPrice" placeholder="السعر بالدولار">
+    <input type="number" id="modalNewCost" placeholder="كلفة المنتج">
     <input type="text" id="modalNewBarcode" placeholder="رقم الباركود">
     <input type="number" id="modalNewStock" placeholder="الكمية في المخزون">
     <select id="modalCategorySelect"></select>
@@ -516,7 +520,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <input type="text" id="editProductBarcode">
     
     <input type="number" id="editProductStock" placeholder="الكمية في المخزون">
-   
+   <input type="number" id="editProductCost" placeholder="كلفة المنتج">
     
     <button onclick="saveEditedProduct()" style="background:#27ae60;color:white;">حفظ</button>
   </div>
@@ -702,7 +706,7 @@ function renderProducts(products) {
     // 🟢 تحسين عرض حسب المخزون
     if ((p.stock || 0) <= 0) {
       div.style.opacity = "0.4";
-      div.style.pointerEvents = "auto"; // يمنع البيع
+      div.style.pointerEvents = "none"; // يمنع البيع
     }
     
     if ((p.stock || 0) < 5 && (p.stock || 0) > 0) {
@@ -762,37 +766,6 @@ function searchProducts() {
   
   renderProducts(filtered); // ✅ هذا السطر الصح
 }
-async function addProduct() {
-  const name = document.getElementById("newName").value.trim();
-  const price = parseFloat(document.getElementById("newPrice").value);
-  const category = document.getElementById("categorySelect").value;
-  
-  if (!name || !price || !category)
-    return alert("املأ البيانات");
-  
-  await db.collection("products").add({
-    name,
-    price,
-    category,
-    stock: 0, // ⬅ نحط مخزون افتراضي
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  
-  document.getElementById("newName").value = "";
-  document.getElementById("newPrice").value = "";
-  
-  alert("تمت إضافة المنتج");
-}
-async function deleteProduct(id) {
-  
-  if (!currentUser || currentUser.role !== "admin")
-    return alert("غير مسموح");
-  
-  if (!confirm("هل تريد حذف المنتج؟")) return;
-  
-  await db.collection("products").doc(id).delete();
-
-}
 
 
 function showProducts(cat, button) {
@@ -812,6 +785,7 @@ function showProducts(cat, button) {
   renderProducts(filtered);
 }
 // --------- السلة ---------
+
 async function addToCart(product) {
   
   if (!currentOrderId) {
@@ -831,14 +805,14 @@ async function addToCart(product) {
     existing.total = existing.price * existing.qty;
   } else {
     cart.push({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      qty: 1,
-      total: product.price
-    });
+  productId: product.id,
+  name: product.name,
+  price: product.price,
+  cost: product.cost || 0, // 🔥 مهم جداً
+  qty: 1,
+  total: product.price
+});
   }
-  
   renderCart();
 }
 function renderCart() {
@@ -991,34 +965,33 @@ async function addProductModal() {
   
   const name = document.getElementById("modalNewName").value.trim();
   const price = parseFloat(document.getElementById("modalNewPrice").value);
+  const cost = parseFloat(document.getElementById("modalNewCost").value);
   const category = document.getElementById("modalCategorySelect").value;
   const barcode = document.getElementById("modalNewBarcode").value.trim();
   const stock = parseInt(document.getElementById("modalNewStock").value);
   
-  // تحقق من القيم
-  if (!name || isNaN(price) || !category || !barcode || isNaN(stock) || stock < 0)
+  if (!name || isNaN(price) || isNaN(cost) || !category || !barcode || isNaN(stock) || stock < 0)
     return alert("املأ كل البيانات بشكل صحيح");
   
   await db.collection("products").add({
-  name,
-  price,
-  category,
-  barcode,
-  stock, // ✅ فاصلة هون مهمة جداً
-  createdAt: firebase.firestore.FieldValue.serverTimestamp()
-});
+    name,
+    price,
+    cost,
+    category,
+    barcode,
+    stock,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
   
   alert("تمت إضافة المنتج");
   
-  // تصفير الحقول بعد الإضافة
   document.getElementById("modalNewName").value = "";
   document.getElementById("modalNewPrice").value = "";
+  document.getElementById("modalNewCost").value = "";
   document.getElementById("modalNewBarcode").value = "";
   document.getElementById("modalNewStock").value = "";
   
   closeSectionModal();
-  showProducts(currentCategory);
-  
 }
 
 
@@ -1270,6 +1243,76 @@ async function toggleDailyReport() {
   modal.style.display = "block";
 }
 
+
+async function showProfitStats() {
+  
+  if (!currentUser || currentUser.role !== "admin")
+    return alert("غير مسموح");
+  
+  const today = new Date().toISOString().split('T')[0];
+  
+  const snap = await db.collection("sales")
+    .where("date", "==", today)
+    .get();
+  
+  if (snap.empty)
+    return alert("لا توجد مبيعات اليوم");
+  
+  let totalSales = 0;
+  let totalProfit = 0;
+  let totalOrders = 0;
+  let productStats = {};
+  
+  snap.forEach(doc => {
+    const d = doc.data();
+    totalSales += d.totalUSD;
+    totalOrders++;
+    
+    d.items.forEach(item => {
+      
+      // حساب الربح
+      totalProfit += (item.price - (item.cost || 0)) * item.qty;
+      
+      // إحصائيات المنتجات
+      if (!productStats[item.name])
+        productStats[item.name] = 0;
+      
+      productStats[item.name] += item.qty;
+    });
+  });
+  
+  const avgOrder = totalSales / totalOrders;
+  
+  // أكثر منتج مبيعاً
+  let topProduct = "-";
+  let maxQty = 0;
+  
+  for (let name in productStats) {
+    if (productStats[name] > maxQty) {
+      maxQty = productStats[name];
+      topProduct = name;
+    }
+  }
+  
+  alert(`
+📊 إحصائيات اليوم:
+
+عدد الطلبات: ${totalOrders}
+
+إجمالي المبيعات:
+${totalSales.toFixed(2)}$
+
+متوسط الطلب:
+${avgOrder.toFixed(2)}$
+
+أكثر منتج مبيعاً:
+${topProduct} (${maxQty})
+
+💰 صافي الربح:
+${totalProfit.toFixed(2)}$
+  `);
+}
+
 async function deleteAllDailySales() {
   
   if (!currentUser || currentUser.role !== "admin") {
@@ -1461,6 +1504,7 @@ async function editProductPopup(productId) {
   document.getElementById("editProductName").value = product.name;
   document.getElementById("editProductPrice").value = product.price;
   document.getElementById("editProductBarcode").value = product.barcode || "";
+  document.getElementById("editProductCost").value = product.cost || 0;
   document.getElementById("editProductStock").value = product.stock || 0; // 🔥 أضفنا هذا السطر
   
   const select = document.getElementById("editProductCategory");
@@ -1484,26 +1528,29 @@ async function saveEditedProduct() {
   if (!editingProductId) return;
   
   const name = document.getElementById("editProductName").value.trim();
+  const cost = parseFloat(document.getElementById("editProductCost").value);
   const price = parseFloat(document.getElementById("editProductPrice").value);
   const barcode = document.getElementById("editProductBarcode").value.trim();
   const category = document.getElementById("editProductCategory").value;
   const stock = parseInt(document.getElementById("editProductStock").value);
   
-  if (!name || isNaN(price) || !category || !barcode || isNaN(stock) || stock < 0)
+  if (!name || isNaN(price) || isNaN(cost) || !category || !barcode || isNaN(stock) || stock < 0)
     return alert("املأ كل البيانات");
   
   await db.collection("products").doc(editingProductId).update({
     name,
     price,
     category,
+    cost,
     barcode,
     stock
   });
-  
   alert("تم تعديل المنتج");
   closeEditProductModal();
-  showProducts(currentCategory);
- 
+  showProducts(
+    currentCategory,
+    document.querySelector(".categories button.active")
+  );
 }
 </script>
 </body>
