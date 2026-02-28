@@ -636,16 +636,16 @@ function applyPermissions(role) {
   const reportBtn = document.querySelector(".report");
   const profitBtn = document.getElementById("profitBtn");
   
-  if (!sectionBtn || !reportBtn) return;
+  // إخفاء الكل أولاً
+  if (sectionBtn) sectionBtn.style.display = "none";
+  if (reportBtn) reportBtn.style.display = "none";
+  if (profitBtn) profitBtn.style.display = "none";
   
-  // إظهار الكل أولاً
-  sectionBtn.style.display = "inline-block";
-  reportBtn.style.display = "inline-block";
-  
-  // إذا كاشير نخفي
-  if (role === "cashier") {
-    sectionBtn.style.display = "none";
-    reportBtn.style.display = "none";
+  // إذا أدمن نظهرهم
+  if (role === "admin") {
+    if (sectionBtn) sectionBtn.style.display = "inline-block";
+    if (reportBtn) reportBtn.style.display = "inline-block";
+    if (profitBtn) profitBtn.style.display = "inline-block";
   }
 }
 function logout() {
