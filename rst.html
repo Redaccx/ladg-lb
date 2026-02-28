@@ -417,8 +417,8 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
     <button onclick="createNewOrder()" style="color:#ffffff;background:#333333;">طلب جديد</button>
     <button class="new-section" onclick="openSectionModal()">إدارة الأقسام والمنتجات</button>
     <button class="report" onclick="toggleDailyReport()">تقرير اليوم</button>
-    <button onclick="showProfitStats()" style="background:#8e44ad;color:white;">
-  📊 إحصائيات الربح
+    <button id="profitBtn" onclick="showProfitStats()" style="background:#8e44ad;color:white;">
+   إحصائيات الربح
 </button>
     <button class="logout" onclick="logout()">خروج</button>
   </div>
@@ -634,6 +634,7 @@ function applyPermissions(role) {
   
   const sectionBtn = document.querySelector(".new-section");
   const reportBtn = document.querySelector(".report");
+  const profitBtn = document.getElementById("profitBtn");
   
   if (!sectionBtn || !reportBtn) return;
   
