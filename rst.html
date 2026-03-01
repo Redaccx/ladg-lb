@@ -805,9 +805,8 @@ async function addToCart(product) {
   
   const currentQtyInCart = existing ? existing.qty : 0;
   
-  if ((product.stock || 0) <= currentQtyInCart)
-    return alert("المخزون غير كافي");
-  
+  if (currentQtyInCart + 1 > (product.stock || 0))
+  return alert("المخزون غير كافي");
   if (existing) {
     existing.qty += 1;
     existing.total = existing.price * existing.qty;
