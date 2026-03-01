@@ -586,6 +586,11 @@ auth.onAuthStateChanged(async user => {
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
+    setTimeout(() => {
+  const input = document.getElementById("scannerInput");
+  input.value = "";
+  input.focus();
+}, 500);
     
     orders = {};
     currentOrderId = null;
@@ -601,11 +606,7 @@ await createNewOrder();
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
-    setTimeout(() => {
-  const input = document.getElementById("scannerInput");
-  input.value = "";
-  input.focus();
-}, 500);
+    
   }
 });
 
