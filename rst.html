@@ -394,7 +394,8 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   
   
   <input type="text" id="scannerInput"
-style="position:fixed; left:-1000px;"
+style="position:fixed; left:-1000px; opacity:0;"
+autocomplete="off"
 onkeydown="if(event.key==='Enter'){scanProduct(this.value)}">
 
 <!-- تسجيل دخول -->
@@ -600,6 +601,11 @@ await createNewOrder();
   } else {
     document.getElementById("loginPage").style.display = "block";
     document.getElementById("app").style.display = "none";
+    setTimeout(() => {
+  const input = document.getElementById("scannerInput");
+  input.value = "";
+  input.focus();
+}, 500);
   }
 });
 
@@ -1605,24 +1611,7 @@ async function saveEditedProduct() {
   );
 }
 
-let scannerEnabled = false;
 
-auth.onAuthStateChanged(user => {
-  if (user) {
-    scannerEnabled = true;
-    setTimeout(() => {
-      document.getElementById("scannerInput").focus();
-    }, 500);
-  } else {
-    scannerEnabled = false;
-  }
-});
-
-document.addEventListener("click", function() {
-  if (scannerEnabled) {
-    document.getElementById("scannerInput").focus();
-  }
-});
 </script>
 </body>
 </html>
