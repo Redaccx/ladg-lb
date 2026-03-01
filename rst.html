@@ -393,7 +393,9 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <body>
   
   
-  <input type="text" id="scannerInput" style="position:absolute; top:-100px;" autofocus onkeydown="if(event.key==='Enter'){scanProduct(this.value)}">
+  <input type="text" id="scannerInput"
+style="position:fixed; left:-1000px;"
+onkeydown="if(event.key==='Enter'){scanProduct(this.value)}">
 
 <!-- تسجيل دخول -->
 <div id="loginPage" class="login-box">
@@ -1598,6 +1600,12 @@ async function saveEditedProduct() {
     document.querySelector(".categories button.active")
   );
 }
+
+document.addEventListener("click", function() {
+  document.getElementById("scannerInput").focus();
+});
+
+document.getElementById("scannerInput").focus();
 </script>
 </body>
 </html>
