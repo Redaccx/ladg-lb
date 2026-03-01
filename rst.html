@@ -395,9 +395,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
   
   <input type="text" id="scannerInput"
 style="position:fixed; left:-1000px; opacity:0;"
-autocomplete="off"
-onkeydown="if(event.key==='Enter'){scanProduct(this.value)}">
-
+autocomplete="off">
 <!-- تسجيل دخول -->
 <div id="loginPage" class="login-box">
 <h3>تسجيل دخول</h3>
@@ -1612,7 +1610,29 @@ async function saveEditedProduct() {
   );
 }
 
+let barcodeBuffer = "";
 
+document.addEventListener("keydown", function(e) {
+  
+  // إذا مش داخل التطبيق لا تلتقط
+  if (document.getElementById("app").style.display === "none") return;
+  
+  if (e.key === "Enter") {
+    
+    if (barcodeBuffer.length > 2) {
+      scanProduct(barcodeBuffer);
+    }
+    
+    barcodeBuffer = "";
+    return;
+  }
+  
+  // تجاهل مفاتيح خاصة
+  if (e.key.length === 1) {
+    barcodeBuffer += e.key;
+  }
+  
+});
 </script>
 </body>
 </html>
