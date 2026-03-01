@@ -1526,15 +1526,19 @@ function renderOpenOrders() {
 }
 function scanProduct(code) {
   
-  if (code.length < 3) return; // منع القراءة الجزئية
-  
   const cleanCode = code.trim();
-const product = allProducts.find(p => p.barcode === cleanCode);
+  if (cleanCode.length < 3) return;
+  
+  const product = allProducts.find(p => p.barcode === cleanCode);
   
   if (product) {
     addToCart(product);
-    document.getElementById("scannerInput").value = "";
   }
+  
+  // 🔥 مهم جداً
+  const input = document.getElementById("scannerInput");
+  input.value = "";
+  input.focus();
 }
 let editingProductId = null;
 
@@ -1601,11 +1605,24 @@ async function saveEditedProduct() {
   );
 }
 
-document.addEventListener("click", function() {
-  document.getElementById("scannerInput").focus();
+let scannerEnabled = false;
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    scannerEnabled = true;
+    setTimeout(() => {
+      document.getElementById("scannerInput").focus();
+    }, 500);
+  } else {
+    scannerEnabled = false;
+  }
 });
 
-document.getElementById("scannerInput").focus();
+document.addEventListener("click", function() {
+  if (scannerEnabled) {
+    document.getElementById("scannerInput").focus();
+  }
+});
 </script>
 </body>
 </html>
