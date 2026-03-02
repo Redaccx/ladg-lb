@@ -393,9 +393,7 @@ input:focus, select:focus { background: rgba(255,255,255,0.2); outline: none; }
 <body>
   
   
-  <input type="text" id="scannerInput"
-style="position:fixed; left:-1000px; opacity:0;"
-autocomplete="off">
+
 <!-- تسجيل دخول -->
 <div id="loginPage" class="login-box">
 <h3>تسجيل دخول</h3>
@@ -584,11 +582,7 @@ auth.onAuthStateChanged(async user => {
     
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("app").style.display = "block";
-    setTimeout(() => {
-  const input = document.getElementById("scannerInput");
-  input.value = "";
-  input.focus();
-}, 500);
+    
     
     orders = {};
     currentOrderId = null;
@@ -1529,7 +1523,6 @@ function renderOpenOrders() {
   }
 }
 function scanProduct(code) {
-  
   const cleanCode = code.trim();
   if (cleanCode.length < 3) return;
   
@@ -1538,11 +1531,6 @@ function scanProduct(code) {
   if (product) {
     addToCart(product);
   }
-  
-  // 🔥 مهم جداً
-  const input = document.getElementById("scannerInput");
-  input.value = "";
-  input.focus();
 }
 
 
@@ -1617,14 +1605,12 @@ let barcodeTimer;
 
 document.addEventListener("keydown", function(e) {
   
-  // إذا حرف عادي
   if (e.key.length === 1) {
     
     barcodeBuffer += e.key;
     
     clearTimeout(barcodeTimer);
     
-    // إذا ما اجا حرف جديد خلال 50ms
     barcodeTimer = setTimeout(() => {
       
       if (barcodeBuffer.length > 2) {
@@ -1633,7 +1619,8 @@ document.addEventListener("keydown", function(e) {
       
       barcodeBuffer = "";
       
-    }, 50);
+    }, 80);
+    
   }
   
 });
