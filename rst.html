@@ -1617,28 +1617,26 @@ let barcodeTimer;
 
 document.addEventListener("keydown", function(e) {
   
-  // إذا كبسة Enter
-  if (e.key === "Enter") {
-    if (barcodeBuffer.length > 2) {
-      scanProduct(barcodeBuffer);
-    }
-    barcodeBuffer = "";
-    return;
-  }
-  
-  // إذا حرف عادي (رقم من السكان)
+  // إذا حرف عادي
   if (e.key.length === 1) {
+    
     barcodeBuffer += e.key;
     
     clearTimeout(barcodeTimer);
+    
+    // إذا ما اجا حرف جديد خلال 50ms
     barcodeTimer = setTimeout(() => {
+      
+      if (barcodeBuffer.length > 2) {
+        scanProduct(barcodeBuffer);
+      }
+      
       barcodeBuffer = "";
-    }, 100);
+      
+    }, 50);
   }
   
 });
-
-
 </script>
 </body>
 </html>
