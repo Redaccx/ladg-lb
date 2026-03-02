@@ -1605,6 +1605,23 @@ let barcodeTimer;
 
 document.addEventListener("keydown", function(e) {
   
+  // 🔥 إذا المؤشر داخل أي input → تجاهل
+  const active = document.activeElement;
+  if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
+    return;
+  }
+  
+  // فقط إذا التطبيق مفتوح
+  if (document.getElementById("app").style.display !== "block") {
+    return;
+  }
+  
+  // تجاهل المفاتيح الخاصة
+  if (e.key === "Shift" || e.key === "Alt" || e.key === "Control") {
+    return;
+  }
+  
+  // إذا حرف
   if (e.key.length === 1) {
     
     barcodeBuffer += e.key;
@@ -1619,7 +1636,7 @@ document.addEventListener("keydown", function(e) {
       
       barcodeBuffer = "";
       
-    }, 80);
+    }, 100); // زدتها شوي لتصير أضمن
     
   }
   
