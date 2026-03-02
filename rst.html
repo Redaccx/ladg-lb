@@ -1610,25 +1610,18 @@ async function saveEditedProduct() {
 }
 
 let barcodeBuffer = "";
-let lastKeyTime = Date.now();
+let scanTimeout;
 
 document.addEventListener("keydown", function(e) {
   
   if (document.getElementById("app").style.display === "none") return;
   
-  const now = Date.now();
-  
-  // إذا مر وقت طويل بين الأحرف → اعتبره سكان جديد
-  if (now - lastKeyTime > 100) {
-    barcodeBuffer = "";
-  }
-  
-  lastKeyTime = now;
-  
   if (e.key === "Enter") {
     
-    if (barcodeBuffer.length > 2) {
-      scanProduct(barcodeBuffer);
+    const code = barcodeBuffer.trim();
+    
+    if (code.length > 2) {
+      scanProduct(code);
     }
     
     barcodeBuffer = "";
@@ -1636,7 +1629,15 @@ document.addEventListener("keydown", function(e) {
   }
   
   if (e.key.length === 1) {
+    
     barcodeBuffer += e.key;
+    
+    // تنظيف تلقائي إذا ما إجى Enter
+    clearTimeout(scanTimeout);
+    scanTimeout = setTimeout(() => {
+      barcodeBuffer = "";
+    }, 300);
+    
   }
   
 });
