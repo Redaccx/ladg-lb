@@ -1610,11 +1610,20 @@ async function saveEditedProduct() {
 }
 
 let barcodeBuffer = "";
+let lastKeyTime = Date.now();
 
 document.addEventListener("keydown", function(e) {
   
-  // إذا مش داخل التطبيق لا تلتقط
   if (document.getElementById("app").style.display === "none") return;
+  
+  const now = Date.now();
+  
+  // إذا مر وقت طويل بين الأحرف → اعتبره سكان جديد
+  if (now - lastKeyTime > 100) {
+    barcodeBuffer = "";
+  }
+  
+  lastKeyTime = now;
   
   if (e.key === "Enter") {
     
@@ -1626,7 +1635,6 @@ document.addEventListener("keydown", function(e) {
     return;
   }
   
-  // تجاهل مفاتيح خاصة
   if (e.key.length === 1) {
     barcodeBuffer += e.key;
   }
