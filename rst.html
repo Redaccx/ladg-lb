@@ -1545,21 +1545,7 @@ function scanProduct(code) {
   input.focus();
 }
 
-scannerInput.addEventListener("keydown", function(e) {
-  
-  if (e.key === "Enter") {
-    e.preventDefault();
-    
-    const code = scannerInput.value.trim();
-    
-    if (code.length > 2) {
-      scanProduct(code);
-    }
-    
-    scannerInput.value = "";
-  }
-  
-});
+
 let editingProductId = null;
 
 
@@ -1625,6 +1611,32 @@ async function saveEditedProduct() {
     document.querySelector(".categories button.active")
   );
 }
+
+let barcodeBuffer = "";
+let barcodeTimer;
+
+document.addEventListener("keydown", function(e) {
+  
+  // إذا كبسة Enter
+  if (e.key === "Enter") {
+    if (barcodeBuffer.length > 2) {
+      scanProduct(barcodeBuffer);
+    }
+    barcodeBuffer = "";
+    return;
+  }
+  
+  // إذا حرف عادي (رقم من السكان)
+  if (e.key.length === 1) {
+    barcodeBuffer += e.key;
+    
+    clearTimeout(barcodeTimer);
+    barcodeTimer = setTimeout(() => {
+      barcodeBuffer = "";
+    }, 100);
+  }
+  
+});
 
 
 </script>
