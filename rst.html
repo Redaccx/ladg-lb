@@ -1545,11 +1545,10 @@ function scanProduct(code) {
   input.focus();
 }
 
-const scannerInput = document.getElementById("scannerInput");
-
-scannerInput.addEventListener("keypress", function(e) {
+scannerInput.addEventListener("keydown", function(e) {
   
   if (e.key === "Enter") {
+    e.preventDefault();
     
     const code = scannerInput.value.trim();
     
