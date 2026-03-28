@@ -167,7 +167,6 @@ h1{
       <p id="popupText"></p>
       <small id="popupDate"></small>
 
-      <!-- ACTIONS -->
       <div class="actions">
         <button class="id" onclick="copyID()">نسخ ID</button>
         <button class="copy" onclick="copyLink()">رابط</button>
@@ -230,7 +229,7 @@ async function translate(text){
   }
 }
 
-/* LOAD */
+/* LOAD POSTS */
 async function loadPosts(){
   const postsDiv = document.getElementById("posts");
   postsDiv.innerHTML="";
@@ -241,7 +240,6 @@ async function loadPosts(){
     const d = doc.data();
 
     let title = d.title || "";
-    let content = d.content || "";
 
     if(lang === "en"){
       title = await translate(title);
@@ -264,11 +262,10 @@ async function loadPosts(){
   });
 }
 
-/* OPEN */
+/* OPEN POST */
 async function openPost(id, data){
 
   current.id = id;
-  current.url = window.location.href;
 
   let title = data.title || "";
   let content = data.content || "";
@@ -279,6 +276,9 @@ async function openPost(id, data){
   }
 
   current.title = title;
+
+  /* 🔥 الرابط = ID فقط */
+  current.url = window.location.origin + window.location.pathname + "?id=" + id;
 
   document.getElementById("popupImg").src = data.image || "";
   document.getElementById("popupTitle").innerText = title;
@@ -316,6 +316,19 @@ function closePopup(e){
     document.getElementById("popup").style.display="none";
   }
 }
+
+/* 🔥 فتح مباشر من ID */
+window.onload = () => {
+  const id = new URLSearchParams(window.location.search).get("id");
+
+  if(id){
+    db.collection("news").doc(id).get().then(doc=>{
+      if(doc.exists){
+        openPost(doc.id, doc.data());
+      }
+    });
+  }
+};
 
 loadPosts();
 </script>
