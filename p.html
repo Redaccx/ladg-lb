@@ -42,20 +42,32 @@ header{
   box-shadow:0 10px 30px rgba(0,0,0,0.1);
 }
 
+/* صورة كبيرة احترافية */
 .card img{
   width:100%;
-  height:260px;
+  height:300px;
   object-fit:cover;
-  cursor:pointer;
 }
 
 .content{
   padding:16px;
 }
 
-h2{color:#C1272D;}
-p{line-height:1.8;color:#333;}
-small{display:block;margin-top:10px;color:gray;}
+h2{
+  color:#C1272D;
+  margin-bottom:8px;
+}
+
+p{
+  line-height:1.8;
+  color:#333;
+}
+
+small{
+  display:block;
+  margin-top:10px;
+  color:gray;
+}
 
 /* LIKE */
 .heart{
@@ -63,25 +75,30 @@ small{display:block;margin-top:10px;color:gray;}
   cursor:pointer;
   color:#aaa;
   display:inline-block;
-  margin-top:8px;
+  margin-top:10px;
 }
-.heart.active{color:red;}
 
-/* ACTIONS */
+.heart.active{
+  color:red;
+}
+
+/* ACTION BAR */
 .actions{
   display:flex;
-  flex-wrap:wrap;
   gap:8px;
-  justify-content:center;
-  padding:15px;
+  padding:12px;
+  background:#fafafa;
+  border-top:1px solid #eee;
 }
 
-button{
+.btn{
+  flex:1;
   border:none;
-  padding:8px 12px;
-  border-radius:8px;
+  padding:10px;
+  border-radius:10px;
   cursor:pointer;
   color:#fff;
+  font-size:13px;
 }
 
 .copy{background:#444;}
@@ -89,72 +106,11 @@ button{
 .fb{background:#1877F2;}
 .link{background:#C1272D;}
 
+/* loading */
 #loading{
   text-align:center;
   margin-top:70px;
   color:gray;
-}
-
-/* ===== POPUP ===== */
-.popup{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.7);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-}
-
-.popup-content{
-  background:#fff;
-  width:90%;
-  max-width:420px;
-  border-radius:18px;
-  overflow:hidden;
-  position:relative;
-  animation:pop .25s ease;
-}
-
-.popup-content img{
-  width:100%;
-  height:220px;
-  object-fit:cover;
-}
-
-.popup-body{
-  padding:15px;
-}
-
-.popup-body h3{
-  margin:0 0 10px;
-  color:#C1272D;
-}
-
-.popup-body p{
-  font-size:14px;
-  line-height:1.7;
-}
-
-.close{
-  position:absolute;
-  top:10px;
-  right:10px;
-  width:32px;
-  height:32px;
-  border-radius:50%;
-  border:none;
-  cursor:pointer;
-  background:#fff;
-  font-size:16px;
-}
-
-@keyframes pop{
-  from{transform:scale(0.8);opacity:0;}
-  to{transform:scale(1);opacity:1;}
 }
 </style>
 </head>
@@ -170,61 +126,18 @@ button{
 
 <div class="card" id="post" style="display:none;"></div>
 
-<!-- POPUP -->
-<div class="popup" id="popup">
-  <div class="popup-content">
-    <button class="close" onclick="closePopup()">✖</button>
-    <img id="popupImg">
-    <div class="popup-body">
-      <h3 id="popupTitle"></h3>
-      <p id="popupText"></p>
-    </div>
-  </div>
-</div>
-
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyBFMkZ7DFGLGshb3C104ORveF8wGvfncmY",
+  apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
   authDomain: "alanmaa-lb.firebaseapp.com",
   projectId: "alanmaa-lb"
 });
 
 const db = firebase.firestore();
-
-/* ===== POPUP ===== */
-function openPopup(title,text,img){
-  document.getElementById("popupTitle").innerText = title || "";
-  document.getElementById("popupText").innerText = text || "";
-  document.getElementById("popupImg").src = img || "";
-  document.getElementById("popup").style.display = "flex";
-}
-
-function closePopup(){
-  document.getElementById("popup").style.display = "none";
-}
-
-document.getElementById("popup").addEventListener("click",function(e){
-  if(e.target === this) closePopup();
-});
-
-/* COPY */
-function copyText(text){
-  navigator.clipboard.writeText(text);
-  alert("تم النسخ ✔");
-}
-
-/* SHARE */
-function shareWA(t,c,u){
-  window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(t+"\n\n"+c+"\n\n"+u));
-}
-
-function shareFB(u){
-  window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(u));
-}
 
 /* LIKE */
 function isLiked(id){
@@ -232,21 +145,35 @@ function isLiked(id){
 }
 
 function toggleLike(id){
-  const heart=document.getElementById("heart");
-  let arr=JSON.parse(localStorage.getItem("likes")||"[]");
+  const heart = document.getElementById("heart");
+  let arr = JSON.parse(localStorage.getItem("likes")||"[]");
 
   if(arr.includes(id)){
     arr = arr.filter(x=>x!==id);
     heart.classList.remove("active");
-  }else{
+  } else {
     arr.push(id);
     heart.classList.add("active");
   }
 
-  localStorage.setItem("likes",JSON.stringify(arr));
+  localStorage.setItem("likes", JSON.stringify(arr));
 }
 
-/* LOAD POST FROM ID */
+/* SHARE */
+function shareWA(title,url){
+  window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(title+"\n"+url));
+}
+
+function shareFB(url){
+  window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(url));
+}
+
+function copyLink(url){
+  navigator.clipboard.writeText(url);
+  alert("تم نسخ الرابط ✔");
+}
+
+/* LOAD POST BY ID */
 async function loadPost(){
 
   const id = new URLSearchParams(window.location.search).get("id");
@@ -255,7 +182,7 @@ async function loadPost(){
   const box = document.getElementById("post");
 
   if(!id){
-    loading.innerText = "❌ لا يوجد ID في الرابط";
+    loading.innerText = "❌ لا يوجد ID";
     return;
   }
 
@@ -272,7 +199,7 @@ async function loadPost(){
     const url = window.location.href;
 
     box.innerHTML = `
-      <img src="${d.image || ''}" onclick="openPopup('${d.title}','${d.content}','${d.image}')">
+      <img src="${d.image || ''}">
 
       <div class="content">
         <h2>${d.title || ''}</h2>
@@ -284,17 +211,17 @@ async function loadPost(){
       </div>
 
       <div class="actions">
-        <button class="copy" onclick="copyText(\`${d.content || ''}\`)">نسخ</button>
-        <button class="wa" onclick="shareWA(\`${d.title || ''}\`,\`${d.content || ''}\`,'${url}')">واتساب</button>
-        <button class="fb" onclick="shareFB('${url}')">فيسبوك</button>
-        <button class="link" onclick="copyText('${url}')">رابط</button>
+        <button class="btn copy" onclick="copyLink('${url}')">نسخ</button>
+        <button class="btn wa" onclick="shareWA('${d.title || ''}','${url}')">واتساب</button>
+        <button class="btn fb" onclick="shareFB('${url}')">فيسبوك</button>
+        <button class="btn link" onclick="copyLink('${url}')">رابط</button>
       </div>
     `;
 
     loading.style.display="none";
     box.style.display="block";
 
-  }catch(err){
+  } catch(err){
     console.log(err);
     loading.innerText="❌ خطأ في الاتصال";
   }
