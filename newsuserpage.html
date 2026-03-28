@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>آخر الأخبار</title>
+<title>الأخبار</title>
 
 <style>
 body{
@@ -12,29 +12,31 @@ body{
   background:#f5f5f5;
 }
 
-/* HEADER */
+/* HEADER (صغير) */
 header{
   background:#C1272D;
   color:#fff;
-  padding:15px;
+  padding:10px 12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
 
 h1{
-  font-size:18px;
+  font-size:16px;
   margin:0;
 }
 
+/* BUTTON */
 .btn{
   background:#fff;
   color:#C1272D;
   border:none;
-  padding:6px 12px;
-  border-radius:8px;
+  padding:5px 10px;
+  border-radius:7px;
   cursor:pointer;
   font-weight:bold;
+  font-size:13px;
 }
 
 /* GRID */
@@ -45,35 +47,35 @@ h1{
   padding:15px;
 }
 
+/* CARD */
 .post{
   background:#fff;
-  border-radius:16px;
+  border-radius:14px;
   overflow:hidden;
-  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+  box-shadow:0 5px 12px rgba(0,0,0,0.08);
   cursor:pointer;
-  transition:0.3s;
-}
-
-.post:hover{
-  transform:translateY(-5px);
 }
 
 .post img{
   width:100%;
-  height:200px;
+  height:190px;
   object-fit:cover;
 }
 
-.post h3{
-  margin:10px;
-  color:#C1272D;
-  font-size:16px;
+.post-body{
+  padding:10px;
 }
 
-.post small{
-  display:block;
-  margin:0 10px 10px;
+.post h3{
+  margin:0;
+  font-size:15px;
+  color:#C1272D;
+}
+
+.date{
+  font-size:12px;
   color:gray;
+  margin-top:5px;
 }
 
 /* POPUP */
@@ -84,7 +86,6 @@ h1{
   background:rgba(0,0,0,0.75);
   justify-content:center;
   align-items:center;
-  z-index:9999;
   padding:15px;
 }
 
@@ -92,13 +93,14 @@ h1{
   background:#fff;
   width:100%;
   max-width:500px;
-  border-radius:18px;
+  border-radius:16px;
   overflow:hidden;
+  position:relative;
 }
 
-.popup-content img{
+.popup img{
   width:100%;
-  height:260px;
+  height:240px;
   object-fit:cover;
 }
 
@@ -106,47 +108,43 @@ h1{
   padding:15px;
 }
 
-.popup-body h3{
-  color:#C1272D;
-  margin:0 0 10px;
+.date-popup{
+  font-size:12px;
+  color:gray;
+  margin-top:8px;
 }
 
-.popup-body p{
-  line-height:1.7;
-}
-
-/* SHARE */
-.share-box{
+/* ACTIONS */
+.actions{
   display:flex;
   gap:8px;
-  flex-wrap:wrap;
   margin-top:12px;
 }
 
-.share-btn{
+.actions button{
   flex:1;
   border:none;
-  padding:10px;
-  border-radius:10px;
+  padding:9px;
+  border-radius:8px;
   color:#fff;
   cursor:pointer;
+  font-size:13px;
 }
 
+.copy{background:#444;}
 .wa{background:#25D366;}
 .fb{background:#1877F2;}
-.copy{background:#444;}
 
-/* CLOSE */
-.close-btn{
+.close{
   position:absolute;
   top:10px;
   right:10px;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:none;
   background:#C1272D;
   color:#fff;
-  border:none;
-  width:30px;
-  height:30px;
-  border-radius:50%;
   cursor:pointer;
 }
 </style>
@@ -155,17 +153,18 @@ h1{
 <body>
 
 <header>
-  <button class="btn" onclick="window.location.href='index.html'">رجوع</button>
-  <h1>آخر الأخبار</h1>
+  <button class="btn" onclick="history.back()" id="backBtn">← رجوع</button>
+  <h1 id="title">آخر الأخبار</h1>
+  <button class="btn" onclick="toggleLang()" id="langBtn">EN</button>
 </header>
 
 <div id="posts" class="posts-grid"></div>
 
 <!-- POPUP -->
-<div id="popup" class="popup" onclick="closePopup(event)">
-  <div class="popup-content" style="position:relative;">
+<div class="popup" id="popup" onclick="closePopup(event)">
+  <div class="popup-content">
 
-    <button class="close-btn" onclick="closePopup(event)">×</button>
+    <button class="close" onclick="closePopup(event)">×</button>
 
     <img id="popupImg">
 
@@ -173,10 +172,13 @@ h1{
       <h3 id="popupTitle"></h3>
       <p id="popupText"></p>
 
-      <div class="share-box">
-        <button class="share-btn wa" onclick="shareWA()">واتساب</button>
-        <button class="share-btn fb" onclick="shareFB()">فيسبوك</button>
-        <button class="share-btn copy" onclick="copyLink()">نسخ الرابط</button>
+      <div class="date-popup" id="popupDate"></div>
+
+      <!-- 🔥 أزرار داخل المنشور -->
+      <div class="actions">
+        <button class="copy" onclick="copyLink()">نسخ الرابط</button>
+        <button class="wa" onclick="shareWA()">واتساب</button>
+        <button class="fb" onclick="shareFB()">فيسبوك</button>
       </div>
 
     </div>
@@ -196,14 +198,43 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-/* CURRENT POST */
 let current = {
   id:"",
   title:"",
-  content:"",
-  image:"",
   url:""
 };
+
+/* LANGUAGE */
+let lang = localStorage.getItem("lang") || "ar";
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.body.dir = (lang === "en") ? "ltr" : "rtl";
+
+  document.getElementById("langBtn").innerText = (lang === "en") ? "AR" : "EN";
+  document.getElementById("title").innerText = (lang === "en") ? "Latest News" : "آخر الأخبار";
+  document.getElementById("backBtn").innerText = (lang === "en") ? "Back" : "رجوع";
+}
+
+function toggleLang(){
+  lang = (lang === "ar") ? "en" : "ar";
+  localStorage.setItem("lang", lang);
+  applyLang();
+  loadPosts();
+}
+
+applyLang();
+
+/* TRANSLATE */
+async function translate(text){
+  try{
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ar|en`);
+    const data = await res.json();
+    return data.responseData.translatedText;
+  }catch(e){
+    return text;
+  }
+}
 
 /* LOAD POSTS */
 async function loadPosts(){
@@ -212,46 +243,71 @@ async function loadPosts(){
 
   const snap = await db.collection("news").orderBy("date","desc").get();
 
-  snap.forEach(doc=>{
+  snap.forEach(async doc=>{
     const d = doc.data();
+
+    let title = d.title || "";
+    let content = d.content || "";
+
+    if(lang === "en"){
+      title = await translate(title);
+      content = await translate(content);
+    }
+
+    const dateText = d.date
+      ? new Date(d.date).toLocaleDateString(lang === "en" ? "en-US" : "ar-LB")
+      : "";
 
     const div = document.createElement("div");
     div.className="post";
 
     div.innerHTML=`
       <img src="${d.image||''}">
-      <h3>${d.title||''}</h3>
-      <small>${d.date ? new Date(d.date).toLocaleDateString() : ''}</small>
+      <div class="post-body">
+        <h3>${title}</h3>
+        <div class="date">🗓️ ${dateText}</div>
+      </div>
     `;
 
-    div.onclick = ()=> openPost(d, doc.id);
+    div.onclick = ()=> openPost(doc.id, d);
 
     postsDiv.appendChild(div);
   });
 }
 
 /* OPEN POST */
-function openPost(data, id){
+async function openPost(id, data){
+
   current.id = id;
-  current.title = data.title || "";
-  current.content = data.content || "";
-  current.image = data.image || "";
 
-  const base = window.location.origin + window.location.pathname;
-  current.url = base + "?id=" + id;
+  let title = data.title || "";
+  let content = data.content || "";
 
-  document.getElementById("popupImg").src = current.image;
-  document.getElementById("popupTitle").innerText = current.title;
-  document.getElementById("popupText").innerText = current.content;
+  if(lang === "en"){
+    title = await translate(title);
+    content = await translate(content);
+  }
+
+  current.title = title;
+  current.url = window.location.origin + "?id=" + id;
+
+  document.getElementById("popupImg").src = data.image || "";
+  document.getElementById("popupTitle").innerText = title;
+  document.getElementById("popupText").innerText = content;
+
+  const dateText = data.date
+    ? new Date(data.date).toLocaleDateString(lang === "en" ? "en-US" : "ar-LB")
+    : "";
+
+  document.getElementById("popupDate").innerText = "🗓️ " + dateText;
 
   document.getElementById("popup").style.display="flex";
 }
 
-/* CLOSE */
-function closePopup(e){
-  if(!e || e.target.id==="popup" || e.target.classList.contains("close-btn")){
-    document.getElementById("popup").style.display="none";
-  }
+/* COPY LINK (ID) */
+function copyLink(){
+  navigator.clipboard.writeText(current.url);
+  alert(lang === "en" ? "Copied ✔" : "تم النسخ ✔");
 }
 
 /* SHARE */
@@ -263,10 +319,11 @@ function shareFB(){
   window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(current.url));
 }
 
-/* COPY LINK (WITH ID) */
-function copyLink(){
-  navigator.clipboard.writeText(current.url);
-  alert("تم نسخ رابط المنشور ✔");
+/* CLOSE */
+function closePopup(e){
+  if(!e || e.target.classList.contains("close") || e.target.id==="popup"){
+    document.getElementById("popup").style.display="none";
+  }
 }
 
 loadPosts();
