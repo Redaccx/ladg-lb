@@ -12,6 +12,7 @@ body{
   background:#f3f3f3;
 }
 
+/* HEADER */
 header{
   background:#C1272D;
   color:#fff;
@@ -31,6 +32,7 @@ header{
   cursor:pointer;
 }
 
+/* CARD */
 .card{
   max-width:650px;
   margin:20px auto;
@@ -44,42 +46,28 @@ header{
   width:100%;
   height:260px;
   object-fit:cover;
+  cursor:pointer;
 }
 
 .content{
   padding:16px;
 }
 
-h2{
-  color:#C1272D;
-  margin-bottom:10px;
-}
+h2{color:#C1272D;}
+p{line-height:1.8;color:#333;}
+small{display:block;margin-top:10px;color:gray;}
 
-p{
-  line-height:1.8;
-  color:#333;
-}
-
-small{
-  display:block;
-  margin-top:10px;
-  color:gray;
-}
-
-/* like */
+/* LIKE */
 .heart{
   font-size:26px;
   cursor:pointer;
   color:#aaa;
-  margin-top:10px;
   display:inline-block;
+  margin-top:8px;
 }
+.heart.active{color:red;}
 
-.heart.active{
-  color:red;
-}
-
-/* buttons */
+/* ACTIONS */
 .actions{
   display:flex;
   flex-wrap:wrap;
@@ -106,6 +94,68 @@ button{
   margin-top:70px;
   color:gray;
 }
+
+/* ===== POPUP ===== */
+.popup{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+
+.popup-content{
+  background:#fff;
+  width:90%;
+  max-width:420px;
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;
+  animation:pop .25s ease;
+}
+
+.popup-content img{
+  width:100%;
+  height:220px;
+  object-fit:cover;
+}
+
+.popup-body{
+  padding:15px;
+}
+
+.popup-body h3{
+  margin:0 0 10px;
+  color:#C1272D;
+}
+
+.popup-body p{
+  font-size:14px;
+  line-height:1.7;
+}
+
+.close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:none;
+  cursor:pointer;
+  background:#fff;
+  font-size:16px;
+}
+
+@keyframes pop{
+  from{transform:scale(0.8);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
 </style>
 </head>
 
@@ -120,18 +170,46 @@ button{
 
 <div class="card" id="post" style="display:none;"></div>
 
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-content">
+    <button class="close" onclick="closePopup()">✖</button>
+    <img id="popupImg">
+    <div class="popup-body">
+      <h3 id="popupTitle"></h3>
+      <p id="popupText"></p>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
+  apiKey: "AIzaSyBFMkZ7DFGLGshb3C104ORveF8wGvfncmY",
   authDomain: "alanmaa-lb.firebaseapp.com",
   projectId: "alanmaa-lb"
 });
 
 const db = firebase.firestore();
+
+/* ===== POPUP ===== */
+function openPopup(title,text,img){
+  document.getElementById("popupTitle").innerText = title || "";
+  document.getElementById("popupText").innerText = text || "";
+  document.getElementById("popupImg").src = img || "";
+  document.getElementById("popup").style.display = "flex";
+}
+
+function closePopup(){
+  document.getElementById("popup").style.display = "none";
+}
+
+document.getElementById("popup").addEventListener("click",function(e){
+  if(e.target === this) closePopup();
+});
 
 /* COPY */
 function copyText(text){
@@ -158,7 +236,7 @@ function toggleLike(id){
   let arr=JSON.parse(localStorage.getItem("likes")||"[]");
 
   if(arr.includes(id)){
-    arr=arr.filter(x=>x!==id);
+    arr = arr.filter(x=>x!==id);
     heart.classList.remove("active");
   }else{
     arr.push(id);
@@ -168,17 +246,13 @@ function toggleLike(id){
   localStorage.setItem("likes",JSON.stringify(arr));
 }
 
-/* LOAD POST */
+/* LOAD POST FROM ID */
 async function loadPost(){
 
-  // ✅ قراءة ID من الرابط
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+  const id = new URLSearchParams(window.location.search).get("id");
 
   const loading = document.getElementById("loading");
   const box = document.getElementById("post");
-
-  console.log("Post ID:", id);
 
   if(!id){
     loading.innerText = "❌ لا يوجد ID في الرابط";
@@ -198,7 +272,8 @@ async function loadPost(){
     const url = window.location.href;
 
     box.innerHTML = `
-      <img src="${d.image || ''}">
+      <img src="${d.image || ''}" onclick="openPopup('${d.title}','${d.content}','${d.image}')">
+
       <div class="content">
         <h2>${d.title || ''}</h2>
         <p>${d.content || ''}</p>
@@ -216,12 +291,12 @@ async function loadPost(){
       </div>
     `;
 
-    loading.style.display = "none";
-    box.style.display = "block";
+    loading.style.display="none";
+    box.style.display="block";
 
-  } catch(err){
+  }catch(err){
     console.log(err);
-    loading.innerText = "❌ خطأ في الاتصال";
+    loading.innerText="❌ خطأ في الاتصال";
   }
 }
 
