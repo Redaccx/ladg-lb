@@ -9,9 +9,10 @@
 body{
   margin:0;
   font-family:Tahoma;
-  background:#f6f6f6;
+  background:#f5f5f5;
 }
 
+/* HEADER */
 header{
   background:#C1272D;
   color:#fff;
@@ -44,7 +45,6 @@ h1{
   padding:15px;
 }
 
-/* CARD */
 .post{
   background:#fff;
   border-radius:16px;
@@ -76,63 +76,94 @@ h1{
   color:gray;
 }
 
-/* ACTIONS */
-.actions{
-  display:flex;
-  justify-content:center;
-  gap:6px;
-  padding:10px;
-}
-
-.btn-share{
-  border:none;
-  padding:6px 10px;
-  border-radius:8px;
-  font-size:12px;
-  cursor:pointer;
-  color:#fff;
-}
-
-.whatsapp{background:#25D366;}
-.facebook{background:#1877F2;}
-.link{background:#444;}
-
-/* POPUP */
+/* ===== POPUP ===== */
 .popup{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.6);
+  background:rgba(0,0,0,0.75);
   justify-content:center;
   align-items:center;
+  z-index:9999;
+  padding:15px;
 }
 
 .popup-content{
   background:#fff;
-  width:90%;
+  width:100%;
   max-width:500px;
-  border-radius:16px;
-  padding:15px;
+  border-radius:18px;
+  overflow:hidden;
   position:relative;
+  animation:pop .25s ease;
 }
 
+/* صورة */
+.popup-content img{
+  width:100%;
+  height:260px;
+  object-fit:cover;
+}
+
+.popup-body{
+  padding:15px;
+}
+
+.popup-body h3{
+  margin:0 0 10px;
+  color:#C1272D;
+}
+
+.popup-body p{
+  font-size:15px;
+  line-height:1.7;
+}
+
+/* close */
 .close-btn{
   position:absolute;
   top:10px;
-  left:10px;
+  right:10px;
   background:#C1272D;
   color:#fff;
   border:none;
-  width:30px;
-  height:30px;
+  width:32px;
+  height:32px;
   border-radius:50%;
   cursor:pointer;
 }
 
-.popup img{
-  width:100%;
-  border-radius:12px;
-  margin-bottom:10px;
+/* SHARE BOX */
+.share-box{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.share-btn{
+  flex:1;
+  min-width:100px;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13px;
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.wa{background:#25D366;}
+.fb{background:#1877F2;}
+.tg{background:#0088cc;}
+.copy{background:#444;}
+
+/* animation */
+@keyframes pop{
+  from{transform:scale(0.85);opacity:0;}
+  to{transform:scale(1);opacity:1;}
 }
 </style>
 </head>
@@ -147,8 +178,28 @@ h1{
 
 <div id="posts" class="posts-grid"></div>
 
+<!-- POPUP -->
 <div id="popup" class="popup" onclick="closePopup(event)">
-  <div class="popup-content" id="popupContent"></div>
+  <div class="popup-content">
+
+    <button class="close-btn" onclick="closePopup(event)">×</button>
+
+    <img id="popupImg">
+
+    <div class="popup-body">
+      <h3 id="popupTitle"></h3>
+      <p id="popupText"></p>
+
+      <!-- SHARE -->
+      <div class="share-box">
+        <button class="share-btn wa" onclick="shareWA()">واتساب</button>
+        <button class="share-btn fb" onclick="shareFB()">فيسبوك</button>
+        <button class="share-btn tg" onclick="shareTG()">تلغرام</button>
+        <button class="share-btn copy" onclick="copyLink()">نسخ الرابط</button>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <!-- Firebase -->
@@ -156,85 +207,83 @@ h1{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBFMkZ...",
+firebase.initializeApp({
+  apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
   authDomain: "alanmaa-lb.firebaseapp.com",
-  projectId: "alanmaa-lb",
-};
+  projectId: "alanmaa-lb"
+});
 
-firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const postsDiv = document.getElementById("posts");
+let current = {
+  title:"",
+  content:"",
+  image:"",
+  url:""
+};
 
-/* تحميل */
+/* LOAD POSTS */
 async function loadPosts(){
-  postsDiv.innerHTML = "";
+  const postsDiv = document.getElementById("posts");
+  postsDiv.innerHTML="";
 
-  const snapshot = await db.collection("news").orderBy("date","desc").get();
+  const snap = await db.collection("news").orderBy("date","desc").get();
 
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    const id = doc.id;
+  snap.forEach(doc=>{
+    const d = doc.data();
 
-    const url = `https://alanmaa-lb.com/p?id=${id}`;
+    const div = document.createElement("div");
+    div.className="post";
 
-    const card = document.createElement("div");
-    card.className = "post";
-
-    card.innerHTML = `
-      <img src="${data.image || ''}">
-      <h3>${data.title || ''}</h3>
-      <small>🗓️ ${data.date ? new Date(data.date).toLocaleDateString() : ''}</small>
-
-      <div class="actions">
-        <button class="btn-share link" onclick="copyLink('${url}');event.stopPropagation()">🔗</button>
-        <button class="btn-share whatsapp" onclick="shareWA('${data.title}','${data.content}','${url}');event.stopPropagation()">💬</button>
-        <button class="btn-share facebook" onclick="shareFB('${url}');event.stopPropagation()">📘</button>
-      </div>
+    div.innerHTML=`
+      <img src="${d.image||''}">
+      <h3>${d.title||''}</h3>
+      <small>${d.date ? new Date(d.date).toLocaleDateString() : ''}</small>
     `;
 
-    card.onclick = ()=> openPost(data,id,url);
+    div.onclick = ()=> openPost(d);
 
-    postsDiv.appendChild(card);
+    postsDiv.appendChild(div);
   });
 }
 
-/* Popup */
-function openPost(data,id,url){
-  document.getElementById("popupContent").innerHTML = `
-    <button class="close-btn" onclick="closePopup(event)">×</button>
-    <img src="${data.image}">
-    <h3>${data.title}</h3>
-    <p>${data.content}</p>
-    <small>ID: ${id}</small>
-  `;
+/* OPEN POPUP */
+function openPost(data){
+  current.title = data.title || "";
+  current.content = data.content || "";
+  current.image = data.image || "";
+  current.url = window.location.href;
 
-  document.getElementById("popup").style.display = "flex";
+  document.getElementById("popupImg").src = current.image;
+  document.getElementById("popupTitle").innerText = current.title;
+  document.getElementById("popupText").innerText = current.content;
+
+  document.getElementById("popup").style.display="flex";
 }
 
-/* Copy */
-function copyLink(url){
-  navigator.clipboard.writeText(url);
-  alert("تم نسخ الرابط ✔");
-}
-
-/* WhatsApp */
-function shareWA(title,content,url){
-  const text = `${title}\n\n${content}\n\n${url}`;
-  window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(text));
-}
-
-/* Facebook */
-function shareFB(url){
-  window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(url));
-}
-
-/* Close */
+/* CLOSE */
 function closePopup(e){
-  if(e.target.id==="popup" || e.target.classList.contains("close-btn")){
+  if(!e || e.target.id==="popup" || e.target.classList.contains("close-btn")){
     document.getElementById("popup").style.display="none";
   }
+}
+
+/* SHARE */
+function shareWA(){
+  window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(current.title+"\n"+current.url));
+}
+
+function shareFB(){
+  window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(current.url));
+}
+
+function shareTG(){
+  window.open("https://t.me/share/url?url="+encodeURIComponent(current.url)+"&text="+encodeURIComponent(current.title));
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(current.url);
+  alert("تم نسخ الرابط ✔");
 }
 
 loadPosts();
