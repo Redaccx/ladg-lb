@@ -1,151 +1,204 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>تبرع عبر ويش ماني - جمعية اللبنانية للأنماء </title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: 'Tahoma', sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-      color: #333;
-      direction: rtl;
-      text-align: center;
-    }
+<meta charset="UTF-8">
+<title>تبرع عبر Bob Finance - جمعية اللبنانية للأنماء</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    header {
-      background-color: #c1272d;
-      color: white;
-      padding: 15px 10px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
-    .lang-toggle, .back-btn {
-      padding: 5px 15px;
-      background: #fff;
-      color: #c1272d;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 5px;
-      white-space: nowrap;
-    }
+<style>
+body{
+  font-family:'Cairo',sans-serif;
+  margin:0;
+  background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
+  color:#333;
+  text-align:center;
+}
 
-    .header-center {
-      flex: 1;
-      text-align: center;
-      font-size: 15px;
-      font-weight: bold;
-      direction: rtl;
-    }
+/* HEADER */
+header{
+  background:linear-gradient(135deg,#c1272d,#a61f24);
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-    .logo {
-      width: 100px;
-      margin-top: 20px;
-    }
+.header-center{
+  font-size:18px;
+  font-weight:bold;
+}
 
-    h1 {
-      color: #c1272d;
-      margin: 20px 0 10px;
-      font-size: 20px;
-    }
+/* LANG BUTTON */
+.lang-toggle{
+  padding:6px 14px;
+  background:white;
+  color:#c1272d;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+  font-size:13px;
+  transition:0.3s;
+}
+.lang-toggle:hover{
+  transform:scale(1.05);
+}
 
-    p {
-      max-width: 600px;
-      margin: 20px auto;
-      font-size: 16px;
-      line-height: 1.8;
-    }
+/* FLOAT BACK BUTTON */
+.floating-back{
+  position:fixed;
+  top:70px;
+  left:15px;
+  width:42px;
+  height:42px;
+  background:white;
+  color:#c1272d;
+  border:none;
+  border-radius:50%;
+  box-shadow:0 6px 15px rgba(0,0,0,0.15);
+  cursor:pointer;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:0.3s;
+  z-index:1000;
+}
+.floating-back:hover{
+  transform:scale(1.1);
+  background:#c1272d;
+  color:white;
+}
 
-    .donate-box {
-      margin: 30px auto;
-      padding: 20px;
-      border-radius: 10px;
-      background: #fff;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-    }
+/* LOGO */
+.logo{
+  width:110px;
+  margin:25px 0 10px;
+}
 
-    .donate-btn {
-      display: inline-block;
-      padding: 15px 30px;
-      background: #c1272d;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      text-decoration: none;
-      margin-top: 15px;
-    }
+/* TITLE */
+h1{
+  color:#c1272d;
+  font-size:22px;
+  margin-bottom:10px;
+}
 
-    .donate-btn:hover {
-      background: #a61f24;
-    }
+p{
+  max-width:600px;
+  margin:15px auto;
+  line-height:1.8;
+}
 
-    .phone-number {
-      font-size: 20px;
-      margin-top: 10px;
-      color: #444;
-    }
+/* CARD */
+.card{
+  background:white;
+  margin:30px auto;
+  padding:25px;
+  border-radius:20px;
+  max-width:420px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
+  transition:0.3s;
+}
+.card:hover{
+  transform:translateY(-5px);
+}
 
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-        gap: 10px;
-      }
+/* PHONE FIX */
+.phone-number{
+  font-size:20px;
+  margin:10px 0;
+  font-weight:bold;
+  direction:ltr;
+  unicode-bidi:plaintext;
+  color:#444;
+}
 
-      .header-center {
-        order: -1;
-      }
-    }
-  </style>
+/* BUTTON */
+.btn{
+  display:inline-block;
+  margin-top:20px;
+  padding:15px 35px;
+  background:linear-gradient(135deg,#c1272d,#e63946);
+  color:white;
+  font-size:18px;
+  border:none;
+  border-radius:40px;
+  cursor:pointer;
+  text-decoration:none;
+  transition:0.3s;
+  box-shadow:0 6px 15px rgba(193,39,45,0.3);
+}
+.btn:hover{
+  transform:scale(1.07);
+}
+
+/* MOBILE */
+@media(max-width:600px){
+  header{
+    flex-direction:column;
+    gap:10px;
+  }
+}
+</style>
 </head>
+
 <body>
 
 <header>
   <button class="lang-toggle" onclick="toggleLanguage()">English</button>
   <div class="header-center" id="assoc-name">الجمعية اللبنانية للأنماء</div>
-  <button class="back-btn" onclick="history.back()" id="back-btn">← رجوع</button>
 </header>
 
-<img src="https://f.top4top.io/p_34902je5a1.jpg" class="logo" alt="Wish Money Logo">
+<!-- زر رجوع عائم -->
+<button class="floating-back" onclick="history.back()">←</button>
 
-<h1 id="title">تبرع الآن عبر Western Union </h1>
+<img src="https://d.top4top.io/p_35836wju71.jpg" class="logo">
+
+<h1 id="title">تبرع الآن عبر Bob Finance</h1>
+
 <p id="desc">
-  تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج.
+تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج ❤️
 </p>
 
-<div class="donate-box">
-  <div class="phone-number" id="phone-label"> أحلام النمر :</div>
-  <div class="phone-number" id="phone">81866177‬</div>
-  <a href="https://wa.me/96181866177" class="donate-btn" id="donate-btn">إرسال مستند التبرع </a>
+<div class="card">
+
+  <div id="phone-label">أحلام النمر :</div>
+
+  <div class="phone-number" id="phone">
+    +961 70 590 815
+  </div>
+
+  <a href="https://wa.me/96170590815" class="btn" id="donate-btn">
+    إرسال مستند التبرع
+  </a>
+
 </div>
 
 <script>
-  function toggleLanguage() {
-    const isArabic = document.documentElement.lang === 'ar';
+function toggleLanguage(){
+  const isArabic = document.documentElement.lang === 'ar';
 
-    document.documentElement.lang = isArabic ? 'en' : 'ar';
-    document.body.dir = isArabic ? 'ltr' : 'rtl';
+  document.documentElement.lang = isArabic ? 'en' : 'ar';
+  document.body.dir = isArabic ? 'ltr' : 'rtl';
 
-    document.getElementById('assoc-name').textContent = isArabic ? ' Lebanese  Association for Development ' : 'جمعية اللبنانية للأنماء ';
-    document.getElementById('title').textContent = isArabic ? 'Donate Now via Western Union ' : '  تبرع الآن عبر   Western Union ';
-    document.getElementById('desc').textContent = isArabic
-      ? 'A one-dollar donation might be small for you, but it can make a big difference in someone’s life'
-      : 'تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج..';
-    document.getElementById('phone-label').textContent = isArabic ? ' Ahlam al nemer:' : ' أحلام النمر :';
-    document.getElementById('donate-btn').textContent = isArabic ? 'Submit Donation Document' : 'إرسال مستند التبرع ';
-    document.querySelector('.lang-toggle').textContent = isArabic ? 'العربية' : 'English';
-    document.getElementById('back-btn').textContent = isArabic ? '← Back' : '← رجوع';
-  }
+  document.getElementById('assoc-name').textContent =
+    isArabic ? 'Lebanese Association for Development' : 'جمعية اللبنانية للأنماء';
+
+  document.getElementById('title').textContent =
+    isArabic ? 'Donate Now via Bob Finance' : 'تبرع الآن عبر Bob Finance';
+
+  document.getElementById('desc').textContent = isArabic
+    ? 'A small donation can make a big difference in someone’s life ❤️'
+    : 'تبرّع بدولار… يمكن يكون صغير بالنسبة إلك، بس كبير بحياة حدا محتاج ❤️';
+
+  document.getElementById('phone-label').textContent =
+    isArabic ? 'Ahlam Al Nemer' : 'أحلام النمر :';
+
+  document.getElementById('donate-btn').textContent =
+    isArabic ? 'Submit Donation Document' : 'إرسال مستند التبرع';
+}
 </script>
 
 </body>
