@@ -16,7 +16,7 @@ body{
 header{
   background:#C1272D;
   color:#fff;
-  padding:14px;
+  padding:10px 12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -26,10 +26,22 @@ header{
   background:#fff;
   color:#C1272D;
   border:none;
-  padding:6px 12px;
+  padding:6px 10px;
   border-radius:8px;
   font-weight:bold;
   cursor:pointer;
+  font-size:13px;
+}
+
+.lang-btn{
+  background:#fff;
+  color:#C1272D;
+  border:none;
+  padding:6px 10px;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:13px;
 }
 
 /* CARD */
@@ -42,7 +54,6 @@ header{
   box-shadow:0 10px 30px rgba(0,0,0,0.1);
 }
 
-/* صورة كبيرة احترافية */
 .card img{
   width:100%;
   height:300px;
@@ -69,20 +80,7 @@ small{
   color:gray;
 }
 
-/* LIKE */
-.heart{
-  font-size:26px;
-  cursor:pointer;
-  color:#aaa;
-  display:inline-block;
-  margin-top:10px;
-}
-
-.heart.active{
-  color:red;
-}
-
-/* ACTION BAR */
+/* ACTIONS */
 .actions{
   display:flex;
   gap:8px;
@@ -118,8 +116,11 @@ small{
 <body>
 
 <header>
-  <button class="back-btn" onclick="history.back()">← رجوع</button>
-  <h3>منشور الجمعية</h3>
+  <button class="back-btn" onclick="history.back()" id="backBtn">← رجوع</button>
+
+  <h3 id="title">منشور الجمعية</h3>
+
+  <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
 </header>
 
 <div id="loading">⏳ جاري التحميل...</div>
@@ -138,6 +139,38 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
+
+/* ===== LANGUAGE ===== */
+let lang = localStorage.getItem("lang") || "ar";
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.body.dir = (lang === "en") ? "ltr" : "rtl";
+
+  document.getElementById("langBtn").innerText = (lang === "en") ? "AR" : "EN";
+  document.getElementById("title").innerText = (lang === "en") ? "Post" : "منشور الجمعية";
+  document.getElementById("backBtn").innerText = (lang === "en") ? "Back" : "رجوع";
+}
+
+function toggleLang(){
+  lang = (lang === "ar") ? "en" : "ar";
+  localStorage.setItem("lang", lang);
+  loadPost(); // 🔥 يعيد تحميل وترجمة
+  applyLang();
+}
+
+applyLang();
+
+/* TRANSLATE */
+async function translate(text){
+  try{
+    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ar|en`);
+    const data = await res.json();
+    return data.responseData.translatedText;
+  }catch(e){
+    return text;
+  }
+}
 
 /* LIKE */
 function isLiked(id){
@@ -170,10 +203,10 @@ function shareFB(url){
 
 function copyLink(url){
   navigator.clipboard.writeText(url);
-  alert("تم نسخ الرابط ✔");
+  alert(lang === "en" ? "Copied ✔" : "تم النسخ ✔");
 }
 
-/* LOAD POST BY ID */
+/* LOAD POST */
 async function loadPost(){
 
   const id = new URLSearchParams(window.location.search).get("id");
@@ -182,7 +215,7 @@ async function loadPost(){
   const box = document.getElementById("post");
 
   if(!id){
-    loading.innerText = "❌ لا يوجد ID";
+    loading.innerText = "❌ No ID";
     return;
   }
 
@@ -191,19 +224,27 @@ async function loadPost(){
     const doc = await db.collection("news").doc(id).get();
 
     if(!doc.exists){
-      loading.innerText = "❌ المنشور غير موجود";
+      loading.innerText = "❌ Not found";
       return;
     }
 
     const d = doc.data();
     const url = window.location.href;
 
+    let title = d.title || "";
+    let content = d.content || "";
+
+    if(lang === "en"){
+      title = await translate(title);
+      content = await translate(content);
+    }
+
     box.innerHTML = `
       <img src="${d.image || ''}">
 
       <div class="content">
-        <h2>${d.title || ''}</h2>
-        <p>${d.content || ''}</p>
+        <h2>${title}</h2>
+        <p>${content}</p>
 
         <small>🗓️ ${d.date ? new Date(d.date).toLocaleString("ar-LB") : ''}</small>
 
@@ -212,7 +253,7 @@ async function loadPost(){
 
       <div class="actions">
         <button class="btn copy" onclick="copyLink('${url}')">نسخ</button>
-        <button class="btn wa" onclick="shareWA('${d.title || ''}','${url}')">واتساب</button>
+        <button class="btn wa" onclick="shareWA('${title}','${url}')">واتساب</button>
         <button class="btn fb" onclick="shareFB('${url}')">فيسبوك</button>
         <button class="btn link" onclick="copyLink('${url}')">رابط</button>
       </div>
