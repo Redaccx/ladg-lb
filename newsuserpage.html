@@ -12,7 +12,7 @@ body{
   background:#f5f5f5;
 }
 
-/* HEADER (صغير) */
+/* HEADER */
 header{
   background:#C1272D;
   color:#fff;
@@ -27,7 +27,6 @@ h1{
   margin:0;
 }
 
-/* BUTTON */
 .btn{
   background:#fff;
   color:#C1272D;
@@ -108,12 +107,6 @@ h1{
   padding:15px;
 }
 
-.date-popup{
-  font-size:12px;
-  color:gray;
-  margin-top:8px;
-}
-
 /* ACTIONS */
 .actions{
   display:flex;
@@ -132,6 +125,7 @@ h1{
 }
 
 .copy{background:#444;}
+.id{background:#555;}
 .wa{background:#25D366;}
 .fb{background:#1877F2;}
 
@@ -171,12 +165,12 @@ h1{
     <div class="popup-body">
       <h3 id="popupTitle"></h3>
       <p id="popupText"></p>
+      <small id="popupDate"></small>
 
-      <div class="date-popup" id="popupDate"></div>
-
-      <!-- 🔥 أزرار داخل المنشور -->
+      <!-- ACTIONS -->
       <div class="actions">
-        <button class="copy" onclick="copyLink()">نسخ الرابط</button>
+        <button class="id" onclick="copyID()">نسخ ID</button>
+        <button class="copy" onclick="copyLink()">رابط</button>
         <button class="wa" onclick="shareWA()">واتساب</button>
         <button class="fb" onclick="shareFB()">فيسبوك</button>
       </div>
@@ -204,7 +198,7 @@ let current = {
   url:""
 };
 
-/* LANGUAGE */
+/* LANG */
 let lang = localStorage.getItem("lang") || "ar";
 
 function applyLang(){
@@ -236,7 +230,7 @@ async function translate(text){
   }
 }
 
-/* LOAD POSTS */
+/* LOAD */
 async function loadPosts(){
   const postsDiv = document.getElementById("posts");
   postsDiv.innerHTML="";
@@ -251,12 +245,7 @@ async function loadPosts(){
 
     if(lang === "en"){
       title = await translate(title);
-      content = await translate(content);
     }
-
-    const dateText = d.date
-      ? new Date(d.date).toLocaleDateString(lang === "en" ? "en-US" : "ar-LB")
-      : "";
 
     const div = document.createElement("div");
     div.className="post";
@@ -265,7 +254,7 @@ async function loadPosts(){
       <img src="${d.image||''}">
       <div class="post-body">
         <h3>${title}</h3>
-        <div class="date">🗓️ ${dateText}</div>
+        <div class="date">🗓️ ${d.date ? new Date(d.date).toLocaleDateString() : ""}</div>
       </div>
     `;
 
@@ -275,10 +264,11 @@ async function loadPosts(){
   });
 }
 
-/* OPEN POST */
+/* OPEN */
 async function openPost(id, data){
 
   current.id = id;
+  current.url = window.location.href;
 
   let title = data.title || "";
   let content = data.content || "";
@@ -289,25 +279,26 @@ async function openPost(id, data){
   }
 
   current.title = title;
-  current.url = window.location.origin + "?id=" + id;
 
   document.getElementById("popupImg").src = data.image || "";
   document.getElementById("popupTitle").innerText = title;
   document.getElementById("popupText").innerText = content;
-
-  const dateText = data.date
-    ? new Date(data.date).toLocaleDateString(lang === "en" ? "en-US" : "ar-LB")
-    : "";
-
-  document.getElementById("popupDate").innerText = "🗓️ " + dateText;
+  document.getElementById("popupDate").innerText =
+    data.date ? new Date(data.date).toLocaleString() : "";
 
   document.getElementById("popup").style.display="flex";
 }
 
-/* COPY LINK (ID) */
+/* COPY ID */
+function copyID(){
+  navigator.clipboard.writeText(current.id);
+  alert(lang === "en" ? "ID Copied ✔" : "تم نسخ ID ✔");
+}
+
+/* COPY LINK */
 function copyLink(){
   navigator.clipboard.writeText(current.url);
-  alert(lang === "en" ? "Copied ✔" : "تم النسخ ✔");
+  alert(lang === "en" ? "Link Copied ✔" : "تم نسخ الرابط ✔");
 }
 
 /* SHARE */
