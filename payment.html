@@ -1,175 +1,182 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>طرق التيرع - الجمعية اللبنانية للأنماء</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8">
+<title>طرق التبرع - الجمعية اللبنانية للأنماء</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    body {
-      font-family: 'Tahoma', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      color: #333;
-      overflow-x: hidden;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
-    .language-toggle {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      background-color: #C1272D;
-      color: #fff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+<style>
+body{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  background:linear-gradient(135deg,#eef2f7,#dbe4f0);
+  text-align:center;
+  color:#333;
+}
 
-    .logo {
-      margin: 50px auto 10px;
-    }
+/* LANGUAGE BUTTON */
+.language-toggle{
+  position:fixed;
+  top:15px;
+  left:15px;
+  background:#c1272d;
+  color:#fff;
+  border:none;
+  padding:8px 14px;
+  border-radius:25px;
+  cursor:pointer;
+  font-size:14px;
+  transition:0.3s;
+  box-shadow:0 5px 12px rgba(0,0,0,0.15);
+}
+.language-toggle:hover{
+  transform:scale(1.05);
+}
 
-    .logo img {
-      width: 140px;
-      border-radius: 10px;
-    }
+/* LOGO */
+.logo img{
+  width:130px;
+  margin-top:60px;
+  border-radius:12px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.1);
+}
 
-    h1 {
-      margin-top: 10px;
-      font-size: 24px;
-      color: #C1272D;
-    }
+/* TITLE */
+h1{
+  color:#c1272d;
+  margin-top:15px;
+  font-size:26px;
+}
 
-    .description {
-      font-size: 16px;
-      margin: 15px auto 30px;
-      color: #555;
-      max-width: 90%;
-      line-height: 1.8;
-    }
+/* DESCRIPTION */
+.description{
+  max-width:650px;
+  margin:15px auto 30px;
+  font-size:15px;
+  line-height:1.8;
+  color:#555;
+  padding:0 15px;
+}
 
-    .payment-methods {
-      max-width: 420px;
-      margin: auto;
-      padding: 0 20px;
-    }
+/* CONTAINER */
+.payment-methods{
+  max-width:420px;
+  margin:auto;
+  padding:0 15px 40px;
+}
 
-    .payment-option {
-      background-color: #fff;
-      border: 2px solid #C1272D;
-      border-radius: 10px;
-      margin: 12px 0;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-      text-decoration: none;
-      color: inherit;
-      transition: 0.2s;
-    }
+/* CARD */
+.payment-option{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#fff;
+  border-radius:16px;
+  padding:14px 16px;
+  margin:12px 0;
+  text-decoration:none;
+  color:#333;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  border:1px solid transparent;
+  transition:0.3s;
+}
 
-    .payment-option:hover {
-      background-color: #C1272D;
-      color: #fff;
-      transform: scale(1.02);
-    }
+.payment-option:hover{
+  transform:translateY(-5px);
+  border-color:#c1272d;
+  box-shadow:0 15px 30px rgba(193,39,45,0.2);
+}
 
-    .payment-option span {
-      font-size: 17px;
-    }
+/* TEXT */
+.payment-option span{
+  font-size:17px;
+  font-weight:600;
+}
 
-    .payment-option img {
-      width: 32px;
-      height: 32px;
-    }
+/* ICON */
+.payment-option img{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+}
 
-    footer {
-      margin-top: 40px;
-      padding: 15px 20px;
-      background-color: #C1272D;
-      color: #fff;
-      font-size: 14px;
-      text-align: center;
-    }
-  </style>
+/* FOOTER */
+footer{
+  background:#c1272d;
+  color:#fff;
+  padding:15px;
+  font-size:13px;
+}
+</style>
 </head>
+
 <body>
 
-  <button class="language-toggle" onclick="toggleLanguage()">EN</button>
+<button class="language-toggle" onclick="toggleLanguage()">EN</button>
 
-  <div class="logo">
-    <img src="https://d.top4top.io/p_35836wju71.jpg" alt="شعار الجمعية">
-  </div>
+<div class="logo">
+  <img src="https://d.top4top.io/p_35836wju71.jpg">
+</div>
 
-  <h1 id="title">طرق التبرع</h1>
+<h1 id="title">طرق التبرع</h1>
 
-  <div class="description" id="description">
-    الجمعية اللبنانية للأنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة.  
-    يمكنك دعم الجمعية من خلال التبرع عبر إحدى الطرق التالية. نحن نضمن أمان العمليات وسرعة التوصيل، ويتم استخدام كل تبرع في مشاريع واقعية تخدم المجتمع. شكراً لمساهمتكم في التغيير.
-  </div>
+<div class="description" id="description">
+الجمعية اللبنانية للأنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة.  
+يمكنك دعم الجمعية من خلال التبرع عبر إحدى الطرق التالية.
+</div>
 
-  <div class="payment-methods" id="payments">
-    <a href="whishmoney" class="payment-option">
-      <span>whish Money</span>
-      <img src="https://j.top4top.io/p_3490h7fyo1.jpg" alt="Whish Money">
-    </a>
-    <a href="westernunion" class="payment-option">
-      <span>Western Union</span>
-      <img src="https://f.top4top.io/p_34902je5a1.jpg" alt="Western Union">
-    </a>
-    <a href="bobfinance" class="payment-option">
-      <span>BoB Finance</span>
-      <img src="https://b.top4top.io/p_34904cpj21.jpg" alt="BoB Finance">
-    </a>
+<div class="payment-methods">
 
-  </div>
+  <a href="whishmoney" class="payment-option">
+    <span>Whish Money</span>
+    <img src="https://j.top4top.io/p_3490h7fyo1.jpg">
+  </a>
 
-  <footer id="footer"> 
-    جميع الحقوق محفوظة الجمعية اللبنانية للأنماء 2025 © 
-  </footer>
+  <a href="westernunion" class="payment-option">
+    <span>Western Union</span>
+    <img src="https://f.top4top.io/p_34902je5a1.jpg">
+  </a>
 
-  <script>
-    let currentLang = "ar";
+  <a href="bobfinance" class="payment-option">
+    <span>BoB Finance</span>
+    <img src="https://b.top4top.io/p_34904cpj21.jpg">
+  </a>
 
-    function toggleLanguage() {
-      if (currentLang === "ar") {
-        document.documentElement.lang = "en";
-        document.documentElement.dir = "ltr";
-        document.querySelector(".language-toggle").textContent = "عربي";
-        document.getElementById("title").textContent = "Donation Methods";
-        document.getElementById("description").textContent =
-          "The Lebanese Development Association is a non-profit organization dedicated to supporting families in need and empowering youth through sustainable programs. You can support us by donating using one of the secure methods below. Every donation contributes to real, impactful projects. Thank you for making a difference.";
-        const options = document.querySelectorAll(".payment-option span");
-        options[0].textContent = "Whish Money";
-        options[1].textContent = "Western Union";
-        options[2].textContent = "BoB Finance";
-      
-        document.getElementById("footer").textContent = "All rights reserved © Lebanese Development Association 2025";
-        currentLang = "en";
-      } else {
-        document.documentElement.lang = "ar";
-        document.documentElement.dir = "rtl";
-        document.querySelector(".language-toggle").textContent = "EN";
-        document.getElementById("title").textContent = "طرق الدفع";
-        document.getElementById("description").textContent =
-          "الجمعية اللبنانية للأنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة. يمكنك دعم الجمعية من خلال التبرع عبر إحدى الطرق التالية. نحن نضمن أمان العمليات وسرعة التوصيل، ويتم استخدام كل تبرع في مشاريع واقعية تخدم المجتمع. شكراً لمساهمتكم في التغيير.";
-        const options = document.querySelectorAll(".payment-option span");
-        options[0].textContent = "Whish Money";
-        options[1].textContent = "Western Union";
-        options[2].textContent = "BoB Finance";
-        
-        document.getElementById("footer").textContent = "جميع الحقوق ©  محفوظةالجمعية اللبنانية للأنماء 2025";
-        currentLang = "ar";
-      }
-    }
-  </script>
+</div>
+
+<footer id="footer">
+جميع الحقوق محفوظة © الجمعية اللبنانية للأنماء 2026
+</footer>
+
+<script>
+let lang="ar";
+
+function toggleLanguage(){
+
+  lang = lang==="ar" ? "en" : "ar";
+
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==="ar" ? "rtl" : "ltr";
+
+  document.querySelector(".language-toggle").textContent =
+    lang==="ar" ? "EN" : "عربي";
+
+  document.getElementById("title").textContent =
+    lang==="ar" ? "طرق التبرع" : "Donation Methods";
+
+  document.getElementById("description").textContent =
+    lang==="ar"
+    ? "الجمعية اللبنانية للأنماء هي جمعية خيرية تهدف إلى دعم الأُسر المحتاجة وتمكين الشباب عبر برامج تنموية مستدامة."
+    : "The Lebanese Development Association supports families in need and empowers youth through sustainable programs.";
+
+  document.getElementById("footer").textContent =
+    lang==="ar"
+    ? "جميع الحقوق محفوظة © الجمعية اللبنانية للأنماء 2026"
+    : "All rights reserved © Lebanese Development Association 2026";
+}
+</script>
+
 </body>
 </html>
