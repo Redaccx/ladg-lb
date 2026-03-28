@@ -76,7 +76,7 @@ h1{
   color:gray;
 }
 
-/* ===== POPUP ===== */
+/* POPUP */
 .popup{
   display:none;
   position:fixed;
@@ -94,11 +94,8 @@ h1{
   max-width:500px;
   border-radius:18px;
   overflow:hidden;
-  position:relative;
-  animation:pop .25s ease;
 }
 
-/* صورة */
 .popup-content img{
   width:100%;
   height:260px;
@@ -110,30 +107,15 @@ h1{
 }
 
 .popup-body h3{
-  margin:0 0 10px;
   color:#C1272D;
+  margin:0 0 10px;
 }
 
 .popup-body p{
-  font-size:15px;
   line-height:1.7;
 }
 
-/* close */
-.close-btn{
-  position:absolute;
-  top:10px;
-  right:10px;
-  background:#C1272D;
-  color:#fff;
-  border:none;
-  width:32px;
-  height:32px;
-  border-radius:50%;
-  cursor:pointer;
-}
-
-/* SHARE BOX */
+/* SHARE */
 .share-box{
   display:flex;
   gap:8px;
@@ -143,27 +125,29 @@ h1{
 
 .share-btn{
   flex:1;
-  min-width:100px;
   border:none;
   padding:10px;
   border-radius:10px;
-  cursor:pointer;
-  font-size:13px;
   color:#fff;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  cursor:pointer;
 }
 
 .wa{background:#25D366;}
 .fb{background:#1877F2;}
-.tg{background:#0088cc;}
 .copy{background:#444;}
 
-/* animation */
-@keyframes pop{
-  from{transform:scale(0.85);opacity:0;}
-  to{transform:scale(1);opacity:1;}
+/* CLOSE */
+.close-btn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#C1272D;
+  color:#fff;
+  border:none;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -173,14 +157,13 @@ h1{
 <header>
   <button class="btn" onclick="window.location.href='index.html'">رجوع</button>
   <h1>آخر الأخبار</h1>
-  <button class="btn">EN</button>
 </header>
 
 <div id="posts" class="posts-grid"></div>
 
 <!-- POPUP -->
 <div id="popup" class="popup" onclick="closePopup(event)">
-  <div class="popup-content">
+  <div class="popup-content" style="position:relative;">
 
     <button class="close-btn" onclick="closePopup(event)">×</button>
 
@@ -190,11 +173,9 @@ h1{
       <h3 id="popupTitle"></h3>
       <p id="popupText"></p>
 
-      <!-- SHARE -->
       <div class="share-box">
         <button class="share-btn wa" onclick="shareWA()">واتساب</button>
         <button class="share-btn fb" onclick="shareFB()">فيسبوك</button>
-        <button class="share-btn tg" onclick="shareTG()">تلغرام</button>
         <button class="share-btn copy" onclick="copyLink()">نسخ الرابط</button>
       </div>
 
@@ -215,7 +196,9 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
+/* CURRENT POST */
 let current = {
+  id:"",
   title:"",
   content:"",
   image:"",
@@ -241,18 +224,21 @@ async function loadPosts(){
       <small>${d.date ? new Date(d.date).toLocaleDateString() : ''}</small>
     `;
 
-    div.onclick = ()=> openPost(d);
+    div.onclick = ()=> openPost(d, doc.id);
 
     postsDiv.appendChild(div);
   });
 }
 
-/* OPEN POPUP */
-function openPost(data){
+/* OPEN POST */
+function openPost(data, id){
+  current.id = id;
   current.title = data.title || "";
   current.content = data.content || "";
   current.image = data.image || "";
-  current.url = window.location.href;
+
+  const base = window.location.origin + window.location.pathname;
+  current.url = base + "?id=" + id;
 
   document.getElementById("popupImg").src = current.image;
   document.getElementById("popupTitle").innerText = current.title;
@@ -277,13 +263,10 @@ function shareFB(){
   window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(current.url));
 }
 
-function shareTG(){
-  window.open("https://t.me/share/url?url="+encodeURIComponent(current.url)+"&text="+encodeURIComponent(current.title));
-}
-
+/* COPY LINK (WITH ID) */
 function copyLink(){
   navigator.clipboard.writeText(current.url);
-  alert("تم نسخ الرابط ✔");
+  alert("تم نسخ رابط المنشور ✔");
 }
 
 loadPosts();
