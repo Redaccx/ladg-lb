@@ -2,169 +2,243 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>منشورات الجمعية اللبنانية للإنماء</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آخر الأخبار</title>
+
 <style>
-body { font-family: Tahoma, sans-serif; background:#f8f8f8; margin:0; padding:20px; direction:rtl; }
-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
-h1 { text-align:center; color:#C1272D; flex:1 1 100%; margin-bottom:10px; }
-.lang-btn, .back-btn { background:#C1272D; color:white; border:none; padding:8px 16px; border-radius:5px; cursor:pointer; margin:5px; font-size:14px; }
-.posts-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:15px; margin-top:20px; }
-.post { display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden; cursor:pointer; transition: transform 0.2s; }
-.post:hover { transform: scale(1.02); }
-.post img { width: 100%; height: 250px; object-fit: cover; border-radius: 0; } /* حجم ثابت للصور */
-.post h3 { text-align:center; margin:8px 0 5px; color:#C1272D; font-size:16px; }
-.read-more { text-align:center; font-size:12px; color:white; background:#C1272D; padding:5px 8px; border-radius:12px; margin:5px auto 10px; width:fit-content; cursor:pointer; }
-.post small { color:gray; font-size:12px; display:block; text-align:center; margin-bottom:5px; }
-.post .action-buttons { display:flex; justify-content:center; gap:5px; flex-wrap:wrap; margin-bottom:5px; }
-.post .share-btn.link { background:#444; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:12px; }
-#loadingMessage { text-align:center; margin-top:40px; font-size:16px; color:gray; }
-.popup { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:999; }
-.popup-content { background:white; padding:20px; border-radius:10px; max-width:500px; width:90%; text-align:center; position:relative; animation:fadeIn 0.3s; overflow-y:auto; max-height:90vh; }
-@keyframes fadeIn { from {opacity:0; transform:scale(0.9);} to {opacity:1; transform:scale(1);} }
-.popup-content img { width:100%; height:250px; object-fit:cover; border-radius:8px; margin-bottom:10px; }
-.close-btn { position:absolute; top:10px; left:10px; background:#C1272D; color:white; border:none; border-radius:50%; width:30px; height:30px; font-size:18px; cursor:pointer; font-weight:bold; display:flex; align-items:center; justify-content:center; }
-.popup .action-buttons { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:15px; }
-.popup .share-btn { color:white; border:none; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:14px; }
-.popup .share-btn.whatsapp { background:#25D366; }
-.popup .share-btn.facebook { background:#1877F2; }
-.popup .share-btn.link { background:#444; }
+body{
+  margin:0;
+  font-family:Tahoma;
+  background:#f6f6f6;
+}
+
+header{
+  background:#C1272D;
+  color:#fff;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+h1{
+  font-size:18px;
+  margin:0;
+}
+
+.btn{
+  background:#fff;
+  color:#C1272D;
+  border:none;
+  padding:6px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+/* GRID */
+.posts-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:15px;
+  padding:15px;
+}
+
+/* CARD */
+.post{
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 5px 15px rgba(0,0,0,0.08);
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.post:hover{
+  transform:translateY(-5px);
+}
+
+.post img{
+  width:100%;
+  height:200px;
+  object-fit:cover;
+}
+
+.post h3{
+  margin:10px;
+  color:#C1272D;
+  font-size:16px;
+}
+
+.post small{
+  display:block;
+  margin:0 10px 10px;
+  color:gray;
+}
+
+/* ACTIONS */
+.actions{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  padding:10px;
+}
+
+.btn-share{
+  border:none;
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:12px;
+  cursor:pointer;
+  color:#fff;
+}
+
+.whatsapp{background:#25D366;}
+.facebook{background:#1877F2;}
+.link{background:#444;}
+
+/* POPUP */
+.popup{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+}
+
+.popup-content{
+  background:#fff;
+  width:90%;
+  max-width:500px;
+  border-radius:16px;
+  padding:15px;
+  position:relative;
+}
+
+.close-btn{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:#C1272D;
+  color:#fff;
+  border:none;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  cursor:pointer;
+}
+
+.popup img{
+  width:100%;
+  border-radius:12px;
+  margin-bottom:10px;
+}
 </style>
 </head>
+
 <body>
 
 <header>
-  <button class="back-btn" onclick="window.location.href='index.html'">← <span id="backText">رجوع</span></button>
-  <button class="lang-btn" onclick="toggleLanguage()"><span id="langText">English</span></button>
-  <h1 id="pageTitle">آخر الأخبار</h1>
+  <button class="btn" onclick="window.location.href='index.html'">رجوع</button>
+  <h1>آخر الأخبار</h1>
+  <button class="btn">EN</button>
 </header>
 
-<div id="loadingMessage">⏳ جاري تحميل المنشورات...</div>
-<div id="postsContainer" class="posts-grid" style="display:none;"></div>
+<div id="posts" class="posts-grid"></div>
 
 <div id="popup" class="popup" onclick="closePopup(event)">
-  <div class="popup-content" id="popupContent">
-    <button class="close-btn" onclick="closePopup(event)">×</button>
-  </div>
+  <div class="popup-content" id="popupContent"></div>
 </div>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyBFMkZ7DFGLgshb3C104ORveF8wGvfncmY",
+  apiKey: "AIzaSyBFMkZ...",
   authDomain: "alanmaa-lb.firebaseapp.com",
-  databaseURL: "https://alanmaa-lb-default-rtdb.firebaseio.com",
   projectId: "alanmaa-lb",
-  storageBucket: "alanmaa-lb.firebasestorage.app",
-  messagingSenderId: "503038482881",
-  appId: "1:503038482881:web:101ead344c3274e668f740",
-  measurementId: "G-W0TF54W20B"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let currentLang = localStorage.getItem("lang") || "ar";
-const translations = {
-  ar: { title:"آخر الأخبار", back:"رجوع", loading:"⏳ جاري تحميل المنشورات...", empty:"لا يوجد منشورات حاليا" },
-  en: { title:"Last News", back:"Back", loading:"⏳ Loading posts...", empty:"No posts available" }
-};
+const postsDiv = document.getElementById("posts");
 
-function applyLanguage() {
-  document.documentElement.lang = currentLang;
-  document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
-  document.getElementById("pageTitle").innerText = translations[currentLang].title;
-  document.getElementById("backText").innerText = translations[currentLang].back;
-  document.getElementById("langText").innerText = currentLang === "ar" ? "English" : "عربي";
-  document.getElementById("loadingMessage").innerText = translations[currentLang].loading;
-  loadPosts();
-}
-
-function toggleLanguage() {
-  currentLang = currentLang === "ar" ? "en" : "ar";
-  localStorage.setItem("lang", currentLang);
-  applyLanguage();
-}
-
-function copyText(text) {
-  navigator.clipboard.writeText(text);
-  alert("✅ تم النسخ بنجاح!");
-}
-
-// مشاركة واتساب وفيسبوك
-function shareWhatsApp(title, content, url) {
-  const text = `${title}\n${content}\n${url}`;
-  const encodedText = encodeURIComponent(text);
-  const waUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-  window.open(waUrl, "_blank");
-}
-
-function shareFacebook(url) {
-  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  window.open(fbUrl, "_blank", "width=600,height=400");
-}
-
-async function loadPosts() {
-  const container = document.getElementById("postsContainer");
-  const loadingText = document.getElementById("loadingMessage");
-  container.innerHTML = "";
-  loadingText.style.display = "block";
-  container.style.display = "none";
+/* تحميل */
+async function loadPosts(){
+  postsDiv.innerHTML = "";
 
   const snapshot = await db.collection("news").orderBy("date","desc").get();
-  if(snapshot.empty) { loadingText.innerText = translations[currentLang].empty; return; }
 
-  snapshot.forEach(doc => {
+  snapshot.forEach(doc=>{
     const data = doc.data();
     const id = doc.id;
-    const div = document.createElement("div");
-    div.className = "post";
-    div.innerHTML = `
-      <img src="${data.image}" alt="post">
-      <h3>${data.title}</h3>
-      <div class="read-more">اضغط هنا لقراءة النص الكامل</div>
-      <small>🗓️ ${new Date(data.date).toLocaleDateString(currentLang)}</small>
-      <div class="action-buttons">
-        <button class="share-btn link" onclick="copyText('https://alanmaa-lb.com/p?id=${id}');event.stopPropagation();" title="نسخ الرابط">🔗</button>
+
+    const url = `https://alanmaa-lb.com/p?id=${id}`;
+
+    const card = document.createElement("div");
+    card.className = "post";
+
+    card.innerHTML = `
+      <img src="${data.image || ''}">
+      <h3>${data.title || ''}</h3>
+      <small>🗓️ ${data.date ? new Date(data.date).toLocaleDateString() : ''}</small>
+
+      <div class="actions">
+        <button class="btn-share link" onclick="copyLink('${url}');event.stopPropagation()">🔗</button>
+        <button class="btn-share whatsapp" onclick="shareWA('${data.title}','${data.content}','${url}');event.stopPropagation()">💬</button>
+        <button class="btn-share facebook" onclick="shareFB('${url}');event.stopPropagation()">📘</button>
       </div>
     `;
-    div.onclick = () => openPopup(id,data);
-    container.appendChild(div);
-  });
 
-  loadingText.style.display = "none";
-  container.style.display = "grid";
+    card.onclick = ()=> openPost(data,id,url);
+
+    postsDiv.appendChild(card);
+  });
 }
 
-function openPopup(id,data) {
-  const popup = document.getElementById("popup");
-  const content = document.getElementById("popupContent");
-  const shortUrl = `https://alanmaa-lb.com/p?id=${id}`;
-
-  content.innerHTML = `
+/* Popup */
+function openPost(data,id,url){
+  document.getElementById("popupContent").innerHTML = `
     <button class="close-btn" onclick="closePopup(event)">×</button>
-    <img src="${data.image}" alt="post">
+    <img src="${data.image}">
     <h3>${data.title}</h3>
     <p>${data.content}</p>
-    ${data.link ? `<a href="${data.link}" target="_blank">${data.link}</a>` : ""}
-    <small>🗓️ ${new Date(data.date).toLocaleString(currentLang)}</small>
-    <div class="action-buttons">
-      <button class="share-btn whatsapp" onclick="shareWhatsApp('${data.title.replace(/'/g,"\\'")}','${data.content.replace(/'/g,"\\'")}','${shortUrl}')">💬 واتساب</button>
-      <button class="share-btn facebook" onclick="shareFacebook('${shortUrl}')">📘 فيسبوك</button>
-      <button class="share-btn link" onclick="copyText('${shortUrl}')">🔗 رابط</button>
-    </div>
+    <small>ID: ${id}</small>
   `;
-  popup.style.display = "flex";
+
+  document.getElementById("popup").style.display = "flex";
 }
 
-function closePopup(event) {
-  if(event.target.classList.contains("close-btn") || event.target.id === "popup") {
-    document.getElementById("popup").style.display = "none";
+/* Copy */
+function copyLink(url){
+  navigator.clipboard.writeText(url);
+  alert("تم نسخ الرابط ✔");
+}
+
+/* WhatsApp */
+function shareWA(title,content,url){
+  const text = `${title}\n\n${content}\n\n${url}`;
+  window.open("https://api.whatsapp.com/send?text="+encodeURIComponent(text));
+}
+
+/* Facebook */
+function shareFB(url){
+  window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(url));
+}
+
+/* Close */
+function closePopup(e){
+  if(e.target.id==="popup" || e.target.classList.contains("close-btn")){
+    document.getElementById("popup").style.display="none";
   }
 }
 
-window.onload = applyLanguage;
+loadPosts();
 </script>
+
 </body>
 </html>
