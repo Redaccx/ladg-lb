@@ -1,144 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Privacy Policy |   الجمعية اللبنانية للأنماء</title>
-  <style>
-    body {
-      font-family: 'Tahoma', sans-serif;
-      background-color: #f9f9f9;
-      padding: 20px;
-      color: #333;
-      direction: ltr;
-      transition: direction 0.3s;
-    }
-    h1 {
-      color: #C1272D;
-    }
-    h2 {
-      margin-top: 30px;
-      color: #C1272D;
-    }
-    a {
-      color: #C1272D;
-      text-decoration: none;
-    }
-    .lang-switch {
-      margin-bottom: 20px;
-    }
-    .lang-switch button {
-      margin-right: 10px;
-      padding: 5px 10px;
-      border: none;
-      background: #C1272D;
-      color: white;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .arabic { display: none; direction: rtl; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Privacy Policy | الجمعية اللبنانية للأنماء</title>
+
+<style>
+body{
+margin:0;
+font-family:Tahoma, sans-serif;
+background:linear-gradient(135deg,#f5f7fa,#e4e8ec);
+color:#333;
+}
+
+/* زر اللغة */
+.lang-switch{
+position:fixed;
+top:15px;
+right:15px;
+z-index:1000;
+}
+
+.lang-switch button{
+background:#C1272D;
+color:#fff;
+border:none;
+padding:8px 14px;
+border-radius:20px;
+cursor:pointer;
+font-size:12px;
+transition:0.3s;
+}
+
+.lang-switch button:hover{
+transform:scale(1.05);
+}
+
+/* الحاوية */
+.container{
+max-width:850px;
+margin:80px auto 80px;
+padding:20px;
+}
+
+h1{
+text-align:center;
+color:#C1272D;
+margin-bottom:20px;
+}
+
+.card{
+background:#fff;
+padding:20px;
+margin-bottom:15px;
+border-radius:15px;
+box-shadow:0 8px 20px rgba(0,0,0,0.08);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+}
+
+h2{
+color:#a32428;
+margin-bottom:10px;
+font-size:18px;
+}
+
+p, li{
+font-size:15px;
+line-height:1.7;
+}
+
+ul{
+padding-right:20px;
+}
+
+a{
+color:#C1272D;
+text-decoration:none;
+}
+
+/* عربي */
+.arabic{
+display:none;
+direction:rtl;
+}
+
+/* فوتر */
+footer{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#C1272D;
+color:#fff;
+text-align:center;
+padding:10px;
+font-size:13px;
+}
+</style>
 </head>
+
 <body>
 
-  <div class="lang-switch">
-    <button onclick="switchLang('en')">English</button>
-    <button onclick="switchLang('ar')">العربية</button>
-  </div>
+<!-- زر اللغة -->
+<div class="lang-switch">
+<button id="langBtn" onclick="toggleLang()">العربية</button>
+</div>
 
-  <!-- English Content -->
-  <div class="english">
-    <h1>Privacy Policy</h1>
-    <p>Last updated: July 18, 2026</p>
-    <p>Lebanese Association For Development  ("we", "our", or "the Association") is committed to protecting your privacy...</p>
+<div class="container">
 
-    <h2>1. Information We Collect</h2>
-    <ul>
-      <li>Name</li>
-      <li>Phone number</li>
-      <li>Email address</li>
-      <li>Donation/payment details</li>
-      <li>Messages through the website</li>
-    </ul>
+<h1>Privacy Policy</h1>
 
-    <h2>2. How We Use Your Information</h2>
-    <ul>
-      <li>Process donations</li>
-      <li>Send updates</li>
-      <li>Respond to inquiries</li>
-      <li>Comply with legal obligations</li>
-    </ul>
+<!-- ENGLISH -->
+<div class="english">
 
-    <h2>3. Sharing of Information</h2>
-    <p>We never sell or rent your data. We may share with trusted services like payment processors, if needed.</p>
+<div class="card">
+<h2>Last Updated</h2>
+<p>18 July 2026</p>
+</div>
 
-    <h2>4. Your Rights</h2>
-    <ul>
-      <li>Access and update your info</li>
-      <li>Delete your data</li>
-      <li>Withdraw consent</li>
-    </ul>
+<div class="card">
+<h2>Information We Collect</h2>
+<ul>
+<li>Name</li>
+<li>Phone number</li>
+<li>Email address</li>
+<li>Donation/payment details</li>
+<li>Messages via website</li>
+</ul>
+</div>
 
-    <h2>5. Contact</h2>
-    <p>Email: <a href="mailto:alanmaa.lb@hotmail.com">alanmaa.lb@hotmail.com</a><br>
-    Phone: <a href="tel:+96170590815">+961 70 590 815</a></p>
-  </div>
+<div class="card">
+<h2>How We Use Information</h2>
+<ul>
+<li>Process donations</li>
+<li>Send updates</li>
+<li>Respond to inquiries</li>
+<li>Improve services</li>
+</ul>
+</div>
 
-  <!-- Arabic Content -->
-  <div class="arabic">
-    <h1>سياسة الخصوصية</h1>
-    <p>آخر تحديث: 18 تموز 2026</p>
-    <p>الجمعية اللبنانية للأنماء ("نحن"، "الجمعية") ملتزمة بحماية خصوصيتكم ومعلوماتكم الشخصية...</p>
+<div class="card">
+<h2>Data Protection</h2>
+<p>We do not sell or share your data with third parties except trusted services.</p>
+</div>
 
-    <h2>١. المعلومات التي نجمعها</h2>
-    <ul>
-      <li>الاسم</li>
-      <li>رقم الهاتف</li>
-      <li>البريد الإلكتروني</li>
-      <li>تفاصيل الدفع والتبرع</li>
-      <li>الرسائل عبر الموقع</li>
-    </ul>
+<div class="card">
+<h2>Contact Us</h2>
+<p>
+Email: <a href="mailto:alanmaa.lb@hotmail.com">alanmaa.lb@hotmail.com</a><br>
+Phone: <a href="tel:+96170590815">+961 70 590 815</a>
+</p>
+</div>
 
-    <h2>٢. كيف نستخدم معلوماتك</h2>
-    <ul>
-      <li>معالجة التبرعات</li>
-      <li>إرسال التحديثات</li>
-      <li>الرد على الاستفسارات</li>
-      <li>الامتثال للمتطلبات القانونية</li>
-    </ul>
+</div>
 
-    <h2>٣. مشاركة المعلومات</h2>
-    <p>نحن لا نبيع أو نؤجر معلوماتك. قد نشارك مع خدمات موثوقة عند الحاجة (مثل بوابات الدفع).</p>
+<!-- ARABIC -->
+<div class="arabic">
 
-    <h2>٤. حقوقك</h2>
-    <ul>
-      <li>الوصول إلى بياناتك وتعديلها</li>
-      <li>طلب حذف بياناتك</li>
-      <li>سحب الموافقة على التواصل</li>
-    </ul>
+<div class="card">
+<h2>آخر تحديث</h2>
+<p>18 تموز 2026</p>
+</div>
 
-    <h2>٥. تواصل معنا</h2>
-    <p>📧 البريد الإلكتروني: <a href="mailto:alanmaa.lb@hotmail.com">alanmaa.lb@hotmail.com</a><br>
-    ☎️ الهاتف: <a href="tel:+96170590815">+961 70 590 8157</a></p>
-  </div>
+<div class="card">
+<h2>المعلومات التي نجمعها</h2>
+<ul>
+<li>الاسم</li>
+<li>رقم الهاتف</li>
+<li>البريد الإلكتروني</li>
+<li>تفاصيل التبرعات</li>
+<li>الرسائل عبر الموقع</li>
+</ul>
+</div>
 
-  <script>
-    function switchLang(lang) {
-      const en = document.querySelector('.english');
-      const ar = document.querySelector('.arabic');
-      if (lang === 'ar') {
-        en.style.display = 'none';
-        ar.style.display = 'block';
-        document.body.dir = 'rtl';
-        document.documentElement.lang = 'ar';
-      } else {
-        en.style.display = 'block';
-        ar.style.display = 'none';
-        document.body.dir = 'ltr';
-        document.documentElement.lang = 'en';
-      }
-    }
-  </script>
+<div class="card">
+<h2>كيفية استخدام المعلومات</h2>
+<ul>
+<li>معالجة التبرعات</li>
+<li>إرسال التحديثات</li>
+<li>الرد على الاستفسارات</li>
+<li>تحسين الخدمات</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>حماية البيانات</h2>
+<p>نحن لا نبيع أو نشارك بياناتك إلا مع خدمات موثوقة عند الحاجة.</p>
+</div>
+
+<div class="card">
+<h2>تواصل معنا</h2>
+<p>
+البريد الإلكتروني: <a href="mailto:alanmaa.lb@hotmail.com">alanmaa.lb@hotmail.com</a><br>
+الهاتف: <a href="tel:+96170590815">+961 70 590 815</a>
+</p>
+</div>
+
+</div>
+
+</div>
+
+<footer>
+© 2026 الجمعية اللبنانية للأنماء - جميع الحقوق محفوظة
+</footer>
+
+<script>
+let isArabic = false;
+
+function toggleLang(){
+const en = document.querySelector(".english");
+const ar = document.querySelector(".arabic");
+const btn = document.getElementById("langBtn");
+
+if(isArabic){
+  en.style.display = "block";
+  ar.style.display = "none";
+  document.body.dir = "ltr";
+  document.documentElement.lang = "en";
+  btn.textContent = "العربية";
+  isArabic = false;
+}else{
+  en.style.display = "none";
+  ar.style.display = "block";
+  document.body.dir = "rtl";
+  document.documentElement.lang = "ar";
+  btn.textContent = "English";
+  isArabic = true;
+}
+}
+</script>
 
 </body>
 </html>
