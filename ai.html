@@ -102,10 +102,10 @@ onAuthStateChanged(auth, async user=>{
 
 // Call PHP proxy
 async function callAPI(params){
-  const res = await fetch("smm_proxy.php",{
-    method:"POST",
-    headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:new URLSearchParams(params)
+  const res = await fetch("smm_proxy.php", {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: new URLSearchParams(params)
   });
   return await res.json();
 }
@@ -117,7 +117,7 @@ async function loadServices(){
   let container = document.getElementById("services");
   container.innerHTML = "";
 
-  if(!services || !Array.isArray(services) || services.length === 0){
+  if(!services || services.length === 0){
     container.innerHTML = "<p>لا توجد خدمات</p>";
     return;
   }
@@ -127,7 +127,7 @@ async function loadServices(){
     div.className = "service-item";
     div.innerHTML = `
       <strong>${s.name}</strong><br>
-      السعر: ${s.rate} | حد أدنى: ${s.min} | حد أقصى: ${s.max}<br>
+      السعر: ${s.rate} | الحد الأدنى: ${s.min} | الحد الأقصى: ${s.max}<br>
       <input placeholder="رابط الحساب أو البوست" class="link-input">
       <input placeholder="الكمية" class="qty-input">
       <button onclick="orderService('${s.service}', this)">اطلب الآن</button>
