@@ -30,7 +30,7 @@ button:hover{background:#2563eb;}
 <button onclick="logout()">تسجيل خروج</button>
 <hr>
 
-<h3>طلب خدمة</h3>
+<h3>جميع الخدمات</h3>
 <select id="services"></select>
 <input id="link" placeholder="رابط الحساب أو البوست">
 <input id="quantity" placeholder="الكمية">
@@ -45,9 +45,9 @@ button:hover{background:#2563eb;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// إعداد Firebase
+// Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyAgqj5rWFXuwldXm5-yFZj0POdS6rRYepo",
     authDomain: "support-c1836.firebaseapp.com",
@@ -59,6 +59,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
+
+// مفتاح API SMMREAL
+const API_KEY = "1dd70c35fcc1060037ba32e5647fc392";
+const API_URL = "https://smmreal.com/api/v2";
 
 // تسجيل دخول
 window.login = function(){
@@ -76,7 +80,7 @@ window.register = function(){
   .then(async (userCredential)=>{
     const user = userCredential.user;
     let initialBalance = 0.01;
-    await setDoc(doc(db,"users",user.uid),{email: email,balance: initialBalance,created: Date.now()});
+    await setDoc(doc(db,"users",user.uid),{email: email,balance: initialBalance,created: Date.now(), uid: user.uid});
     alert(`تم إنشاء الحساب! حصلت على رصيد مجاني ${initialBalance}$`);
   }).catch(err=>alert(err.message));
 }
@@ -102,26 +106,35 @@ onAuthStateChanged(auth, async user=>{
   }
 });
 
-// تحميل الخدمات من api.php على السيرفر
-async function loadServices(){
+// دالة fetch API مباشرة (Proxy داخلي)
+async function callAPI(params){
+  params.key = API_KEY;
+  const formData = new URLSearchParams(params);
   try{
-    const res = await fetch("api.php",{
+    const res = await fetch(API_URL,{
       method:"POST",
-      headers:{"Content-Type":"application/x-www-form-urlencoded"},
-      body:"action=services"
+      body: formData
     });
-    const services = await res.json();
-    let select = document.getElementById("services");
-    select.innerHTML = "";
-    services.forEach(s=>{
-      let option = document.createElement("option");
-      option.value = s.service;
-      option.text = s.name+" | السعر "+s.rate;
-      select.appendChild(option);
-    });
+    const data = await res.json();
+    return data;
   }catch(e){
-    console.error("خطأ تحميل الخدمات:", e);
+    console.error("API Error:", e);
+    return null;
   }
+}
+
+// تحميل جميع الخدمات
+async function loadServices(){
+  const services = await callAPI({action:"services"});
+  if(!services) return;
+  let select = document.getElementById("services");
+  select.innerHTML = "";
+  services.forEach(s=>{
+    let option = document.createElement("option");
+    option.value = s.service;
+    option.text = s.name+" | السعر "+s.rate;
+    select.appendChild(option);
+  });
 }
 
 // طلب خدمة
@@ -139,19 +152,21 @@ window.order = async function(){
 
   await updateDoc(userRef,{ balance: balance - cost });
 
-  try{
-    const res = await fetch("api.php",{
-      method:"POST",
-      headers:{"Content-Type":"application/x-www-form-urlencoded"},
-      body:new URLSearchParams({action:"add",service,link,quantity})
-    });
-    const data = await res.json();
-    document.getElementById("result").innerText = "رقم الطلب: "+data.order;
-    loadOrders(user.uid);
-  }catch(e){
-    console.error("خطأ في إرسال الطلب:", e);
-    alert("حدث خطأ في إرسال الطلب");
-  }
+  const data = await callAPI({action:"add",service,link,quantity});
+  if(!data){ alert("حدث خطأ في الطلب"); return; }
+
+  document.getElementById("result").innerText = "رقم الطلب: "+data.order;
+
+  await addDoc(collection(db,"orders"),{
+    user: user.uid,
+    service,
+    link,
+    quantity,
+    status: "pending",
+    created: Date.now()
+  });
+
+  loadOrders(user.uid);
 }
 
 // تحميل الطلبات الخاصة بالمستخدم
