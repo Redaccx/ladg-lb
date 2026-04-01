@@ -45,7 +45,7 @@ button:hover{background:#2563eb;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // إعداد Firebase
 const firebaseConfig = {
@@ -102,18 +102,26 @@ onAuthStateChanged(auth, async user=>{
   }
 });
 
-// تحميل الخدمات من api.php
+// تحميل الخدمات من api.php على السيرفر
 async function loadServices(){
-  const res = await fetch("api.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"action=services"});
-  const services = await res.json();
-  let select = document.getElementById("services");
-  select.innerHTML = "";
-  services.forEach(s=>{
-    let option = document.createElement("option");
-    option.value = s.service;
-    option.text = s.name+" | السعر "+s.rate;
-    select.appendChild(option);
-  });
+  try{
+    const res = await fetch("api.php",{
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded"},
+      body:"action=services"
+    });
+    const services = await res.json();
+    let select = document.getElementById("services");
+    select.innerHTML = "";
+    services.forEach(s=>{
+      let option = document.createElement("option");
+      option.value = s.service;
+      option.text = s.name+" | السعر "+s.rate;
+      select.appendChild(option);
+    });
+  }catch(e){
+    console.error("خطأ تحميل الخدمات:", e);
+  }
 }
 
 // طلب خدمة
@@ -126,16 +134,24 @@ window.order = async function(){
   let userRef = doc(db,"users",user.uid);
   let userSnap = await getDoc(userRef);
   let balance = userSnap.data().balance;
-  let cost = 0.01;
+  let cost = 0.01; 
   if(balance < cost){ alert("رصيدك غير كافي"); return; }
 
   await updateDoc(userRef,{ balance: balance - cost });
 
-  const res = await fetch("api.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({action:"add",service,link,quantity})});
-  const data = await res.json();
-  document.getElementById("result").innerText = "رقم الطلب: "+data.order;
-
-  loadOrders(user.uid);
+  try{
+    const res = await fetch("api.php",{
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded"},
+      body:new URLSearchParams({action:"add",service,link,quantity})
+    });
+    const data = await res.json();
+    document.getElementById("result").innerText = "رقم الطلب: "+data.order;
+    loadOrders(user.uid);
+  }catch(e){
+    console.error("خطأ في إرسال الطلب:", e);
+    alert("حدث خطأ في إرسال الطلب");
+  }
 }
 
 // تحميل الطلبات الخاصة بالمستخدم
