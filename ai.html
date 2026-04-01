@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMM Panel متكامل</title>
+<style>
+body{font-family:Arial;background:#0f172a;color:white;text-align:center;margin:0;}
+.container{max-width:600px;margin:auto;padding:20px;}
+input,select{width:100%;padding:10px;margin-top:10px;border-radius:6px;border:none;}
+button{padding:12px;margin-top:10px;width:100%;background:#3b82f6;border:none;color:white;border-radius:6px;cursor:pointer;}
+button:hover{background:#2563eb;}
+#dashboard{display:none;}
+#orders{list-style:none;padding:0;}
+</style>
+</head>
+<body>
+
+<div class="container" id="loginBox">
+<h2>تسجيل الدخول / إنشاء حساب</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">دخول</button>
+<button onclick="register()">إنشاء حساب</button>
+</div>
+
+<div class="container" id="dashboard">
+<h2>لوحة التحكم</h2>
+<p>رصيدك: <span id="balance">0</span>$</p>
+<button onclick="logout()">تسجيل خروج</button>
+<hr>
+
+<h3>طلب خدمة</h3>
+<select id="services"></select>
+<input id="link" placeholder="رابط الحساب أو البوست">
+<input id="quantity" placeholder="الكمية">
+<button onclick="order()">طلب الخدمة</button>
+<p id="result"></p>
+<hr>
+
+<h3>الطلبات</h3>
+<ul id="orders"></ul>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// إعداد Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyAgqj5rWFXuwldXm5-yFZj0POdS6rRYepo",
+    authDomain: "support-c1836.firebaseapp.com",
+    projectId: "support-c1836",
+    storageBucket: "support-c1836.firebasestorage.app",
+    messagingSenderId: "475150183599",
+    appId: "1:475150183599:web:4c8a3f40f645b160b0f85a"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
+
+// تسجيل دخول
+window.login = function(){
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+  signInWithEmailAndPassword(auth,email,password).catch(err=>alert(err.message));
+}
+
+// تسجيل حساب جديد + رصيد تلقائي 0.01$
+window.register = function(){
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+
+  createUserWithEmailAndPassword(auth,email,password)
+  .then(async (userCredential)=>{
+    const user = userCredential.user;
+    let initialBalance = 0.01;
+    await setDoc(doc(db,"users",user.uid),{email: email,balance: initialBalance,created: Date.now()});
+    alert(`تم إنشاء الحساب! حصلت على رصيد مجاني ${initialBalance}$`);
+  }).catch(err=>alert(err.message));
+}
+
+// تسجيل خروج
+window.logout = function(){ signOut(auth); }
+
+// متابعة حالة المستخدم
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+
+    let userRef = doc(db,"users",user.uid);
+    let userSnap = await getDoc(userRef);
+    if(userSnap.exists()) document.getElementById("balance").innerText = userSnap.data().balance.toFixed(2);
+
+    loadOrders(user.uid);
+    loadServices();
+  } else {
+    document.getElementById("loginBox").style.display="block";
+    document.getElementById("dashboard").style.display="none";
+  }
+});
+
+// تحميل الخدمات من api.php
+async function loadServices(){
+  const res = await fetch("api.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"action=services"});
+  const services = await res.json();
+  let select = document.getElementById("services");
+  select.innerHTML = "";
+  services.forEach(s=>{
+    let option = document.createElement("option");
+    option.value = s.service;
+    option.text = s.name+" | السعر "+s.rate;
+    select.appendChild(option);
+  });
+}
+
+// طلب خدمة
+window.order = async function(){
+  let user = auth.currentUser;
+  let link = document.getElementById("link").value;
+  let quantity = parseInt(document.getElementById("quantity").value);
+  let service = document.getElementById("services").value;
+
+  let userRef = doc(db,"users",user.uid);
+  let userSnap = await getDoc(userRef);
+  let balance = userSnap.data().balance;
+  let cost = 0.01;
+  if(balance < cost){ alert("رصيدك غير كافي"); return; }
+
+  await updateDoc(userRef,{ balance: balance - cost });
+
+  const res = await fetch("api.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({action:"add",service,link,quantity})});
+  const data = await res.json();
+  document.getElementById("result").innerText = "رقم الطلب: "+data.order;
+
+  loadOrders(user.uid);
+}
+
+// تحميل الطلبات الخاصة بالمستخدم
+async function loadOrders(uid){
+  let ordersEl = document.getElementById("orders");
+  ordersEl.innerHTML = "";
+  const query = await getDocs(collection(db,"orders"));
+  query.forEach(doc=>{
+    let data = doc.data();
+    if(data.user === uid){
+      let li = document.createElement("li");
+      li.innerText = data.service+" | "+data.quantity+" | "+(data.status || "pending");
+      ordersEl.appendChild(li);
+    }
+  });
+}
+</script>
+</body>
+</html>
