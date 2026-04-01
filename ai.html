@@ -6,12 +6,14 @@
 <title>SMM Panel متكامل</title>
 <style>
 body{font-family:Arial;background:#0f172a;color:white;text-align:center;margin:0;}
-.container{max-width:600px;margin:auto;padding:20px;}
+.container{max-width:700px;margin:auto;padding:20px;}
 input,select{width:100%;padding:10px;margin-top:10px;border-radius:6px;border:none;}
 button{padding:12px;margin-top:10px;width:100%;background:#3b82f6;border:none;color:white;border-radius:6px;cursor:pointer;}
 button:hover{background:#2563eb;}
 #dashboard{display:none;}
 #orders{list-style:none;padding:0;}
+.service-item{background:#1e293b;margin:8px;padding:10px;border-radius:6px;text-align:right;}
+.service-item button{width:auto;padding:6px 12px;margin-top:6px;}
 </style>
 </head>
 <body>
@@ -31,14 +33,10 @@ button:hover{background:#2563eb;}
 <hr>
 
 <h3>جميع الخدمات</h3>
-<select id="services"></select>
-<input id="link" placeholder="رابط الحساب أو البوست">
-<input id="quantity" placeholder="الكمية">
-<button onclick="order()">طلب الخدمة</button>
-<p id="result"></p>
+<div id="services"></div>
 <hr>
 
-<h3>الطلبات</h3>
+<h3>طلباتي</h3>
 <ul id="orders"></ul>
 </div>
 
@@ -47,7 +45,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Config
+// إعداد Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyAgqj5rWFXuwldXm5-yFZj0POdS6rRYepo",
     authDomain: "support-c1836.firebaseapp.com",
@@ -71,7 +69,7 @@ window.login = function(){
   signInWithEmailAndPassword(auth,email,password).catch(err=>alert(err.message));
 }
 
-// تسجيل حساب جديد + رصيد تلقائي 0.01$
+// تسجيل حساب جديد + رصيد 0.01$
 window.register = function(){
   let email = document.getElementById("email").value;
   let password = document.getElementById("password").value;
@@ -106,48 +104,48 @@ onAuthStateChanged(auth, async user=>{
   }
 });
 
-// دالة fetch API مباشرة (Proxy داخلي)
+// دالة fetch API مباشرة لموقع أساسي
 async function callAPI(params){
   params.key = API_KEY;
   const formData = new URLSearchParams(params);
   try{
     const res = await fetch(API_URL,{
       method:"POST",
-      body: formData
+      body:formData
     });
-    const data = await res.json();
-    return data;
-  }catch(e){
-    console.error("API Error:", e);
-    return null;
-  }
+    return await res.json();
+  }catch(e){ console.error("API Error:",e); return null;}
 }
 
-// تحميل جميع الخدمات
+// تحميل الخدمات من الموقع الأساسي مباشرة
 async function loadServices(){
   const services = await callAPI({action:"services"});
-  if(!services) return;
-  let select = document.getElementById("services");
-  select.innerHTML = "";
+  let container = document.getElementById("services");
+  container.innerHTML = "";
+  if(!services || !Array.isArray(services)) { container.innerHTML = "<p>لا توجد خدمات</p>"; return; }
+
   services.forEach(s=>{
-    let option = document.createElement("option");
-    option.value = s.service;
-    option.text = s.name+" | السعر "+s.rate;
-    select.appendChild(option);
+    let div = document.createElement("div");
+    div.className = "service-item";
+    div.innerHTML = `<strong>${s.name}</strong> | السعر: ${s.rate} | الحد الأدنى: ${s.min} | الحد الأقصى: ${s.max}<br>
+                     <input placeholder="رابط الحساب أو البوست" class="link-input">
+                     <input placeholder="الكمية" class="qty-input">
+                     <button onclick="orderService('${s.service}', this)">اطلب الآن</button>`;
+    container.appendChild(div);
   });
 }
 
-// طلب خدمة
-window.order = async function(){
-  let user = auth.currentUser;
-  let link = document.getElementById("link").value;
-  let quantity = parseInt(document.getElementById("quantity").value);
-  let service = document.getElementById("services").value;
+// طلب خدمة مباشرة من موقع أساسي
+window.orderService = async function(service, btn){
+  let parent = btn.parentElement;
+  let link = parent.querySelector(".link-input").value;
+  let quantity = parseInt(parent.querySelector(".qty-input").value);
 
+  let user = auth.currentUser;
   let userRef = doc(db,"users",user.uid);
   let userSnap = await getDoc(userRef);
   let balance = userSnap.data().balance;
-  let cost = 0.01; 
+  let cost = 0.01; // خصم ثابت لكل طلب
   if(balance < cost){ alert("رصيدك غير كافي"); return; }
 
   await updateDoc(userRef,{ balance: balance - cost });
@@ -155,7 +153,7 @@ window.order = async function(){
   const data = await callAPI({action:"add",service,link,quantity});
   if(!data){ alert("حدث خطأ في الطلب"); return; }
 
-  document.getElementById("result").innerText = "رقم الطلب: "+data.order;
+  document.getElementById("balance").innerText = (balance-cost).toFixed(2);
 
   await addDoc(collection(db,"orders"),{
     user: user.uid,
@@ -169,7 +167,7 @@ window.order = async function(){
   loadOrders(user.uid);
 }
 
-// تحميل الطلبات الخاصة بالمستخدم
+// تحميل الطلبات
 async function loadOrders(uid){
   let ordersEl = document.getElementById("orders");
   ordersEl.innerHTML = "";
@@ -178,7 +176,7 @@ async function loadOrders(uid){
     let data = doc.data();
     if(data.user === uid){
       let li = document.createElement("li");
-      li.innerText = data.service+" | "+data.quantity+" | "+(data.status || "pending");
+      li.innerText = `${data.service} | ${data.quantity} | ${data.status || "pending"}`;
       ordersEl.appendChild(li);
     }
   });
