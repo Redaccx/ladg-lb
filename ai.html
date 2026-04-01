@@ -113,17 +113,25 @@ async function callAPI(params){
 // Load services
 async function loadServices(){
   const services = await callAPI({action:"services"});
+
   let container = document.getElementById("services");
   container.innerHTML = "";
-  if(!services || !Array.isArray(services)) { container.innerHTML = "<p>لا توجد خدمات</p>"; return; }
+
+  if(!services || !Array.isArray(services) || services.length === 0){
+    container.innerHTML = "<p>لا توجد خدمات</p>";
+    return;
+  }
 
   services.forEach(s=>{
     let div = document.createElement("div");
     div.className = "service-item";
-    div.innerHTML = `<strong>${s.name}</strong> | السعر: ${s.rate} | الحد الأدنى: ${s.min} | الحد الأقصى: ${s.max}<br>
-                     <input placeholder="رابط الحساب أو البوست" class="link-input">
-                     <input placeholder="الكمية" class="qty-input">
-                     <button onclick="orderService('${s.service}', this)">اطلب الآن</button>`;
+    div.innerHTML = `
+      <strong>${s.name}</strong><br>
+      السعر: ${s.rate} | حد أدنى: ${s.min} | حد أقصى: ${s.max}<br>
+      <input placeholder="رابط الحساب أو البوست" class="link-input">
+      <input placeholder="الكمية" class="qty-input">
+      <button onclick="orderService('${s.service}', this)">اطلب الآن</button>
+    `;
     container.appendChild(div);
   });
 }
