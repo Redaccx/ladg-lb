@@ -58,8 +58,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 
-// مفتاح API SMMREAL
-const API_KEY = "1dd70c35fcc1060037ba32e5647fc392";
+// مفتاح API SMMREAL الجديد
+const API_KEY = "0c45a2a7372f143917862d0ac9330e4d";
 const API_URL = "https://smmreal.com/api/v2";
 
 // تسجيل دخول
@@ -69,7 +69,7 @@ window.login = function(){
   signInWithEmailAndPassword(auth,email,password).catch(err=>alert(err.message));
 }
 
-// تسجيل حساب جديد + رصيد 0.01$
+// تسجيل حساب جديد + رصيد تلقائي 0.01$
 window.register = function(){
   let email = document.getElementById("email").value;
   let password = document.getElementById("password").value;
