@@ -264,7 +264,7 @@ body {
 	color: var(--secondary-color);
 }
 .message table {
-	width: 90%;
+	width: 100%;
 	border-collapse: collapse;
 	margin: 1em 0;
 	border-radius: 8px;
@@ -338,7 +338,7 @@ body {
 	align-items: center;
 	gap: 10px;
 	box-shadow: 0 4px 20px var(--shadow);
-width:365px;
+width:355px;
 }
 .upload-button {
 	display: inline-block;
@@ -872,7 +872,7 @@ width:365px;
 		padding-right: 20px;
 	}
 	.message {
-		max-width: 90%;
+		max-width: 100%;
 		padding: 10px 14px;
 		font-size: 0.9rem;
 	}
@@ -882,7 +882,7 @@ width:365px;
 	.chat-input-area {
 		border-radius: 14px;
 		gap: 6px;
-		width:365px;
+		width:355px;
 	}
 	#user-input {
 		font-size: 0.9rem;
